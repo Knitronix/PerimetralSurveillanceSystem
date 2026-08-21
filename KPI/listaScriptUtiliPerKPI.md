@@ -1,5 +1,5 @@
 
-gli script che sono nella cartella ML to DL non potevamo spostarli?
+gli script che sono nella cartella ML to DL non potevamo spostarli perchè il json lo compila direttamente 
 
 sensor integrity verification.py  4.3 
 kpi_calibration_log.json 4.1

@@ -39,7 +39,7 @@ Controlla la label "Rete" in basso a sinistra: deve mostrare un numero di pacche
 Con il sistema a riposo (nessun evento in corso), guarda la label "STA/LTA" in tempo reale: dovrebbe oscillare intorno a 1.0 (nessun evento = short-term e long-term average simili). Genera un evento di prova (un colpo secco vicino alla fibra) e osserva quanto sale il rapporto. Regola:
 - **Soglia ON**: abbastanza sopra il rumore di fondo a riposo da non scattare per caso, ma sotto il picco che hai osservato durante l'evento di prova. Se a riposo il rapporto oscilla fino a 2, non mettere ON a 2.2 (troppo vicino, scatterà spesso per rumore) — un buon margine è tipicamente 1.5-2× il massimo osservato a riposo.
 - **Soglia OFF**: più bassa della ON, ma sopra 1.0. Se troppo vicina alla ON, il trigger si aprirà/chiuderà a scatti sullo stesso evento nonostante l'isteresi.
-Per ora: prendi il max di un minuto di rumore ambientale = rumore_max; poi prendi il max del tuo evento più debole possibile (es passo cauto) = evento_min ON = rumore_max + 0.3×(evento_min − rumore_max);
+Per ora: prendi il max di un minuto di rumore ambientale = rumore_max; poi prendi il max del tuo evento più debole possibile (es passo cauto) = evento_min 
 ON = rumore_max + 0.3×(evento_min − rumore_max), 
 OFF = rumore_max + 0.1×(evento_min − rumore_max)
 
