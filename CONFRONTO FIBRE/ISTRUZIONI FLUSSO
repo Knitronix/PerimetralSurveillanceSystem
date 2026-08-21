@@ -1,0 +1,48 @@
+# Flusso operativo — Confronto tra fibre ottiche
+
+Cartella di lavoro attesa:
+```
+confronto_fibre/
+├── 1_registratore.py
+├── 2_confronta_fibre.py
+├── 3_analizza_sweep.py
+├── config_soglie.json
+├── readme.md
+└── dataset_sensori_24kHz/        (generata automaticamente)
+```
+
+## 1. Preparazione (una volta sola)
+
+1. In `config_soglie.json`, verifica che ci siano le classi che userai, incluse almeno `RUMORE_AMBIENTALE` e `SWEEP`.
+2. Prepara il file audio dello sweep da riprodurre, annotando frequenza minima, massima, durata esatta e tipo (log/lineare) — ti serviranno per `3_analizza_sweep.py`.
+
+## 2. Per ogni fibra da testare
+
+1. Attacca la fibra all'interferometro, avvia `1_registratore.py`.
+2. Imposta l'**ID Fibra** nel campo dedicato, premi Applica.
+3. **Rumore ambientale**: seleziona la classe `RUMORE_AMBIENTALE`, Avvia Registrazione, lascia qualche decina di secondi in quiete, Ferma.
+4. **Sweep**: seleziona la classe `SWEEP`, deseleziona "Attendi soglia", imposta una "Durata cattura" più lunga dello sweep reale (margine per l'allineamento automatico), Avvia Registrazione esattamente all'inizio della riproduzione audio, ripeti almeno 2-3 volte.
+5. (Opzionale) Altri eventi: seleziona la classe, imposta la soglia, Avvia Registrazione, ripeti l'evento più volte, Ferma.
+6. Stacca la fibra, ripeti dal punto 1 per la fibra successiva — **stesso identico protocollo** per ognuna, altrimenti il confronto non è onesto.
+
+## 3. Analisi
+
+1. `python 2_confronta_fibre.py` → confronto su eventi brevi e rumore ambientale (tabelle a schermo + `confronto_fibre.csv`).
+2. In `3_analizza_sweep.py`, verifica che `F_MIN_SWEEP`, `F_MAX_SWEEP`, `DURATA_SWEEP_S`, `TIPO_SWEEP` corrispondano esattamente al file audio usato.
+3. `python 3_analizza_sweep.py` → curva SNR per banda, ripetibilità, verdetto (`confronto_sweep.csv`).
+4. Controlla sempre gli avvisi (⚠, esclusioni per clipping, confidenza di allineamento bassa) prima di trarre conclusioni da un singolo valore.
+
+## 4. File generati
+
+- `dataset_sensori_24kHz/<id_fibra>/<classe>/campione_*.wav` — campioni catalogati
+- `registrazioni_audio/full_streaming_*.wav` — copia grezza e continua dell'intera sessione
+- `confronto_fibre.csv` — dettaglio per-file dell'analisi eventi brevi
+- `confronto_sweep.csv` — dettaglio banda-per-banda dell'analisi sweep
+
+---
+
+Per i dettagli tecnici (formule, costanti, perché certe scelte di design), vedi `readme.md` nella stessa cartella.
+
+**Nota**: la parte di training IA (Random Forest / classificatore live vecchio) non fa più parte di questo flusso — è archiviata a parte, perché sostituita da una versione più recente sviluppata altrove.
+
+**Aggiornamento**: `2_confronta_fibre.py` ora calcola anche un **SNR per banda** (bassa/media/alta), oltre a quello a banda larga — vedi Tabella 3 dell'output e `readme.md` §3.4. Resta ancora da rivedere, se un giorno serve, il trigger a soglia RMS del registratore (§7 del readme): la cattura è ancora a banda larga, quindi eventi a bassa energia/bassa frequenza rischiano di non essere catturati bene a monte.
