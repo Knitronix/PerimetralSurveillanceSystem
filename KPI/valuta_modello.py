@@ -4,17 +4,26 @@ valuta_modello.py
 KPI 7.1 — Personnel classification accuracy (accuracy/precision/recall per classe)
 KPI 7.6 — Classification confidence (curva di calibrazione)
 
+Va lanciato da dentro la cartella KPI/ (o con qualunque cwd: i percorsi di default sono
+calcolati relativamente alla posizione di questo file, non alla cwd).
+
 Uso:
-    python valuta_modello.py --modello modello_classificatore.pkl --dataset dataset_sensori_24kHz
+    python valuta_modello.py
 """
 
 import argparse
 import json
+import sys
+from pathlib import Path
 
 import joblib
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
+
+KPI_DIR = Path(__file__).resolve().parent
+MLTODL_DIR = KPI_DIR.parent / "MLtoDL"
+sys.path.insert(0, str(MLTODL_DIR))
 
 from train_classifier import carica_dataset
 
@@ -46,12 +55,12 @@ def calcola_curva_calibrazione(y_true, probabilita_predette, etichette_predette,
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--modello", default="modello_classificatore.pkl")
-    ap.add_argument("--dataset", default="dataset_sensori_24kHz")
+    ap.add_argument("--modello", default=str(MLTODL_DIR / "modello_classificatore.pkl"))
+    ap.add_argument("--dataset", default=str(MLTODL_DIR / "dataset_sensori_24kHz"))
     ap.add_argument("--test-size", type=float, default=0.25)
-    ap.add_argument("--out-71", default="report_kpi_7_1.json")
-    ap.add_argument("--out-76", default="report_kpi_7_6.json")
-    ap.add_argument("--out-grafico", default="calibration_curve.png")
+    ap.add_argument("--out-71", default=str(KPI_DIR / "report_kpi_7_1.json"))
+    ap.add_argument("--out-76", default=str(KPI_DIR / "report_kpi_7_6.json"))
+    ap.add_argument("--out-grafico", default=str(KPI_DIR / "calibration_curve.png"))
     args = ap.parse_args()
 
     pacchetto = joblib.load(args.modello)

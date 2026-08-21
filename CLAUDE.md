@@ -32,18 +32,21 @@ per il training (nessun vincolo embedded).
   - `train_classifier.py` — training Random Forest + SVM (grid search), salva
     `modello_classificatore.pkl`.
   - `realtime_inference.py` — inferenza in tempo reale usata dalla modalità Riconoscimento.
-  - `sensor_integrity_verification.py`, `calcola_kpi.py`, `curva_apprendimento.py`,
-    `valuta_modello.py` — script del protocollo KPI (vedi `KPI/`); restano in questa cartella
-    (non spostati in `KPI/`) perché scrivono/leggono i log JSON direttamente qui.
   - `plan.md` — planning di progetto a 3 fasi (Laboratorio → Pretest campo → SAFE).
   - `guidaoperativa.md` — manuale d'uso passo-passo di tutta la pipeline.
+  - Dataset (`dataset_sensori_24kHz/`), modello (`modello_classificatore.pkl`) e log operativi
+    (`eventi_log.jsonl`, `riconoscimenti_log.jsonl`) vivono qui; gli script KPI in `KPI/` li
+    leggono da qui ma non li possiedono.
 - `MLtoDLseparateFasiSUPERATO/` — ARCHIVIATO: versione precedente della pipeline sopra, con la
   modalità di riconoscimento realizzata come script separato (`riconoscimento_realtime.py`)
   invece che integrata nel registratore. Non toccare, se non serve davvero un processo di
   riconoscimento indipendente dal registratore (es. su un'altra macchina).
-- `KPI/` — tracking KPI di progetto: `kpi_tracking.xlsx` (valori misurati per fase),
-  `PROTOCOLLOkpi.MD` (procedura dettagliata per ciascun KPI), `listaScriptUtiliPerKPI.md` (mappa
-  KPI → script in `MLtoDL/`).
+- `KPI/` — tutta la logica di valutazione KPI, oltre al tracking: `sensor_integrity_verification.py`,
+  `calcola_kpi.py`, `curva_apprendimento.py`, `valuta_modello.py` (ognuno calcola i propri percorsi
+  in base alla posizione del file, non alla cwd, e legge dataset/modello da `../MLtoDL/`), oltre a
+  `kpi_calibration_log.jsonl` (scritto direttamente qui da `MLtoDL/0registratoreStalta.py`),
+  `kpi_tracking.xlsx` (valori misurati per fase), `PROTOCOLLOkpi.MD` (procedura dettagliata per
+  ciascun KPI), `listaScriptUtiliPerKPI.md` (mappa KPI → script).
 
 > Nessuna cartella `arduino/` è attualmente presente nel repository (multiplexing tappeti/vibratori
 > — da aggiungere qui se/quando il codice viene versionato).
@@ -83,8 +86,9 @@ Integrazione ML in due fasi:
 - Il file `MLtoDL/0registratoreStalta.py` è unico con due modalità (Dataset/Riconoscimento):
   evitare di duplicare la logica STA/LTA in script separati.
 - Gli script KPI (`sensor_integrity_verification.py`, `calcola_kpi.py`, `curva_apprendimento.py`,
-  `valuta_modello.py`) restano in `MLtoDL/` e non vanno spostati in `KPI/`, perché scrivono/leggono
-  i log JSON direttamente in quella cartella.
+  `valuta_modello.py`) vivono in `KPI/`, non in `MLtoDL/`. Se modifichi i loro percorsi di default,
+  mantieni il pattern `Path(__file__).resolve().parent` (mai percorsi relativi alla cwd) — è quello
+  che li rende eseguibili da qualunque cartella.
 
 ## Da completare
 - [ ] Correggere i percorsi reali delle cartelle sopra elencate

@@ -7,11 +7,18 @@ Cruscotto per i KPI operativi:
 - pd                 (TC-5.1 / 5.2 / 5.3 — Probability of Detection)
 - far                (TC-5.5 — False Alarm Rate)
 
+Va lanciato da dentro la cartella KPI/ (o con qualunque cwd: i percorsi di default sono
+calcolati relativamente alla posizione di questo file, non alla cwd).
+
 Uso:
     python calcola_kpi.py calibration-time
     python calcola_kpi.py mission-ready --tempo-posa-minuti 45
-    python calcola_kpi.py pd --pianificati eventi_pianificati.csv --log dataset_sensori_24kHz/eventi_log.jsonl
-    python calcola_kpi.py far --log dataset_sensori_24kHz/eventi_log.jsonl --inizio ... --fine ...
+    python calcola_kpi.py pd --pianificati eventi_pianificati.csv
+    python calcola_kpi.py far --inizio ... --fine ...
+
+--log ha un default che punta a MLtoDL/dataset_sensori_24kHz/eventi_log.jsonl (modalità
+Dataset); per una campagna condotta in modalità Riconoscimento passa esplicitamente
+--log ../MLtoDL/riconoscimenti_log.jsonl.
 """
 
 import argparse
@@ -19,9 +26,15 @@ import csv
 import json
 import statistics
 from datetime import datetime
+from pathlib import Path
 
-FILE_LOG_CALIBRAZIONE = "kpi_calibration_log.jsonl"
-FILE_LOG_SELFTEST = "kpi_selftest_log.jsonl"
+KPI_DIR = Path(__file__).resolve().parent
+MLTODL_DIR = KPI_DIR.parent / "MLtoDL"
+
+FILE_LOG_CALIBRAZIONE = KPI_DIR / "kpi_calibration_log.jsonl"
+FILE_LOG_SELFTEST = KPI_DIR / "kpi_selftest_log.jsonl"
+FILE_EVENTI_DATASET_DEFAULT = MLTODL_DIR / "dataset_sensori_24kHz" / "eventi_log.jsonl"
+FILE_PIANIFICATI_DEFAULT = KPI_DIR / "eventi_pianificati.csv"
 
 # Tolleranza temporale per associare un evento pianificato a un evento
 # rilevato nel log: se il trigger cade entro questa finestra rispetto
@@ -165,11 +178,11 @@ def main():
     p_mr.add_argument("--tempo-posa-minuti", type=float, required=True)
 
     p_pd = sub.add_parser("pd")
-    p_pd.add_argument("--pianificati", required=True)
-    p_pd.add_argument("--log", required=True)
+    p_pd.add_argument("--pianificati", default=str(FILE_PIANIFICATI_DEFAULT))
+    p_pd.add_argument("--log", default=str(FILE_EVENTI_DATASET_DEFAULT))
 
     p_far = sub.add_parser("far")
-    p_far.add_argument("--log", required=True)
+    p_far.add_argument("--log", default=str(FILE_EVENTI_DATASET_DEFAULT))
     p_far.add_argument("--inizio", required=True, help="ISO 8601, es. 2026-09-10T14:00:00")
     p_far.add_argument("--fine", required=True)
 

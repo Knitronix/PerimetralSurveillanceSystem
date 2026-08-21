@@ -18,14 +18,18 @@ import argparse
 import json
 import socket
 import time
+from pathlib import Path
+
 import numpy as np
+
+KPI_DIR = Path(__file__).resolve().parent
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
 CAMPIONI_PER_PACCHETTO = 254
 SAMPLE_RATE = 24000
 BYTES_ATTESI = CAMPIONI_PER_PACCHETTO * 2
-FILE_LOG_SELFTEST = "kpi_selftest_log.jsonl"
+FILE_LOG_SELFTEST = KPI_DIR / "kpi_selftest_log.jsonl"
 
 # Soglie di plausibilità: da tarare sulla base dell'esperienza reale del
 # sistema. Questi default sono un punto di partenza, non valori assoluti.

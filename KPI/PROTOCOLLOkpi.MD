@@ -6,6 +6,8 @@ Ogni KPI ha: **cosa misura**, **procedura passo-passo**, **strumento** (script, 
 
 **Principio guida**: un KPI misurato in laboratorio (Fase 1) valida che *la procedura di misura funzioni*, non che *il sistema sia pronto*. Non confrontare mai un numero di Fase 1 con un requisito operativo — solo Fase 2/3 hanno segnali rappresentativi.
 
+**Dove vivono gli script**: tutti gli script KPI citati sotto (`sensor_integrity_verification.py`, `calcola_kpi.py`, `curva_apprendimento.py`, `valuta_modello.py`) sono in questa cartella (`KPI/`), non in `MLtoDL/`. Dataset, modello e log operativi restano invece in `MLtoDL/` (li leggono da lì): i comandi qui sotto funzionano con i default già corretti, indipendentemente dalla cartella da cui li lanci — i flag `--dataset`/`--modello`/`--log` restano disponibili solo per override.
+
 ---
 
 ## 4.1 — Calibration time
@@ -63,7 +65,7 @@ python sensor_integrity_verification.py --durata 30
 **Procedura**:
 1. Con un dataset rappresentativo della fase corrente (**non** quello di laboratorio per le fasi successive — dataset reale), lancia:
 ```bash
-python curva_apprendimento.py --dataset dataset_sensori_24kHz
+python curva_apprendimento.py
 ```
 2. Lo script allena il modello su frazioni crescenti del dataset (10%, 20%, ... 100%), misura F1 macro ad ogni step, e individua il punto di plateau (prima frazione oltre la quale il miglioramento scende sotto una soglia, di default 1%).
 
@@ -99,10 +101,11 @@ python calcola_kpi.py mission-ready --tempo-posa-minuti 45
 **Procedura**:
 1. Pianifica una campagna di eventi controllati: per ogni evento, un operatore annota categoria, timestamp di inizio/fine, in un file `eventi_pianificati.csv` (formato sotto).
 2. Genera fisicamente gli eventi pianificati sul/vicino al tracciato della fibra, con il sistema in acquisizione (modalità Dataset o Riconoscimento, non importa per questo KPI — quello che conta è che gli eventi vengano *catturati*, cioè che scatti il trigger STA/LTA).
-3. A campagna conclusa:
+3. A campagna conclusa (se `eventi_pianificati.csv` è in `KPI/` e gli eventi sono stati raccolti in modalità Dataset, i default bastano già):
 ```bash
-python calcola_kpi.py pd --pianificati eventi_pianificati.csv --log dataset_sensori_24kHz/eventi_log.jsonl
+python calcola_kpi.py pd --pianificati eventi_pianificati.csv
 ```
+Per una campagna condotta in modalità Riconoscimento, passa esplicitamente `--log ../MLtoDL/riconoscimenti_log.jsonl`.
 
 **Formato `eventi_pianificati.csv`**:
 ```csv
@@ -126,7 +129,7 @@ event_id,categoria,timestamp_inizio,timestamp_fine
 2. Annota inizio e fine del periodo "silenzioso".
 3. Al termine:
 ```bash
-python calcola_kpi.py far --log dataset_sensori_24kHz/eventi_log.jsonl --inizio 2026-09-10T14:00:00 --fine 2026-09-10T18:00:00
+python calcola_kpi.py far --inizio 2026-09-10T14:00:00 --fine 2026-09-10T18:00:00
 ```
 
 **Output**: numero di falsi allarmi/ora (ogni evento catturato durante il periodo silenzioso è per definizione un falso allarme).
@@ -144,7 +147,7 @@ python calcola_kpi.py far --log dataset_sensori_24kHz/eventi_log.jsonl --inizio 
 
 **Procedura**: già prodotto automaticamente da `train_classifier.py` ad ogni riaddestramento (classification report + matrice di confusione stampati a console). Per salvarlo come report formale riutilizzabile:
 ```bash
-python valuta_modello.py --modello modello_classificatore.pkl --dataset dataset_sensori_24kHz
+python valuta_modello.py
 ```
 
 **Output**: file `report_kpi_7_1.json` con accuracy/precision/recall/F1 per classe e matrice di confusione.
@@ -159,7 +162,7 @@ python valuta_modello.py --modello modello_classificatore.pkl --dataset dataset_
 
 **Procedura**: stesso script di 7.1, stesso comando:
 ```bash
-python valuta_modello.py --modello modello_classificatore.pkl --dataset dataset_sensori_24kHz
+python valuta_modello.py
 ```
 
 **Output**: file `report_kpi_7_6.json` con la curva di calibrazione (bin di confidenza vs accuratezza reale in quel bin) + grafico `calibration_curve.png`. Una curva vicina alla diagonale = modello ben calibrato; sistematicamente sopra la diagonale = il modello è più sicuro di quanto dovrebbe (rischioso, soprattutto vicino alla soglia di 75% usata per "sconosciuto").

@@ -56,6 +56,11 @@ CARTELLA_EVENTI_RICONOSCIUTI = "eventi_riconosciuti"
 FILE_CONFIG = "config_soglie_ia.json"
 ID_FIBRA_DEFAULT = "fibra1"
 PATH_MODELLO_DEFAULT = "modello_classificatore.pkl"
+# La logica di valutazione KPI vive in KPI/ (vedi KPI/calcola_kpi.py), non qui: questo
+# path è calcolato relativo alla posizione dello script, non alla cwd, così il log
+# finisce sempre nel posto giusto indipendentemente da dove viene lanciato l'app.
+CARTELLA_KPI = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "KPI")
+PATH_LOG_CALIBRAZIONE = os.path.join(CARTELLA_KPI, "kpi_calibration_log.jsonl")
 
 INTERVALLO_ATTESO_PACCHETTO = CAMPIONI_PER_PACCHETTO / SAMPLE_RATE
 # Il dispositivo NON invia un flusso uniforme pacchetto-per-pacchetto:
@@ -704,7 +709,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
             "secondi_da_avvio": round(secondi, 2),
         }
         try:
-            with open("kpi_calibration_log.jsonl", "a", encoding="utf-8") as f:
+            with open(PATH_LOG_CALIBRAZIONE, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record, ensure_ascii=False) + "\n")
             msg = f"✅ Calibration Time registrato: {secondi:.1f}s dall'avvio"
             self.testo_log.append(msg)

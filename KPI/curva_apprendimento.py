@@ -6,12 +6,17 @@ Allena il modello su frazioni crescenti del dataset, misura F1 macro ad
 ogni step, individua il punto di plateau, e riporta il tempo totale di
 training.
 
+Va lanciato da dentro la cartella KPI/ (o con qualunque cwd: i percorsi di default sono
+calcolati relativamente alla posizione di questo file, non alla cwd).
+
 Uso:
-    python curva_apprendimento.py --dataset dataset_sensori_24kHz
+    python curva_apprendimento.py
 """
 
 import argparse
+import sys
 import time
+from pathlib import Path
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -19,15 +24,19 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
+KPI_DIR = Path(__file__).resolve().parent
+MLTODL_DIR = KPI_DIR.parent / "MLtoDL"
+sys.path.insert(0, str(MLTODL_DIR))
+
 from train_classifier import carica_dataset, filtra_classi_troppo_piccole
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", default="dataset_sensori_24kHz")
+    ap.add_argument("--dataset", default=str(MLTODL_DIR / "dataset_sensori_24kHz"))
     ap.add_argument("--soglia-plateau", type=float, default=0.01,
                      help="miglioramento minimo di F1 macro tra due step consecutivi, sotto il quale si considera raggiunto il plateau")
-    ap.add_argument("--out-grafico", default="curva_apprendimento.png")
+    ap.add_argument("--out-grafico", default=str(KPI_DIR / "curva_apprendimento.png"))
     args = ap.parse_args()
 
     t0 = time.monotonic()
