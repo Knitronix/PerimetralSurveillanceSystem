@@ -12,7 +12,7 @@ non a quanto sono ma:
 - ci sono? 
 -per quanti secondi quanto durano?
 
-L'OBIETTICO è: data f1
+L'OBIETTIVO è: data f1
 se f1 dura t0 allora sto contando lo 0
 se f1 dura t1 sto contando i successivi dopo lo zero, in modo incrementale (da 1 a 100 per esempio)
 
@@ -33,3 +33,9 @@ FARE ANCHE CODICE DI ARDUINO CHE
 lancia 
 f1 lunga t0= 300ms e poi lancia f1 lunga t1= 150ms
 contemporaneamente lancia f2 lunga t1 ma solo quando anche f1 è lunga t1 altrimenti f2 non viene lanciata
+
+f1 --- - - - - - - - - - - 
+f2     -     -     - - -   
+
+nell'esempio sopra solamente gli interruttori n 1,4,7,8,9 sono stati chiusi dato che
+solo le f2 corrispondenti sono presenti
