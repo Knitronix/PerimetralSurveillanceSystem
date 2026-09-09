@@ -89,26 +89,36 @@ INTERVALLO_TIMER_SPETTRO_MS = int(1000 / FPS_SPETTROGRAMMA)
 # --- Protocollo f1/f2 (SPECS.MD §2/§3): valori da tarare, aggiornati sul
 # canale reale (vedi nota in cima al file) ---
 F1_HZ_DEFAULT = 2500.0
-F2_HZ_DEFAULT = 3300.0
-T0_MS_DEFAULT = 100.0      # marcatore di zero
-T1_MS_DEFAULT = 80.0       # durata di uno slot
+F2_HZ_DEFAULT = 1000.0
+T0_MS_DEFAULT = 200.0      # marcatore di zero
+T1_MS_DEFAULT = 100.0      # durata di uno slot
 TOLLERANZA_MS_DEFAULT = 50.0
-# Blocco Goertzel: 20ms -> 4 blocchi/slot t1, 10 blocchi/marcatore t0. Con
-# t1=80ms la tolleranza di 50ms copre [30,130]ms e t0=200ms copre
-# [150,250]ms: le due fasce non si sovrappongono (gap 20ms), ma la
-# tolleranza resta larga rispetto a t1 (il 62% della sua durata nominale) —
-# se in pratica capitano falsi "slot" da rumore prolungato, è il primo
-# parametro da stringere.
+# Blocco Goertzel: 20ms -> 5 blocchi/slot t1, 10 blocchi/marcatore t0. Con
+# t1=100ms la tolleranza di 50ms copre [50,150]ms e t0=200ms copre
+# [150,250]ms: le due fasce si toccano esattamente a 150ms, ma quel valore
+# non è mai raggiungibile (le durate misurate sono multipli di 20ms, 150 non
+# lo è), quindi restano di fatto separate — se in pratica capitano falsi
+# "slot"/"zero" da rumore prolungato, è il primo parametro da stringere.
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 # Soglie sulla potenza Goertzel normalizzata (0..1 = piena scala int16).
-# Punto di partenza tarato sui livelli reali misurati sul canale (rumore
-# <0.00005, f1 reale ~0.0002-0.0003, f2 reale ~0.0014-0.0022): da rifinire
-# ulteriormente sul campo, ma con margine rispetto al rumore di fondo.
-SOGLIA_ON_F1_DEFAULT = 0.00015
-SOGLIA_OFF_F1_DEFAULT = 0.00010
-SOGLIA_ON_F2_DEFAULT = 0.00080
-SOGLIA_OFF_F2_DEFAULT = 0.00050
+# Ritarate con la procedura a 3 punti di SPECS.MD §5.1 (rumore puro / solo
+# f1 / solo f2, canali isolati via CANALE1_ABILITATO/CANALE2_ABILITATO in
+# trasmettitore.ino): rumore puro f1=0.000004, f2=0.000015; segnale vero
+# f1=0.0045, f2=0.003; MA c'è cross-talk asimmetrico tra i due filtri
+# Goertzel: f2 nel filtro di f1 = 0.0001 (trascurabile, 2% del segnale f1),
+# f1 nel filtro di f2 = 0.0016 (pesante, 53% del segnale f2 - f1 è sempre
+# acceso ad ogni slot, quindi questo leakage è presente in continuazione).
+# Per f1 il "pavimento" da battere resta il rumore/leakage minori (0.0001):
+# soglie con ampio margine sopra. Per f2 il vero limite non è il rumore ma
+# il leakage di f1 (0.0016): la soglia è quindi tirata molto più vicina al
+# segnale (0.003) di quanto sarebbe se il problema fosse solo rumore, e
+# resta fragile - la causa va risolta scegliendo una f2 meno contaminata
+# dalle armoniche di f1 (vedi SPECS.MD §5.1/§6.2), non solo con la soglia.
+SOGLIA_ON_F1_DEFAULT = 0.0010
+SOGLIA_OFF_F1_DEFAULT = 0.0006
+SOGLIA_ON_F2_DEFAULT = 0.0024
+SOGLIA_OFF_F2_DEFAULT = 0.0019
 
 FILE_LOG_SLOT = "eventi_f1_f2_log.jsonl"
 MAX_RIGHE_LOG = 300
@@ -133,9 +143,39 @@ QScrollBar::handle:vertical { background: #3a3d42; border-radius: 5px; }
 """
 
 # Stile card riusato per i blocchi di stato (potenza f1/f2, counter, verifica).
+# Padding ridotto (era 12px): con log/parametri/counter tutti impilati nella
+# stessa colonna, ogni px di padding tolto qui è un px in più per la lista
+# log sotto, che è quella letta più spesso.
 STILE_CARD = (
-    "background-color: #212326; border: 1px solid #2e3134; border-radius: 8px; padding: 12px;"
+    "background-color: #212326; border: 1px solid #2e3134; border-radius: 8px; padding: 8px 10px;"
 )
+
+
+class SpinBoxSenzaRotella(QtWidgets.QDoubleSpinBox):
+    """QDoubleSpinBox che ignora la rotella del mouse. Di default Qt cambia
+    il valore anche solo passandoci sopra con la rotella mentre si scorre il
+    pannello (causa reale di frequenze/soglie cambiate per sbaglio) — non
+    serve nemmeno il focus/click. event.ignore() fa risalire lo scroll al
+    genitore (la QScrollArea del pannello destro), che scorre la pagina
+    invece di alterare il valore."""
+
+    def wheelEvent(self, event):
+        event.ignore()
+
+
+class SpinBoxIntSenzaRotella(QtWidgets.QSpinBox):
+    """Come SpinBoxSenzaRotella ma per QSpinBox (valori interi)."""
+
+    def wheelEvent(self, event):
+        event.ignore()
+
+
+class SliderSenzaRotella(QtWidgets.QSlider):
+    """Come SpinBoxSenzaRotella ma per QSlider (stesso problema di scroll
+    accidentale)."""
+
+    def wheelEvent(self, event):
+        event.ignore()
 
 
 @dataclass
@@ -392,6 +432,14 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.dinamica_db = DINAMICA_DB_DEFAULT
         self.spettrogramma_attivo = False
         self.totale_chiusure = 0
+        self.picco_f1 = 0.0
+        self.picco_f2 = 0.0
+        # Verifica ripetibilità (SOLO per test col ciclo Arduino fisso, vedi
+        # _verifica_ripetibilita_ciclo): stato_ciclo_corrente accumula gli
+        # esiti slot->stato del ciclo in corso, ciclo_riferimento è il primo
+        # ciclo completo osservato dopo l'avvio (o dopo un reset manuale).
+        self.stato_ciclo_corrente = {}
+        self.ciclo_riferimento = None
 
         self._accumulo_goertzel = np.empty(0, dtype=np.int16)
         self.protocollo = RilevatoreProtocolloF1F2(
@@ -484,7 +532,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
 
         riga_soglia = QtWidgets.QHBoxLayout()
         riga_soglia.addWidget(QtWidgets.QLabel("Dinamica Spettrogramma (dB sotto il picco):"))
-        self.slider_soglia_spettro = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.slider_soglia_spettro = SliderSenzaRotella(QtCore.Qt.Horizontal)
         self.slider_soglia_spettro.setRange(int(DINAMICA_DB_MIN * 10), int(DINAMICA_DB_MAX * 10))
         self.slider_soglia_spettro.setValue(int(DINAMICA_DB_DEFAULT * 10))
         self.slider_soglia_spettro.valueChanged.connect(self.cambia_dinamica_spettrogramma)
@@ -520,7 +568,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         # ------------------------------------------------------------
         contenitore_destra = QtWidgets.QWidget()
         colonna_destra = QtWidgets.QVBoxLayout(contenitore_destra)
-        colonna_destra.setSpacing(10)
+        colonna_destra.setSpacing(8)
 
         titolo = QtWidgets.QLabel("RILEVATORE PROTOCOLLO f1 / f2")
         titolo.setStyleSheet("font-weight: 700; font-size: 14px; color: #00d2c4; letter-spacing: 0.5px;")
@@ -531,26 +579,53 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         card_stato = QtWidgets.QWidget()
         card_stato.setStyleSheet(STILE_CARD)
         layout_card_stato = QtWidgets.QVBoxLayout(card_stato)
-        layout_card_stato.setSpacing(6)
+        layout_card_stato.setSpacing(4)
 
+        # Potenza e picco (max-hold) sulla stessa riga, frequenza accanto
+        # alla sua potenza: il picco serve a tarare le soglie a occhio (es.
+        # lascia tutti gli interruttori aperti, azzera, aspetta qualche
+        # secondo, leggi il massimo di rumore raggiunto su f2 e metti la
+        # soglia ON un po' sopra). Azzerabile a mano (bottoncino ⟲ sulla riga
+        # del counter, sotto) e in automatico quando cambiano i parametri del
+        # protocollo (un picco preso alla frequenza vecchia non ha senso).
+        riga_f1 = QtWidgets.QHBoxLayout()
+        riga_f1.setSpacing(8)
         self.label_potenza_f1 = QtWidgets.QLabel("Potenza f1: -- (OFF)")
         self.label_potenza_f1.setStyleSheet("color: #ffb02e; font-family: monospace; font-size: 12px; background: none;")
-        layout_card_stato.addWidget(self.label_potenza_f1)
+        riga_f1.addWidget(self.label_potenza_f1, stretch=1)
+        self.label_picco_f1 = QtWidgets.QLabel("picco --")
+        self.label_picco_f1.setStyleSheet("color: #d9a04a; font-family: monospace; font-size: 12px; background: none;")
+        riga_f1.addWidget(self.label_picco_f1)
+        layout_card_stato.addLayout(riga_f1)
 
+        riga_f2 = QtWidgets.QHBoxLayout()
+        riga_f2.setSpacing(8)
         self.label_potenza_f2 = QtWidgets.QLabel("Potenza f2: -- (OFF)")
         self.label_potenza_f2.setStyleSheet("color: #5eb1ff; font-family: monospace; font-size: 12px; background: none;")
-        layout_card_stato.addWidget(self.label_potenza_f2)
+        riga_f2.addWidget(self.label_potenza_f2, stretch=1)
+        self.label_picco_f2 = QtWidgets.QLabel("picco --")
+        self.label_picco_f2.setStyleSheet("color: #5eb1ff; font-family: monospace; font-size: 12px; background: none;")
+        riga_f2.addWidget(self.label_picco_f2)
+        layout_card_stato.addLayout(riga_f2)
 
         linea_separatore = QtWidgets.QFrame()
         linea_separatore.setFrameShape(QtWidgets.QFrame.HLine)
         linea_separatore.setStyleSheet("background-color: #2e3134; max-height: 1px; border: none;")
         layout_card_stato.addWidget(linea_separatore)
 
+        riga_counter = QtWidgets.QHBoxLayout()
         self.label_counter = QtWidgets.QLabel("Counter: --")
         self.label_counter.setStyleSheet(
             "color: #00d2c4; font-family: monospace; font-size: 20px; font-weight: 700; background: none;"
         )
-        layout_card_stato.addWidget(self.label_counter)
+        riga_counter.addWidget(self.label_counter, stretch=1)
+        self.btn_azzera_picchi = QtWidgets.QPushButton("⟲")
+        self.btn_azzera_picchi.setToolTip("Azzera i picchi f1/f2 (per tarare le soglie)")
+        self.btn_azzera_picchi.setFixedSize(44, 44)
+        self.btn_azzera_picchi.setStyleSheet("font-size: 20px;")
+        self.btn_azzera_picchi.clicked.connect(self.azzera_picchi_potenza)
+        riga_counter.addWidget(self.btn_azzera_picchi)
+        layout_card_stato.addLayout(riga_counter)
 
         colonna_destra.addWidget(card_stato)
 
@@ -562,13 +637,13 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         card_verifica = QtWidgets.QWidget()
         card_verifica.setStyleSheet(STILE_CARD)
         layout_card_verifica = QtWidgets.QVBoxLayout(card_verifica)
-        layout_card_verifica.setSpacing(8)
+        layout_card_verifica.setSpacing(4)
 
         riga_numero_atteso = QtWidgets.QHBoxLayout()
         label_atteso = QtWidgets.QLabel("Interruttori attesi/ciclo (0=disattiva):")
         label_atteso.setStyleSheet("background: none;")
         riga_numero_atteso.addWidget(label_atteso)
-        self.spin_numero_atteso = QtWidgets.QSpinBox()
+        self.spin_numero_atteso = SpinBoxIntSenzaRotella()
         self.spin_numero_atteso.setRange(0, 1000)
         self.spin_numero_atteso.setValue(50)
         riga_numero_atteso.addWidget(self.spin_numero_atteso)
@@ -579,11 +654,48 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.label_verifica_ciclo.setWordWrap(True)
         self.label_verifica_ciclo.setStyleSheet(
             "color: #9aa0a6; background-color: #2a2d31; font-size: 14px; "
-            "font-weight: 600; padding: 8px; border-radius: 6px;"
+            "font-weight: 600; padding: 5px; border-radius: 6px;"
         )
         layout_card_verifica.addWidget(self.label_verifica_ciclo)
 
         colonna_destra.addWidget(card_verifica)
+
+        # --- Verifica ripetibilità (SOLO per test): nel banco di prova
+        # attuale switchState su Arduino è randomizzato una sola volta al
+        # boot e non cambia più (vedi trasmettitore.ino), quindi finché non
+        # si tocca l'hardware ogni ciclo deve chiudere esattamente gli stessi
+        # interruttori del precedente. Il primo ciclo completo osservato
+        # diventa il riferimento; i successivi vengono confrontati slot per
+        # slot. Da disattivare/ignorare quando si passa a interruttori reali
+        # che possono cambiare stato nel tempo.
+        card_ripetibilita = QtWidgets.QWidget()
+        card_ripetibilita.setStyleSheet(STILE_CARD)
+        layout_card_ripetibilita = QtWidgets.QVBoxLayout(card_ripetibilita)
+        layout_card_ripetibilita.setSpacing(4)
+
+        riga_titolo_ripetibilita = QtWidgets.QHBoxLayout()
+        label_ripetibilita_titolo = QtWidgets.QLabel("Ripetibilità ciclo (solo test):")
+        label_ripetibilita_titolo.setStyleSheet("background: none;")
+        riga_titolo_ripetibilita.addWidget(label_ripetibilita_titolo, stretch=1)
+        self.btn_ricattura_riferimento = QtWidgets.QPushButton("⟲")
+        self.btn_ricattura_riferimento.setToolTip(
+            "Scarta il riferimento: il prossimo ciclo completo ne diventa uno nuovo"
+        )
+        self.btn_ricattura_riferimento.setFixedSize(28, 28)
+        self.btn_ricattura_riferimento.clicked.connect(self.azzera_riferimento_ripetibilita)
+        riga_titolo_ripetibilita.addWidget(self.btn_ricattura_riferimento)
+        layout_card_ripetibilita.addLayout(riga_titolo_ripetibilita)
+
+        self.label_ripetibilita = QtWidgets.QLabel("In attesa del primo ciclo completo...")
+        self.label_ripetibilita.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_ripetibilita.setWordWrap(True)
+        self.label_ripetibilita.setStyleSheet(
+            "color: #9aa0a6; background-color: #2a2d31; font-size: 13px; "
+            "font-weight: 600; padding: 5px; border-radius: 6px;"
+        )
+        layout_card_ripetibilita.addWidget(self.label_ripetibilita)
+
+        colonna_destra.addWidget(card_ripetibilita)
 
         # --- Parametri avanzati (frequenze/soglie): raccolti in un pannello
         # nascosto di default. Ora che il rilevamento è tarato e stabile
@@ -685,6 +797,11 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.label_totale_chiusure = QtWidgets.QLabel("0 totali")
         self.label_totale_chiusure.setStyleSheet("font-size: 11px; color: #6b7076; font-family: monospace;")
         riga_titolo_log.addWidget(self.label_totale_chiusure)
+        self.btn_cancella_log = QtWidgets.QPushButton("🗑")
+        self.btn_cancella_log.setToolTip("Svuota la lista qui sotto (non tocca il file eventi_f1_f2_log.jsonl)")
+        self.btn_cancella_log.setFixedWidth(32)
+        self.btn_cancella_log.clicked.connect(self.cancella_log_ui)
+        riga_titolo_log.addWidget(self.btn_cancella_log)
         colonna_destra.addLayout(riga_titolo_log)
 
         # Log v2: lista di card (badge numero + testo + orario) invece di un
@@ -741,7 +858,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
 
     @staticmethod
     def _crea_spin(minimo, massimo, valore, passo, decimali=1):
-        spin = QtWidgets.QDoubleSpinBox()
+        spin = SpinBoxSenzaRotella()
         spin.setRange(minimo, massimo)
         spin.setSingleStep(passo)
         spin.setDecimals(decimali)
@@ -760,6 +877,8 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
             self.spin_soglia_on_f2.value(), self.spin_soglia_off_f2.value(),
         )
         self._accumulo_goertzel = np.empty(0, dtype=np.int16)
+        self.azzera_picchi_potenza()
+        self.azzera_riferimento_ripetibilita()
         self.label_counter.setText("Counter: --")
         self.label_verifica_ciclo.setText("Verifica ciclo: --")
         self.label_verifica_ciclo.setStyleSheet(
@@ -795,6 +914,15 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.label_stato_parametri.setStyleSheet(
             "background: none; color: #6bcf8f; font-size: 11px; font-weight: 600;"
         )
+
+    def azzera_picchi_potenza(self):
+        """Azzera il picco (max-hold) di potenza f1/f2, usato per tarare le
+        soglie: si azzera, si osserva il rumore per qualche secondo (o si fa
+        un evento noto), e si legge il massimo raggiunto."""
+        self.picco_f1 = 0.0
+        self.picco_f2 = 0.0
+        self.label_picco_f1.setText("picco --")
+        self.label_picco_f2.setText("picco --")
 
     def cambia_soglie(self):
         self.protocollo.imposta_soglie(
@@ -847,13 +975,21 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
                 self._gestisci_evento_protocollo(evento)
 
         self.label_potenza_f1.setText(
-            f"Potenza f1: {self.protocollo.ultima_potenza_f1:.6f} "
+            f"Potenza f1 (@{self.protocollo.goertzel_f1.frequenza_hz:.0f}Hz): "
+            f"{self.protocollo.ultima_potenza_f1:.6f} "
             f"({'ON' if self.protocollo.macchina_f1.attivo else 'OFF'})"
         )
         self.label_potenza_f2.setText(
-            f"Potenza f2: {self.protocollo.ultima_potenza_f2:.6f} "
+            f"Potenza f2 (@{self.protocollo.goertzel_f2.frequenza_hz:.0f}Hz): "
+            f"{self.protocollo.ultima_potenza_f2:.6f} "
             f"({'ON' if self.protocollo.macchina_f2.attivo else 'OFF'})"
         )
+        if self.protocollo.ultima_potenza_f1 > self.picco_f1:
+            self.picco_f1 = self.protocollo.ultima_potenza_f1
+            self.label_picco_f1.setText(f"picco {self.picco_f1:.6f}")
+        if self.protocollo.ultima_potenza_f2 > self.picco_f2:
+            self.picco_f2 = self.protocollo.ultima_potenza_f2
+            self.label_picco_f2.setText(f"picco {self.picco_f2:.6f}")
 
     def _gestisci_evento_protocollo(self, evento):
         """Il log v2 (lista card) mostra SOLO le chiusure: è l'unica
@@ -866,10 +1002,12 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
             log.info(f"⏱ {ora_str}  marcatore zero (durata {evento['durata_s']:.3f}s) → counter reset")
             self.label_counter.setText("Counter: 0")
             self._verifica_conteggio_ciclo(evento.get("conteggio_ciclo_precedente"))
+            self._verifica_ripetibilita_ciclo()
             return
 
         # evento["tipo"] == "slot"
         self.label_counter.setText(f"Counter: {evento['counter']}")
+        self.stato_ciclo_corrente[evento["counter"]] = evento["stato"]
         self._scrivi_log_slot({
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "counter": evento["counter"],
@@ -921,6 +1059,14 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.totale_chiusure += 1
         self.label_totale_chiusure.setText(f"{self.totale_chiusure} totali")
 
+    def cancella_log_ui(self):
+        """Svuota solo la QListWidget a schermo e il contatore totali:
+        il file eventi_f1_f2_log.jsonl non viene toccato, resta lo storico
+        completo su disco per analisi successive."""
+        self.lista_log.clear()
+        self.totale_chiusure = 0
+        self.label_totale_chiusure.setText("0 totali")
+
     def _verifica_conteggio_ciclo(self, conteggio_rilevato):
         """Confronto non bloccante tra interruttori attesi (campo utente) e
         quelli effettivamente contati nel ciclo appena concluso. Solo un
@@ -944,6 +1090,88 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
                 "font-weight: 700; padding: 8px; border-radius: 6px;"
             )
             log.warning(msg)
+
+    def _verifica_ripetibilita_ciclo(self):
+        """SOLO per test: nel banco di prova attuale switchState su Arduino
+        è fisso per tutta la sessione (randomizzato una sola volta al boot,
+        vedi trasmettitore.ino), quindi ogni ciclo dovrebbe chiudere
+        esattamente gli stessi interruttori del precedente. Il primo ciclo
+        completo osservato diventa il riferimento; i successivi vengono
+        confrontati slot per slot e le differenze segnalate (solo un avviso,
+        non blocca il rilevamento).
+
+        Un ciclo con un numero di slot diverso da "Interruttori attesi/ciclo"
+        è quasi certamente incompleto (pacchetti persi, marcatore di zero
+        scambiato per rumore, ecc.): non viene mai preso come riferimento, né
+        usato per il confronto, perché altrimenti il riferimento stesso (o il
+        confronto) sarebbe inaffidabile fin dall'inizio."""
+        ciclo = self.stato_ciclo_corrente
+        self.stato_ciclo_corrente = {}
+        if not ciclo:
+            return
+
+        atteso = self.spin_numero_atteso.value()
+        if atteso <= 0:
+            self.label_ripetibilita.setText("Imposta \"Interruttori attesi/ciclo\" per attivare la verifica")
+            self.label_ripetibilita.setStyleSheet(
+                "color: #9aa0a6; background-color: #2a2d31; font-size: 13px; "
+                "font-weight: 600; padding: 5px; border-radius: 6px;"
+            )
+            return
+
+        if len(ciclo) != atteso:
+            msg = f"Ciclo scartato per la verifica: {len(ciclo)} slot contati, {atteso} attesi"
+            log.warning(msg)
+            self.label_ripetibilita.setText(f"⚠ {msg}")
+            self.label_ripetibilita.setStyleSheet(
+                "color: #ffffff; background-color: #8a6d1a; font-size: 13px; "
+                "font-weight: 700; padding: 5px; border-radius: 6px;"
+            )
+            return
+
+        if self.ciclo_riferimento is None:
+            self.ciclo_riferimento = dict(ciclo)
+            self.label_ripetibilita.setText(f"✓ Riferimento catturato ({len(ciclo)} slot)")
+            self.label_ripetibilita.setStyleSheet(
+                "color: #10131a; background-color: #5eb1ff; font-size: 13px; "
+                "font-weight: 600; padding: 5px; border-radius: 6px;"
+            )
+            return
+
+        slot_comuni = sorted(set(ciclo) & set(self.ciclo_riferimento))
+        if not slot_comuni:
+            return
+        diversi = [k for k in slot_comuni if ciclo[k] != self.ciclo_riferimento[k]]
+
+        if not diversi:
+            msg = f"✓ Ripetibilità OK: {len(slot_comuni)}/{len(slot_comuni)} slot combaciano col riferimento"
+            self.label_ripetibilita.setText(msg)
+            self.label_ripetibilita.setStyleSheet(
+                "color: #10131a; background-color: #2ed573; font-size: 13px; "
+                "font-weight: 700; padding: 5px; border-radius: 6px;"
+            )
+        else:
+            elenco = ", ".join(str(k) for k in diversi[:10])
+            suffisso = "..." if len(diversi) > 10 else ""
+            msg = f"⚠ {len(diversi)}/{len(slot_comuni)} slot diversi dal riferimento (es. {elenco}{suffisso})"
+            self.label_ripetibilita.setText(msg)
+            self.label_ripetibilita.setStyleSheet(
+                "color: #ffffff; background-color: #d9455f; font-size: 13px; "
+                "font-weight: 700; padding: 5px; border-radius: 6px;"
+            )
+            log.warning(msg)
+
+    def azzera_riferimento_ripetibilita(self):
+        """Scarta il riferimento di ripetibilità: il prossimo ciclo completo
+        ne diventa uno nuovo (utile dopo un reset dell'Arduino, che
+        rirandomizza switchState[])."""
+        self.ciclo_riferimento = None
+        self.stato_ciclo_corrente = {}
+        self.label_ripetibilita.setText("In attesa del primo ciclo completo...")
+        self.label_ripetibilita.setStyleSheet(
+            "color: #9aa0a6; background-color: #2a2d31; font-size: 13px; "
+            "font-weight: 600; padding: 5px; border-radius: 6px;"
+        )
 
     def _scrivi_log_slot(self, record):
         try:

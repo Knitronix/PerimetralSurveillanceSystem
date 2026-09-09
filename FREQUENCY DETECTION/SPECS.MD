@@ -113,6 +113,34 @@ Nota su t0/t1 ridotti a 200/80 ms: con `TOLLERANZA_MS_DEFAULT = 50`, la fascia "
 
 ---
 
+## 5.1 Come ritarare le soglie da soli (senza dover richiedere aiuto)
+
+Le soglie (`SOGLIA_ON_F1/F2`, `SOGLIA_OFF_F1/F2`) vanno ricalcolate ogni volta che cambia qualcosa che altera il livello del segnale reale: fibra diversa, installazione diversa, frequenze f1/f2 diverse, accoppiamento diverso (banco di prova vs campo). Procedura, usando solo gli strumenti già in `main.py` e i flag di isolamento in `trasmettitore.ino`:
+
+**1. Misura il rumore puro** (nessun tono trasmesso):
+- In `trasmettitore.ino` metti `CANALE1_ABILITATO = false` e `CANALE2_ABILITATO = false`, riflasha.
+- In `main.py` premi "⟲ Azzera picchi", aspetta qualche secondo.
+- Leggi `picco f1` e `picco f2`: quello è il rumore di fondo per ciascuna frequenza.
+
+**2. Misura il segnale vero, un canale alla volta — e leggi SEMPRE entrambi i picchi, non solo quello che ti interessa** (per non farli sporcare a vicenda, e per scoprire se invece si sporcano davvero):
+- Per f1: `CANALE1_ABILITATO = true`, `CANALE2_ABILITATO = false`, riflasha, azzera picchi, aspetta almeno un ciclo intero, leggi **sia** `picco f1` (il segnale vero di f1) **sia** `picco f2` (quanto f1 sporca il filtro di f2 — cross-talk).
+- Per f2: `CANALE1_ABILITATO = false`, `CANALE2_ABILITATO = true`, riflasha, azzera picchi, aspetta almeno un ciclo intero (serve che capiti almeno uno slot "chiuso" per vedere il vero picco f2), leggi **sia** `picco f2` (segnale vero) **sia** `picco f1` (cross-talk di f2 su f1).
+- Rimetti entrambi i flag a `true` a fine test — sono solo per l'isolamento, non per l'uso normale.
+
+**3. Il "pavimento" da battere per ogni soglia è il PIÙ ALTO tra rumore puro (punto 1) e cross-talk dall'altro canale (punto 2)**, non solo il rumore. Esempio reale riscontrato: rumore puro di f2 ~0.000015, ma f1 (che è sempre acceso ad ogni slot) filtrato nel bin di f2 dava 0.0016 — un pavimento ~100x più alto del rumore, e oltre metà del segnale vero di f2 (0.003). Se il cross-talk è il pavimento dominante:
+- rapporto segnale/pavimento oltre ~10x → soglia ancora tranquilla da piazzare.
+- rapporto sotto ~3x → soglia intrinsecamente fragile: il problema non si risolve scegliendo il numero giusto, va cambiata la frequenza che sta facendo cross-talk (di solito la più debole delle due, o quella la cui armonica cade vicino all'altra) — riprova questa stessa procedura a 3 punti su un paio di frequenze alternative e tieni quella con il rapporto leakage/segnale più basso.
+
+**4. Calcola le soglie** rispetto al pavimento più alto trovato al punto 3 (non solo al rumore):
+- `SOGLIA_ON ≈ 20% del picco segnale`, ma mai sotto ~1.5-2x il pavimento
+- `SOGLIA_OFF` a metà strada tra pavimento e `SOGLIA_ON` (non necessariamente 65% fisso: se il margine è stretto, l'isteresi va compressa di conseguenza, non ignorata)
+
+**5. Applica i nuovi valori**: per una prova rapida bastano gli spinbox in "Parametri avanzati" (si applicano subito, non serve "Applica parametri protocollo" — quel bottone serve solo per f1/f2/t0/t1/tolleranza). Per farli diventare il default all'avvio, aggiorna le costanti `SOGLIA_ON_F1_DEFAULT`/`SOGLIA_OFF_F1_DEFAULT`/`SOGLIA_ON_F2_DEFAULT`/`SOGLIA_OFF_F2_DEFAULT` in cima a `main.py` (i valori attuali lì sono la fonte di verità, non duplicarli qui in questo documento per evitare che vadano fuori sincronia).
+
+**Promemoria importante:** le soglie tarate sul banco di prova (accoppiamento diretto/forte) NON sono valide per il campo (accoppiamento debole tramite terreno, vedi §5) — vanno rifatte da capo con questa stessa procedura ogni volta che si cambia contesto di misura.
+
+---
+
 ## 6. Prossimi passi
 
 ### 6.1 Delta t minimo discernibile dall'interferometro
