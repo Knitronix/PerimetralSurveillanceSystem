@@ -34,13 +34,23 @@ uint32_t inc1, inc2;
 const uint32_t SAMPLE_RATE = 40000; // Nyquist = 20kHz
 
 // --- Frequenze canale (Hz) ---
-const uint32_t FREQ1 = 1400;   // f1: clock/counter
-const uint32_t FREQ2 = 1000;  // f2: stato interruttore (deve combaciare con F2_HZ_DEFAULT in main.py)
+// AUTOGENERATO da aggiorna_config_ino.py a partire da config_condivisa.py -
+// non modificare questi due valori a mano: cambia F1_HZ/F2_HZ in
+// config_condivisa.py e rilancia "python aggiorna_config_ino.py" (dalla
+// cartella FREQUENCY DETECTION/), che li riscrive qui e in sweep_tempi.ino
+// (Arduino non riesce a includere un header con percorso relativo fuori
+// dalla cartella dello sketch, da qui l'esigenza di uno script che li
+// scriva direttamente invece di un #include condiviso). Scelte con lo
+// sweep a gradini di TEST ARMONICHE/ (vedi SPECS.MD §5.1/§6.2): le due con
+// segnale più forte, meno armoniche proprie e senza cross-talk misurato
+// tra loro, sotto il limite di banda del sistema (~5400Hz).
+const uint32_t FREQ1 = 4600;   // f1: clock/counter
+const uint32_t FREQ2 = 3200;  // f2: stato interruttore
 
 // --- Protocollo f1/f2 (SPECS.MD §2/§3): valori da tarare sperimentalmente ---
 const unsigned long T0_MS      = 200;  // durata marcatore di zero
-const unsigned long T1_MS      = 100;  // durata di uno slot
-const unsigned long GAP_MS     = 120;   // silenzio tra un simbolo e il successivo
+const unsigned long T1_MS      = 20;  // durata di uno slot
+const unsigned long GAP_MS     = 50;   // silenzio tra un simbolo e il successivo
 const uint8_t        NUM_SWITCH = 50; // numero di interruttori nel ciclo
 
 // Placeholder in RAM per test: sostituire con lettura hardware reale
@@ -62,7 +72,7 @@ volatile bool canale2_on = true;
 // testare "solo f1", "solo f2", poi entrambe insieme). Mettere a false per
 // silenziare completamente un canale a prescindere dal protocollo.
 const bool CANALE1_ABILITATO = true;
-const bool CANALE2_ABILITATO = false;
+const bool CANALE2_ABILITATO = true;
 
 // --- Controllo master via seriale (INVARIATO) ---
 volatile bool soundEnabled = false; // parte spento

@@ -34,6 +34,10 @@ Pattern riusati da `MLtoDL/0registratoreStalta.py` (senza modificarlo, resta la 
 
 **Verifica interruttori attesi (non bloccante):** campo `spin_numero_atteso` in cui l'operatore inserisce quanti interruttori si aspetta per ciclo (0 = verifica disattivata). A ogni marcatore di zero, il conteggio del ciclo appena concluso viene confrontato con questo valore; una discrepanza produce solo un avviso a schermo (`label_verifica_ciclo`) e un `log.warning` in console — nessuna eccezione, nessuna interruzione del rilevamento. Serve perché il sistema non ha un limite hardcoded al numero di interruttori (vedi §1 architettura): un singolo slot perso o mal classificato sfasa il counter di 1 per tutto il resto del ciclo, e questo avviso è il modo per accorgersene.
 
+**Altri controlli in UI:** "Azzera picchi" (max-hold su potenza f1/f2, per tarare le soglie a occhio, §5.1); card "Ripetibilità ciclo" (SOLO per test col ciclo Arduino fisso: confronta ogni ciclo completo con un riferimento catturato al primo, segnala slot diversi); bottone per svuotare la lista log a schermo senza toccare il file `.jsonl`.
+
+**Cartelle di supporto** (non toccano `main.py`/`trasmettitore.ino` se non per applicarne i risultati): `TEST ARMONICHE/` e `TEST TEMPI/` (vedi §6), `config_condivisa.py`/`aggiorna_config_ino.py` (vedi §4/§5).
+
 ---
 
 ## 2. Protocollo logico f1 / f2
@@ -82,34 +86,29 @@ Pattern riusati da `MLtoDL/0registratoreStalta.py` (senza modificarlo, resta la 
 
 ## 4. Codice Arduino (trasmettitore)
 
-File: `trasmettitore_f1_f2.ino` (vedi file separato).
+File: `trasmettitore/trasmettitore.ino`.
 
-Genera f1 e f2 come due toni **realmente simultanei** usando due timer hardware indipendenti (Timer1 su pin 9 per f1, Timer2 su pin 11 per f2), non `tone()` standard — la libreria `tone()` di Arduino usa un solo timer condiviso e non garantisce due frequenze simultanee su due pin diversi.
+Genera f1 e f2 come due toni **realmente simultanei sullo stesso pin** (12, OC1B) tramite sintesi DDS (tabella seno a 256 valori, phase accumulator) sommata e mandata in PWM (Timer1 Fast PWM 8 bit, portante 62.5kHz; Timer2 CTC come clock del DDS a `SAMPLE_RATE=40000`Hz). Non usa due timer/pin separati come in una versione precedente di questo documento: un solo pin, i due toni sommati e poi filtrati con un RC passa-basso.
 
 Comportamento:
-- invia marcatore di zero: f1 per `T0_MS`, poi silenzio `GAP_MS`
+- invia marcatore di zero: f1 per `T0_MS`, poi silenzio (nessun `GAP_MS` esplicito dopo il marcatore in questa versione, vedi codice)
 - per ogni interruttore da 1 a `NUM_SWITCH`: f1 per `T1_MS`; se l'interruttore è chiuso, f2 parte in sovrapposizione per lo stesso `T1_MS`; poi silenzio `GAP_MS`
 - ripete da capo
 
-La lettura reale degli interruttori (funzione `readSwitch`) è lasciata come placeholder: va collegata all'hardware reale (shift register / multiplexer per 100 ingressi), non è nello scope di questo file.
+`CANALE1_ABILITATO`/`CANALE2_ABILITATO` permettono di silenziare un canale intero per isolarlo nei test (usati dalla procedura di taratura soglie, §5.1, e dagli sweep di caratterizzazione, §6). `SIMULA_INTERRUTTORI_CASUALI` genera stati random per test senza hardware reale collegato. La lettura reale degli interruttori (funzione `readSwitch`) resta un placeholder da collegare all'hardware reale (shift register/multiplexer).
+
+**Frequenze e timing non sono più costanti locali indipendenti**: vivono in `config_condivisa.py` (letto direttamente da `main.py`) e vengono scritte dentro `trasmettitore.ino` da `python aggiorna_config_ino.py` — un header C++ condiviso non ha funzionato (il toolchain Arduino non segue `#include` con percorsi relativi fuori dalla cartella dello sketch). Flusso per cambiare F1/F2/T0/T1/GAP: modifica `config_condivisa.py` → `python aggiorna_config_ino.py` → riflasha. Le soglie restano fuori da questo meccanismo (vedi §5.1).
 
 ---
 
-## 5. Parametri attuali (tarati sul canale reale, punto di partenza)
+## 5. Parametri attuali
 
-Misurati sul canale motorino/vibrazione → terreno → fibra → interferometro:
-- rumore di fondo: potenza Goertzel normalizzata < 0.00005
-- f1 (600 Hz): tipicamente 0.0002–0.0003
-- f2 (1500 Hz): tipicamente 0.0014–0.0022 (sistematicamente più forte di f1, ~7x — vedi §6.2)
+Fonte di verità: `config_condivisa.py` per frequenze/timing, cima di `main.py` per le soglie — non duplicare i valori qui, per non andare fuori sincronia (già successo una volta: `T0_MS` a 180 su Arduino contro 200 atteso da `main.py`, corretto con `aggiorna_config_ino.py`).
 
-Default correnti in `main.py`:
-- `F1_HZ_DEFAULT = 600`, `F2_HZ_DEFAULT = 1500`
-- `T0_MS_DEFAULT = 200`, `T1_MS_DEFAULT = 80`, `TOLLERANZA_MS_DEFAULT = 50`
-- soglie: ON/OFF f1 = 0.00015/0.00010, ON/OFF f2 = 0.00080/0.00050
-
-Funzionano sul setup di test attuale, ma **non sono costanti definitive**: frequenze e soglie sono ancora punti di partenza, oggetto dei prossimi step (§6).
-
-Nota su t0/t1 ridotti a 200/80 ms: con `TOLLERANZA_MS_DEFAULT = 50`, la fascia "slot valido" copre [30,130] ms e quella "marcatore zero" [150,250] ms — non si sovrappongono (gap 20 ms), ma 50 ms di tolleranza è il 62% della durata nominale di `t1` (80 ms), più largo in proporzione di quanto lo fosse con t1=150ms. Se in campo capitano falsi "slot" generati da rumore prolungato, stringere la tolleranza è il primo parametro da rivedere.
+- **Frequenze** (`F1_HZ`/`F2_HZ`): scelte con lo sweep di §6.2 — 4600Hz/3200Hz, sotto il limite di banda del sistema (~5400Hz), senza cross-talk misurabile tra loro.
+- **Timing** (`T0_MS`/`T1_MS`/`GAP_MS`): validati con lo sweep di §6.1 — T0=200ms (marcatore), T1=20ms (uno slot, il minimo teorico = un blocco Goertzel), GAP=50ms.
+- **Tolleranza** (`TOLLERANZA_MS_DEFAULT` in `main.py`, non nel config condiviso): 10ms — stretta apposta perché T1 è già al minimo rappresentabile (vedi commento in `main.py`).
+- **Soglie**: derivate dai picchi misurati durante gli sweep (procedura §5.1), non da un nuovo test dedicato a 3 punti. Restano **assolute**: da rivalidare a ogni cambio di fibra/installazione/accoppiamento (banco di prova vs campo).
 
 ---
 
@@ -141,27 +140,20 @@ Le soglie (`SOGLIA_ON_F1/F2`, `SOGLIA_OFF_F1/F2`) vanno ricalcolate ogni volta c
 
 ---
 
-## 6. Prossimi passi
+## 6. Caratterizzazione del canale (risolto in laboratorio)
 
-### 6.1 Delta t minimo discernibile dall'interferometro
-Capire qual è la separazione temporale minima tra due eventi/impulsi che il sistema (fibra + interferometro + demodulazione) riesce ancora a distinguere come due eventi separati, invece di leggerli come un unico impulso prolungato.
+Entrambi i punti sotto erano "prossimi passi" aperti, ora risolti con strumenti dedicati in cartelle a parte (non toccano `main.py`/`trasmettitore.ino` se non per il risultato finale già applicato in §5).
 
-Rilevante per: scegliere `T1_MS`/`T0_MS`/tolleranza al minimo compatibile con la fisica del sistema (cicli più corti → più interruttori multiplexabili in un dato tempo di ciclo), e per sapere qual è il limite fisico oltre il quale comprimere ulteriormente il protocollo non ha senso.
+### 6.1 Delta t minimo — `TEST TEMPI/`
+`sweep_tempi/sweep_tempi.ino` genera un tono a durata decrescente in due fasi (ON più corto a gap fisso largo, poi gap più corto a ON fisso sicuro); `analizza_tempi_minimi.py` rigioca sui dati la stessa macchina a stati a isteresi di `main.py` e conta le transizioni rilevate contro quelle attese, per trovare il limite reale senza bisogno di leggere uno spettrogramma a occhio. Risultato applicato: T1=20ms (il minimo teorico, un blocco Goertzel), GAP=50ms.
 
-Da misurare sperimentalmente: sequenza di impulsi a distanza temporale decrescente, osservando a che punto il segnale grezzo (o il rilevatore) smette di separarli in due eventi distinti.
-
-### 6.2 Risposta in frequenza del sistema completo
-Capire se ci sono frequenze che il sistema "sente meglio" — combinazione di quanto bene l'amplificatore/trasduttore la produce e quanto bene l'interferometro la percepisce — per scegliere f1/f2 nella banda migliore invece dei placeholder attuali (600/1500 Hz).
-
-Il fatto che f2 (1500 Hz) misuri sistematicamente ~7x più potenza di f1 (600 Hz) a parità di condizioni (vedi §5) è già un primo indizio che la risposta non è piatta in frequenza — da approfondire con un test sistematico invece che dedurlo da due soli punti.
-
-Punto di partenza: si può riusare/adattare `CONFRONTO FIBRE/3_analizza_sweep.py` (già esistente, fa confronto fibre banda per banda con segnale sweep e cross-correlazione) per misurare la risposta in frequenza del canale intero, invece che il confronto tra fibre diverse.
+### 6.2 Risposta in frequenza — `TEST ARMONICHE/`
+`sweep_gradini/sweep_gradini.ino` spazza un tono a gradini di frequenza (200-6000Hz); `analizza_armoniche_sweep.py` fa FFT per gradino e cerca automaticamente pattern di cross-talk (armoniche, intermodulazione a offset fisso, risonanze assolute). Risultati: il sistema smette di rispondere sopra ~5400Hz; **4600Hz/3200Hz** sono risultate le due frequenze con segnale più forte, meno armoniche proprie e senza cross-talk misurabile tra loro (applicate in §5).
 
 ---
 
 ## 7. Aperti / da decidere
 
 - valore reale di `NUM_SWITCH` da usare nei test (fino a 100)
-- durata del `GAP_MS` tra slot, da fissare e allineare tra Arduino e rilevatore
-- tolleranze reali su t0/t1 da validare con dati di campo, non solo in laboratorio (collegato a §6.1)
-- frequenze esatte f1/f2 da fissare in base ai risultati di §6.2, non più ai placeholder attuali
+- tolleranze t0/t1 validate finora solo in laboratorio (banco di prova): da riverificare con dati di campo, dove il canale è più debole (motorino/vibrazione → terreno → fibra, non l'accoppiamento diretto del banco)
+- soglie da §5.1 derivate dagli sweep di caratterizzazione, non da un test a 3 punti dedicato con protocollo f1/f2 completo attivo — da confermare con "Azzera picchi" dal vivo prima del pretest in campo

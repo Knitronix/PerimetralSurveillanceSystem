@@ -2,8 +2,9 @@
 analizza_armoniche_sweep.py
 ----------------------------
 Analisi automatica delle armoniche/spurie, pensata per lavorare insieme a
-`trasmettitore/sweep_gradini.ino` (SOLO quello sketch, non trasmettitore.ino
-- qui serve un tono singolo pulito a gradini, non il protocollo f1/f2).
+`sweep_gradini/sweep_gradini.ino` (nella stessa cartella TEST ARMONICHE/ -
+SOLO quello sketch, non ../trasmettitore/trasmettitore.ino: qui serve un
+tono singolo pulito a gradini, non il protocollo f1/f2).
 
 Non serve guardare lo spettrogramma a occhio: questo script riceve lo stesso
 stream UDP di main.py (24kHz, pacchetti da 254 campioni int16, porta 12345),

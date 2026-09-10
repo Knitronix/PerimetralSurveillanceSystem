@@ -48,6 +48,8 @@ from dataclasses import dataclass
 from PySide6 import QtCore, QtWidgets
 import pyqtgraph as pg
 
+import config_condivisa
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -88,37 +90,61 @@ INTERVALLO_TIMER_SPETTRO_MS = int(1000 / FPS_SPETTROGRAMMA)
 
 # --- Protocollo f1/f2 (SPECS.MD §2/§3): valori da tarare, aggiornati sul
 # canale reale (vedi nota in cima al file) ---
-F1_HZ_DEFAULT = 2500.0
-F2_HZ_DEFAULT = 1000.0
-T0_MS_DEFAULT = 200.0      # marcatore di zero
-T1_MS_DEFAULT = 100.0      # durata di uno slot
-TOLLERANZA_MS_DEFAULT = 50.0
-# Blocco Goertzel: 20ms -> 5 blocchi/slot t1, 10 blocchi/marcatore t0. Con
-# t1=100ms la tolleranza di 50ms copre [50,150]ms e t0=200ms copre
-# [150,250]ms: le due fasce si toccano esattamente a 150ms, ma quel valore
-# non è mai raggiungibile (le durate misurate sono multipli di 20ms, 150 non
-# lo è), quindi restano di fatto separate — se in pratica capitano falsi
-# "slot"/"zero" da rumore prolungato, è il primo parametro da stringere.
+# F1_HZ/F2_HZ vengono da config_condivisa.py, unica fonte di verità lato
+# Python: cambiale lì, non qui. Lato Arduino non è un vero #include condi-
+# viso (il toolchain Arduino non segue percorsi relativi fuori dalla
+# cartella dello sketch): trasmettitore.ino ha le sue costanti FREQ1/FREQ2
+# come valori letterali, tenute allineate da aggiorna_config_ino.py (lancialo
+# dopo aver cambiato questo file, poi riflasha).
+# Scelte con lo sweep a gradini di TEST ARMONICHE/ (vedi SPECS.MD §5.1/§6.2):
+# tra le frequenze testate (200-6000Hz, oltre i 5400Hz il sistema smette di
+# rispondere) sono le due con segnale più forte, meno armoniche proprie
+# (rapporto spurie/fondamentale ~1.0-1.1) e zero energia spuria misurata
+# dell'una vicino alla frequenza dell'altra, in nessuna direzione.
+F1_HZ_DEFAULT = config_condivisa.F1_HZ
+F2_HZ_DEFAULT = config_condivisa.F2_HZ
+T0_MS_DEFAULT = config_condivisa.T0_MS      # marcatore di zero
+T1_MS_DEFAULT = config_condivisa.T1_MS      # durata di uno slot
+# Tolleranza stretta a 10ms (era 50ms quando t1 era 100/40ms): con t1=20ms
+# uguale esattamente a un blocco Goertzel (BLOCCO_GOERTZEL_MS=20 sotto), una
+# tolleranza di 50ms accetterebbe come "slot valido" anche una durata di 40
+# o 60ms (2-3 blocchi, il doppio/triplo del previsto) - cioè non farebbe
+# più da filtro anti-rumore, quasi ogni impulso più lungo del previsto
+# passerebbe comunque come slot invece di essere scartato come rumore. Con
+# tolleranza=10ms la fascia "slot" copre solo [10,30]ms: dato che le durate
+# misurate sono multipli di 20ms, l'unico valore che ci cade dentro è
+# esattamente 20ms - un vero controllo, non un pass-through.
+TOLLERANZA_MS_DEFAULT = config_condivisa.TOLLERANZA_MS
+# Blocco Goertzel: 20ms -> t1=20ms è ESATTAMENTE un blocco (il minimo
+# teorico rappresentabile), t0=200ms sono 10 blocchi. Con tolleranza=10ms
+# la fascia "slot" copre [10,30]ms (solo 20ms quantizzato ci cade dentro) e
+# quella "marcatore zero" [190,210]ms (solo 200ms): separate, nessuna
+# sovrapposizione. Girare a questa scala è il limite teorico del sistema:
+# verificare con TEST TEMPI/ (stessa frequenza/soglie) che il canale regga
+# davvero un ON così corto e un gap di 50ms prima di fidarsene sul campo -
+# se in pratica capitano falsi "slot"/"zero" da rumore prolungato, la
+# tolleranza è già al minimo sensato, il problema è a monte (soglie o
+# durata stessa, non più questo parametro).
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 # Soglie sulla potenza Goertzel normalizzata (0..1 = piena scala int16).
-# Ritarate con la procedura a 3 punti di SPECS.MD §5.1 (rumore puro / solo
-# f1 / solo f2, canali isolati via CANALE1_ABILITATO/CANALE2_ABILITATO in
-# trasmettitore.ino): rumore puro f1=0.000004, f2=0.000015; segnale vero
-# f1=0.0045, f2=0.003; MA c'è cross-talk asimmetrico tra i due filtri
-# Goertzel: f2 nel filtro di f1 = 0.0001 (trascurabile, 2% del segnale f1),
-# f1 nel filtro di f2 = 0.0016 (pesante, 53% del segnale f2 - f1 è sempre
-# acceso ad ogni slot, quindi questo leakage è presente in continuazione).
-# Per f1 il "pavimento" da battere resta il rumore/leakage minori (0.0001):
-# soglie con ampio margine sopra. Per f2 il vero limite non è il rumore ma
-# il leakage di f1 (0.0016): la soglia è quindi tirata molto più vicina al
-# segnale (0.003) di quanto sarebbe se il problema fosse solo rumore, e
-# resta fragile - la causa va risolta scegliendo una f2 meno contaminata
-# dalle armoniche di f1 (vedi SPECS.MD §5.1/§6.2), non solo con la soglia.
-SOGLIA_ON_F1_DEFAULT = 0.0010
-SOGLIA_OFF_F1_DEFAULT = 0.0006
-SOGLIA_ON_F2_DEFAULT = 0.0024
-SOGLIA_OFF_F2_DEFAULT = 0.0019
+# Frequenze cambiate a 4600/3200Hz (vedi F1_HZ_DEFAULT/F2_HZ_DEFAULT sopra),
+# scelte proprio per non avere più il cross-talk pesante che c'era con la
+# vecchia coppia 2500/1000Hz. Soglie derivate dai dati dello sweep a gradini
+# di TEST ARMONICHE/ (non da un nuovo test a 3 punti dedicato - lo sweep dà
+# già l'equivalente di "solo f1"/"solo f2" a queste frequenze esatte):
+# forza segnale f1(4600Hz)=0.0365, f2(3200Hz)=0.0278, e nessuna spuria
+# rilevata dell'una vicino all'altra (sotto l'1% della propria fondamentale,
+# quindi pavimento cross-talk sotto ~0.0003-0.0004 per entrambe, contro un
+# rumore puro di fondo storicamente ~0.000004 - margine ampio su entrambi i
+# fronti). ON messa al 20% del segnale, OFF al 65% della ON, come da
+# SPECS.MD §5.1. Da confermare con "Azzera picchi" al primo giro live prima
+# di fidarsene sul campo - questi numeri vengono da un banco di sweep a tono
+# singolo, non da una misura diretta col protocollo f1/f2 completo attivo.
+SOGLIA_ON_F1_DEFAULT = 0.0070
+SOGLIA_OFF_F1_DEFAULT = 0.0045
+SOGLIA_ON_F2_DEFAULT = 0.0055
+SOGLIA_OFF_F2_DEFAULT = 0.0036
 
 FILE_LOG_SLOT = "eventi_f1_f2_log.jsonl"
 MAX_RIGHE_LOG = 300
