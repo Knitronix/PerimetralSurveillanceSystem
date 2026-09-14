@@ -77,7 +77,7 @@ def main():
     print(f"Aggiornato {FILE_TRASMETTITORE}:")
     for _tipo_cpp, nome, valore in da_scrivere:
         print(f"  {nome} = {int(valore)}")
-    print("Ricorda di riflashare lo sketch sull'Arduino perché il cambiamento abbia effetto.")
+    print("Ricorda di riflashare trasmettitore.ino sull'Arduino perché il cambiamento abbia effetto.")
 
 
 if __name__ == "__main__":

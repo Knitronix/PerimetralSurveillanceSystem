@@ -5250,3 +5250,1818 @@
 {"timestamp": "2026-09-10T14:51:41", "counter": 7, "stato": "aperto", "durata_s": 0.1}
 {"timestamp": "2026-09-10T14:51:41", "counter": 8, "stato": "aperto", "durata_s": 0.12}
 {"timestamp": "2026-09-10T15:50:45", "counter": 9, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-10T16:50:24", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:29", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:30", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:31", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 40, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:32", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 44, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:33", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:34", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:35", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 40, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:36", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 44, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:37", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:38", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:39", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 39, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:40", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:41", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:42", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 29, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:43", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:44", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:45", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:46", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 27, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:47", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:48", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:49", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:50", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 40, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:51", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:52", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:53", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:54", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 37, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:55", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:56", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:57", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:58", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 38, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:51:59", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:00", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:01", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:02", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 37, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:03", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:04", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:05", "counter": 28, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:06", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:07", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:08", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 29, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:09", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:10", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:11", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:12", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 24, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:13", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:14", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:15", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:16", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:17", "counter": 37, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:18", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:19", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:20", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 27, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 33, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:21", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:22", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:23", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 26, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:24", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:25", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 8, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:26", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 10, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:27", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:28", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:28", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T16:52:28", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:05:20", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:05:43", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:07:39", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:37", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:38", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:38", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:38", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:38", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:38", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:39", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 13, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:40", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 33, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:41", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:42", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:42", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:42", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:42", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:42", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:42", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:43", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 12, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:44", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 32, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:45", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:46", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:46", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:46", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:46", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:46", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:47", "counter": 12, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:48", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 31, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:49", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:50", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:50", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:50", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:50", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:50", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:50", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 15, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:51", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:52", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:53", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:53", "counter": 32, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:53", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:53", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:53", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:53", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:54", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 15, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:55", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:56", "counter": 30, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:57", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:57", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:57", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:57", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:57", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 6, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:58", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 18, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:34:59", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 32, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:00", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:01", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:01", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:01", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:01", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:01", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:01", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:02", "counter": 18, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:03", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:04", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:04", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:04", "counter": 28, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:04", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:04", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:04", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 6, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:05", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 18, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:06", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:07", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:08", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:08", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:08", "counter": 37, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:08", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:08", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:08", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 5, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:09", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 15, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:10", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:11", "counter": 28, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:12", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:12", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-10T17:35:12", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:50", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:50", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:50", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:51", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:52", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": null, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:04:52", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:52", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:52", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:52", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:52", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:53", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:54", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:55", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:55", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:55", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:55", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:55", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 32, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:04:55", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:56", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:56", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:56", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:56", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:56", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:56", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:57", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:58", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:59", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:59", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:59", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:59", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 33, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:04:59", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:04:59", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:00", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:01", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:02", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 33, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:03", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:04", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:05", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:06", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:06", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:06", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:06", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:06", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:06", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 33, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:07", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:08", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:09", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:10", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:10", "tipo": "slot", "counter": 29, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:10", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:10", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:10", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:10", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 32, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:11", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:11", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:11", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:11", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 9, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:12", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:13", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:13", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:13", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:13", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:13", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:13", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:14", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:14", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:14", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 20, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:14", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:14", "tipo": "slot", "counter": 2, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 4, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 6, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:15", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 18, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:16", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:17", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:17", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:17", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:17", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:17", "tipo": "slot", "counter": 29, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:17", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:18", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:18", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:18", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 32, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:18", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:18", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:18", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:19", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 18, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:20", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:21", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 34, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:22", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:23", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:24", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:25", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 41, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:26", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:27", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:28", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 43, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:29", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:30", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:31", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:32", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:32", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:32", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 35, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:33", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:34", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:35", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:36", "tipo": "slot", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 44, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:37", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:38", "tipo": "slot", "counter": 22, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:39", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:40", "tipo": "slot", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 43, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 7, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:41", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:42", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:43", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 46, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:44", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:45", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:46", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:47", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 42, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:48", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:49", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:50", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:51", "tipo": "slot", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 45, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 46, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 46, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:52", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:53", "tipo": "slot", "counter": 22, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:54", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:55", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 41, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:56", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 23, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:57", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:58", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 43, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 44, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 44, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:05:59", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 7, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:00", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 20, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:01", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 33, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 34, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 35, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:02", "tipo": "slot", "counter": 36, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 37, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 38, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 39, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 40, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 41, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 42, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 42, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 4, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:03", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 6, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 7, "stato": "chiuso", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 8, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 9, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 10, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 11, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 12, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "rumore", "durata_s": 0.04}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 13, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 14, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:04", "tipo": "slot", "counter": 15, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 16, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 17, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 18, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 19, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 20, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 21, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 22, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 23, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 24, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 25, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 26, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:05", "tipo": "slot", "counter": 27, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:06", "tipo": "slot", "counter": 28, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:06", "tipo": "slot", "counter": 29, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:06", "tipo": "slot", "counter": 30, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:06", "tipo": "slot", "counter": 31, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T12:06:06", "tipo": "slot", "counter": 32, "stato": "aperto", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:55:20", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:55:20", "tipo": "slot", "counter": 1, "stato": "chiuso", "durata_s": 0.04}
+{"timestamp": "2026-09-11T16:57:08", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:57:10", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:57:10", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:57:13", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.04}
+{"timestamp": "2026-09-11T16:57:13", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:57:14", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:57:15", "tipo": "slot", "counter": 3, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-11T16:57:15", "tipo": "slot", "counter": 4, "stato": "chiuso", "durata_s": 0.06}
+{"timestamp": "2026-09-11T16:57:15", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-11T16:57:15", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.04}
+{"timestamp": "2026-09-11T16:57:16", "tipo": "rumore", "durata_s": 0.02}

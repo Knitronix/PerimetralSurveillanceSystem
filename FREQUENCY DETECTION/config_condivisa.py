@@ -37,12 +37,12 @@ F2_HZ = 3200.0
 # slot, silenzio tra un simbolo e il successivo. Validati con lo sweep di
 # TEST TEMPI/ prima di essere fissati qui.
 T0_MS = 200.0
-T1_MS = 20.0
-GAP_MS = 50.0
+T1_MS = 50.0
+GAP_MS = 70.0
 
 # Tolleranza di classificazione delle durate in main.py: quanto vicino a
 # T0_MS/T1_MS deve cadere una durata misurata per contare come marcatore/
 # slot valido invece che rumore. Con T1_MS=20ms (un solo blocco Goertzel da
 # 20ms, il minimo rappresentabile) va tenuta stretta - vedi il commento
 # dettagliato accanto a TOLLERANZA_MS_DEFAULT in main.py.
-TOLLERANZA_MS = 10.0
+TOLLERANZA_MS = 20.0

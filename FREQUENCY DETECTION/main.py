@@ -394,7 +394,9 @@ class RilevatoreProtocolloF1F2:
 
     def elabora_blocco(self, blocco):
         """Processa un blocco di BLOCCO_GOERTZEL_CAMPIONI campioni. Ritorna
-        la lista di eventi generati (marcatori di zero e slot validi)."""
+        la lista di eventi generati (marcatori di zero, slot validi e durate
+        scartate come rumore - queste ultime solo per logging diagnostico,
+        non influenzano counter/stato)."""
         self.ultima_potenza_f1 = self.goertzel_f1.potenza(blocco)
         self.ultima_potenza_f2 = self.goertzel_f2.potenza(blocco)
 
@@ -433,7 +435,17 @@ class RilevatoreProtocolloF1F2:
                     "stato": stato,
                     "durata_s": durata_f1,
                 })
-            # "rumore": scartato senza generare eventi (SPECS.MD §3 punto 4).
+            else:
+                # "rumore": SPECS.MD §3 punto 4 dice di scartarlo, e qui non
+                # tocca ne' counter ne' stato - resta cosi'. L'evento viene
+                # comunque emesso (solo per logging diagnostico, vedi
+                # _gestisci_evento_protocollo) per poter vedere quali durate
+                # vengono scartate quando un ciclo si chiude prima del
+                # previsto, invece di scomparire senza lasciare traccia.
+                eventi.append({
+                    "tipo": "rumore",
+                    "durata_s": durata_f1,
+                })
 
         return eventi
 
@@ -1025,10 +1037,35 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         ora_str = time.strftime("%H:%M:%S")
 
         if evento["tipo"] == "zero":
-            log.info(f"⏱ {ora_str}  marcatore zero (durata {evento['durata_s']:.3f}s) → counter reset")
+            s = self.worker.stats
+            log.info(
+                f"⏱ {ora_str}  marcatore zero (durata {evento['durata_s']:.3f}s) → counter reset "
+                f"[rete: scartati={s.pacchetti_scartati} raffiche_anomale={s.anomalie_raffica}]"
+            )
+            self._scrivi_log_slot({
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "tipo": "zero",
+                "durata_s": round(evento["durata_s"], 3),
+                "conteggio_ciclo_precedente": evento.get("conteggio_ciclo_precedente"),
+                "pacchetti_scartati": s.pacchetti_scartati,
+                "anomalie_raffica": s.anomalie_raffica,
+            })
             self.label_counter.setText("Counter: 0")
             self._verifica_conteggio_ciclo(evento.get("conteggio_ciclo_precedente"))
             self._verifica_ripetibilita_ciclo()
+            return
+
+        if evento["tipo"] == "rumore":
+            # Diagnostico (vedi elabora_blocco): non tocca counter/stato, solo
+            # visibilita' su cosa viene scartato. Loggato anche su file
+            # perche' capita durante test lunghi non seguiti a schermo in
+            # tempo reale.
+            log.info(f"✂ {ora_str}  durata {evento['durata_s']:.3f}s scartata come rumore (ne' slot ne' marcatore)")
+            self._scrivi_log_slot({
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "tipo": "rumore",
+                "durata_s": round(evento["durata_s"], 3),
+            })
             return
 
         # evento["tipo"] == "slot"
@@ -1036,6 +1073,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.stato_ciclo_corrente[evento["counter"]] = evento["stato"]
         self._scrivi_log_slot({
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "tipo": "slot",
             "counter": evento["counter"],
             "stato": evento["stato"],
             "durata_s": round(evento["durata_s"], 3),

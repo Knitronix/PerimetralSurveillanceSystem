@@ -49,8 +49,8 @@ const uint32_t FREQ2 = 3200;  // f2: stato interruttore
 
 // --- Protocollo f1/f2 (SPECS.MD §2/§3): valori da tarare sperimentalmente ---
 const unsigned long T0_MS      = 200;  // durata marcatore di zero
-const unsigned long T1_MS      = 20;  // durata di uno slot
-const unsigned long GAP_MS     = 50;   // silenzio tra un simbolo e il successivo
+const unsigned long T1_MS      = 50;  // durata di uno slot
+const unsigned long GAP_MS     = 70;   // silenzio tra un simbolo e il successivo
 const uint8_t        NUM_SWITCH = 50; // numero di interruttori nel ciclo
 
 // Placeholder in RAM per test: sostituire con lettura hardware reale

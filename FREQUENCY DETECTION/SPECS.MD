@@ -8,7 +8,7 @@
 
 Si è ripartiti da zero rispetto alla vecchia pipeline MLtoDL (dataset recording, feature extraction, training, classificazione): qui non c'è registrazione, non c'è training, non c'è classificazione.
 
-**Milestone raggiunta:** il metodo di riconoscimento a doppia frequenza (Goertzel + isteresi + macchina a stati sulla durata, vedi §3) **funziona sul canale reale** (motorino/vibrazione → terreno → fibra → interferometro), dopo la taratura delle soglie sui livelli di segnale effettivamente misurati. L'approccio è validato e non più in discussione — i prossimi step (§6) sono di caratterizzazione fisica del canale, non di revisione del metodo.
+**Milestone raggiunta:** il metodo di riconoscimento a doppia frequenza (Goertzel + isteresi + macchina a stati sulla durata, vedi §3) **funziona sul canale reale** (motorino/vibrazione → terreno → fibra → interferometro), dopo la taratura delle soglie sui livelli di segnale effettivamente misurati. L'approccio (Goertzel + isteresi + macchina a stati) resta valido — **ma i valori di timing attuali (T1=20ms/GAP=50ms) NON sono validati per il protocollo completo**, vedi §6.1 e §7: un ciclo reale da 50 interruttori si chiude regolarmente in anticipo (intorno al 41°-45° slot), segno di un marcatore di zero falso a metà ciclo. Prima di fidarsi ancora del metodo sul campo va richiuso questo punto.
 
 ---
 
@@ -144,8 +144,10 @@ Le soglie (`SOGLIA_ON_F1/F2`, `SOGLIA_OFF_F1/F2`) vanno ricalcolate ogni volta c
 
 Entrambi i punti sotto erano "prossimi passi" aperti, ora risolti con strumenti dedicati in cartelle a parte (non toccano `main.py`/`trasmettitore.ino` se non per il risultato finale già applicato in §5).
 
-### 6.1 Delta t minimo — `TEST TEMPI/`
-`sweep_tempi/sweep_tempi.ino` genera un tono a durata decrescente in due fasi (ON più corto a gap fisso largo, poi gap più corto a ON fisso sicuro); `analizza_tempi_minimi.py` rigioca sui dati la stessa macchina a stati a isteresi di `main.py` e conta le transizioni rilevate contro quelle attese, per trovare il limite reale senza bisogno di leggere uno spettrogramma a occhio. Risultato applicato: T1=20ms (il minimo teorico, un blocco Goertzel), GAP=50ms.
+### 6.1 Delta t minimo — `TEST TEMPI/` — ⚠️ risultato NON valido per la combinazione usata in produzione, vedi sotto
+`sweep_tempi/sweep_tempi.ino` genera un tono a durata decrescente in due fasi (ON più corto a gap fisso largo, poi gap più corto a ON fisso sicuro); `analizza_tempi_minimi.py` rigioca sui dati la stessa macchina a stati a isteresi di `main.py` e conta le transizioni rilevate contro quelle attese, per trovare il limite reale senza bisogno di leggere uno spettrogramma a occhio.
+
+**Limite del metodo, scoperto dopo (bagno di umiltà, non toccare finché non si rifà il test):** le due fasi dello sweep variano UN parametro alla volta tenendo l'altro largo — fase A riduce l'ON fino a 20ms ma con GAP fisso a 300ms, fase B riduce il GAP fino a 20ms ma con ON fisso a 80ms. Il valore poi "fissato" in produzione (T1=20ms **e** GAP=50ms insieme) non è mai stato la combinazione testata: ognuno dei due era ok solo perché l'altro aveva margine enorme, non perché la coppia stretta regge. Lo sweep, inoltre, usa solo f1 in isolamento — non riproduce la sovrapposizione reale con f2 né l'intero ciclo a 50 interruttori. Risultato: su un ciclo reale di produzione il conteggio si interrompe in anticipo regolarmente (vedi §0, §7) — non un caso isolato di rumore, ma la conseguenza diretta di questo buco di validazione. Prima di fidarsi di nuovi valori T1/GAP serve un test che sweepa la COPPIA (T1, GAP) insieme, con f1+f2 sovrapposti come nel protocollo vero, non i due assi separatamente.
 
 ### 6.2 Risposta in frequenza — `TEST ARMONICHE/`
 `sweep_gradini/sweep_gradini.ino` spazza un tono a gradini di frequenza (200-6000Hz); `analizza_armoniche_sweep.py` fa FFT per gradino e cerca automaticamente pattern di cross-talk (armoniche, intermodulazione a offset fisso, risonanze assolute). Risultati: il sistema smette di rispondere sopra ~5400Hz; **4600Hz/3200Hz** sono risultate le due frequenze con segnale più forte, meno armoniche proprie e senza cross-talk misurabile tra loro (applicate in §5).
@@ -154,6 +156,7 @@ Entrambi i punti sotto erano "prossimi passi" aperti, ora risolti con strumenti 
 
 ## 7. Aperti / da decidere
 
+- **BLOCCANTE, priorità corrente:** T1=20ms/GAP=50ms non è validato per il protocollo completo (vedi §6.1) — su un ciclo reale a 50 interruttori il counter si resetta in anticipo (intorno al 41°-45° slot, sempre senza buchi interni prima di lì → non è rumore sparso, è un marcatore di zero falso a metà ciclo). Serve un test che sweepa T1 e GAP INSIEME (non uno alla volta) con f1+f2 sovrapposti come in produzione, prima di rimettere mano ai valori o al firmware. Diagnostica aggiunta in `main.py` (log di marcatori zero e durate scartate come rumore, con snapshot statistiche di rete) per il prossimo giro di test dal vivo.
 - valore reale di `NUM_SWITCH` da usare nei test (fino a 100)
 - tolleranze t0/t1 validate finora solo in laboratorio (banco di prova): da riverificare con dati di campo, dove il canale è più debole (motorino/vibrazione → terreno → fibra, non l'accoppiamento diretto del banco)
 - soglie da §5.1 derivate dagli sweep di caratterizzazione, non da un test a 3 punti dedicato con protocollo f1/f2 completo attivo — da confermare con "Azzera picchi" dal vivo prima del pretest in campo
