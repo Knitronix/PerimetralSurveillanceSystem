@@ -46,3 +46,20 @@ GAP_MS = 70.0
 # 20ms, il minimo rappresentabile) va tenuta stretta - vedi il commento
 # dettagliato accanto a TOLLERANZA_MS_DEFAULT in main.py.
 TOLLERANZA_MS = 20.0
+
+# Numero totale di nodi nella catena daisy chain (DAISY CHAIN/master/master.ino
+# + DAISY CHAIN/slave2/slave2.ino + eventuali slaveN futuri) - deve stare
+# allineato tra master.ino (quanti impulsi emette per ciclo sul bus, via
+# DAISY CHAIN/aggiorna_config_daisy.py) e main.py (quanti interruttori si
+# aspetta per ciclo, per il warning di conteggio incompleto): stesso motivo
+# per cui F1/F2/T0/T1/GAP sono qui e non duplicati a mano altrove. Aggiungere
+# un nodo = incrementare questo valore, propagare con aggiorna_config_daisy.py
+# e riflashare master.ino (gli slave non hanno bisogno di conoscere il totale,
+# solo il proprio NODE_ID - vedi DAISY CHAIN/restart.md).
+#
+# Nota: il vecchio trasmettitore.ino (nodo singolo, non daisy chain) ha un
+# proprio NUM_SWITCH=50 indipendente, non legato a questo valore - main.py
+# verifica sempre contro NUMERO_NODI, quindi se si torna a usare
+# trasmettitore.ino da solo per un test rapido, il warning di conteggio in
+# main.py confronterà contro NUMERO_NODI (2), non contro 50.
+NUMERO_NODI = 2

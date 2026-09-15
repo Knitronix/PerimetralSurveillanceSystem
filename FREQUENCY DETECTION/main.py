@@ -128,23 +128,26 @@ TOLLERANZA_MS_DEFAULT = config_condivisa.TOLLERANZA_MS
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 # Soglie sulla potenza Goertzel normalizzata (0..1 = piena scala int16).
-# Frequenze cambiate a 4600/3200Hz (vedi F1_HZ_DEFAULT/F2_HZ_DEFAULT sopra),
-# scelte proprio per non avere più il cross-talk pesante che c'era con la
-# vecchia coppia 2500/1000Hz. Soglie derivate dai dati dello sweep a gradini
-# di TEST ARMONICHE/ (non da un nuovo test a 3 punti dedicato - lo sweep dà
-# già l'equivalente di "solo f1"/"solo f2" a queste frequenze esatte):
-# forza segnale f1(4600Hz)=0.0365, f2(3200Hz)=0.0278, e nessuna spuria
-# rilevata dell'una vicino all'altra (sotto l'1% della propria fondamentale,
-# quindi pavimento cross-talk sotto ~0.0003-0.0004 per entrambe, contro un
-# rumore puro di fondo storicamente ~0.000004 - margine ampio su entrambi i
-# fronti). ON messa al 20% del segnale, OFF al 65% della ON, come da
-# SPECS.MD §5.1. Da confermare con "Azzera picchi" al primo giro live prima
-# di fidarsene sul campo - questi numeri vengono da un banco di sweep a tono
-# singolo, non da una misura diretta col protocollo f1/f2 completo attivo.
-SOGLIA_ON_F1_DEFAULT = 0.0070
-SOGLIA_OFF_F1_DEFAULT = 0.0045
-SOGLIA_ON_F2_DEFAULT = 0.0055
-SOGLIA_OFF_F2_DEFAULT = 0.0036
+# RITARATE per il nuovo setup daisy chain (SPECS.MD DAISY CHAIN/restart.md):
+# accoppiamento molto più debole del banco di sweep originale, picchi
+# segnale misurati "Azzera picchi" f1(4600Hz)=0.00041, f2(3200Hz)=0.0028
+# (contro f1=0.0365/f2=0.0278 del vecchio banco - f1 qui è ~89x più debole,
+# f2 ~10x più debole: NON sono gli stessi numeri di prima riscalati a caso,
+# sono una misura diretta sul nuovo hardware). ON = 20% del picco, OFF = 65%
+# della ON, SPECS.MD §5.1. Pavimento usato per il controllo minimo (ON mai
+# sotto ~1.5-2x pavimento): SOLO rumore puro, storicamente ~0.000004 ("il
+# silenzio è sempre il solito", confermato) - il cross-talk tra i due canali
+# NON è stato rimisurato su questo hardware (punto 2 della procedura §5.1,
+# ancora da fare) e quindi non è incluso nel calcolo. Rischio concreto: sul
+# vecchio banco il pavimento di cross-talk era ~0.0003-0.0004 (1% della
+# fondamentale) - se lo stesso ordine di grandezza valesse qui, sarebbe
+# vicino o sopra SOGLIA_ON_F1 qui sotto (0.000082), che diventerebbe
+# inaffidabile. Da verificare con la procedura di isolamento canali prima di
+# fidarsi sul campo.
+SOGLIA_ON_F1_DEFAULT = 0.000082
+SOGLIA_OFF_F1_DEFAULT = 0.000053
+SOGLIA_ON_F2_DEFAULT = 0.00056
+SOGLIA_OFF_F2_DEFAULT = 0.000364
 
 FILE_LOG_SLOT = "eventi_f1_f2_log.jsonl"
 MAX_RIGHE_LOG = 300
@@ -667,25 +670,23 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
 
         colonna_destra.addWidget(card_stato)
 
-        # Verifica non bloccante: l'operatore inserisce quanti interruttori
-        # si aspetta per ciclo (0 = verifica disattivata); al marcatore di
-        # zero successivo confrontiamo il conteggio appena concluso con
-        # questo valore e segnaliamo un'eventuale discrepanza (solo un
-        # avviso a schermo + log, non blocca né interrompe il rilevamento).
+        # Verifica non bloccante: confrontiamo il conteggio del ciclo appena
+        # concluso (al marcatore di zero successivo) con il numero di nodi
+        # della catena daisy chain, letto da config_condivisa.NUMERO_NODI
+        # (non più uno spinbox modificabile a runtime: deve restare la
+        # stessa unica fonte di verità che usa master.ino per sapere quanti
+        # impulsi emettere per ciclo, vedi config_condivisa.py). Solo un
+        # avviso a schermo + log, non blocca né interrompe il rilevamento.
         card_verifica = QtWidgets.QWidget()
         card_verifica.setStyleSheet(STILE_CARD)
         layout_card_verifica = QtWidgets.QVBoxLayout(card_verifica)
         layout_card_verifica.setSpacing(4)
 
-        riga_numero_atteso = QtWidgets.QHBoxLayout()
-        label_atteso = QtWidgets.QLabel("Interruttori attesi/ciclo (0=disattiva):")
+        label_atteso = QtWidgets.QLabel(
+            f"Interruttori attesi/ciclo: {config_condivisa.NUMERO_NODI} (da config_condivisa.py)"
+        )
         label_atteso.setStyleSheet("background: none;")
-        riga_numero_atteso.addWidget(label_atteso)
-        self.spin_numero_atteso = SpinBoxIntSenzaRotella()
-        self.spin_numero_atteso.setRange(0, 1000)
-        self.spin_numero_atteso.setValue(50)
-        riga_numero_atteso.addWidget(self.spin_numero_atteso)
-        layout_card_verifica.addLayout(riga_numero_atteso)
+        layout_card_verifica.addWidget(label_atteso)
 
         self.label_verifica_ciclo = QtWidgets.QLabel("Verifica ciclo: --")
         self.label_verifica_ciclo.setAlignment(QtCore.Qt.AlignCenter)
@@ -1132,11 +1133,11 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.label_totale_chiusure.setText("0 totali")
 
     def _verifica_conteggio_ciclo(self, conteggio_rilevato):
-        """Confronto non bloccante tra interruttori attesi (campo utente) e
-        quelli effettivamente contati nel ciclo appena concluso. Solo un
-        avviso (label + log.warning): non solleva eccezioni, non ferma il
-        rilevamento."""
-        atteso = self.spin_numero_atteso.value()
+        """Confronto non bloccante tra interruttori attesi
+        (config_condivisa.NUMERO_NODI) e quelli effettivamente contati nel
+        ciclo appena concluso. Solo un avviso (label + log.warning): non
+        solleva eccezioni, non ferma il rilevamento."""
+        atteso = config_condivisa.NUMERO_NODI
         if conteggio_rilevato is None or atteso <= 0:
             return
 
@@ -1174,9 +1175,9 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         if not ciclo:
             return
 
-        atteso = self.spin_numero_atteso.value()
+        atteso = config_condivisa.NUMERO_NODI
         if atteso <= 0:
-            self.label_ripetibilita.setText("Imposta \"Interruttori attesi/ciclo\" per attivare la verifica")
+            self.label_ripetibilita.setText("config_condivisa.NUMERO_NODI è 0: verifica disattivata")
             self.label_ripetibilita.setStyleSheet(
                 "color: #9aa0a6; background-color: #2a2d31; font-size: 13px; "
                 "font-weight: 600; padding: 5px; border-radius: 6px;"

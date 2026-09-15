@@ -108,7 +108,7 @@ Fonte di verità: `config_condivisa.py` per frequenze/timing, cima di `main.py` 
 - **Frequenze** (`F1_HZ`/`F2_HZ`): scelte con lo sweep di §6.2 — 4600Hz/3200Hz, sotto il limite di banda del sistema (~5400Hz), senza cross-talk misurabile tra loro.
 - **Timing** (`T0_MS`/`T1_MS`/`GAP_MS`): validati con lo sweep di §6.1 — T0=200ms (marcatore), T1=20ms (uno slot, il minimo teorico = un blocco Goertzel), GAP=50ms.
 - **Tolleranza** (`TOLLERANZA_MS_DEFAULT` in `main.py`, non nel config condiviso): 10ms — stretta apposta perché T1 è già al minimo rappresentabile (vedi commento in `main.py`).
-- **Soglie**: derivate dai picchi misurati durante gli sweep (procedura §5.1), non da un nuovo test dedicato a 3 punti. Restano **assolute**: da rivalidare a ogni cambio di fibra/installazione/accoppiamento (banco di prova vs campo).
+- **Soglie**: ritarate per il setup daisy chain (accoppiamento molto più debole del banco di sweep originale) - picchi misurati "Azzera picchi" f1(4600Hz)=0.00041, f2(3200Hz)=0.0028 (contro 0.0365/0.0278 del vecchio banco). `SOGLIA_ON = 20%` del picco, `SOGLIA_OFF = 65%` della ON (§5.1): F1 ON=0.000082/OFF=0.000053, F2 ON=0.00056/OFF=0.000364. **Calcolate solo contro il rumore puro** (~0.000004, invariato) - il cross-talk tra f1/f2 su questo hardware non è ancora stato rimisurato (§5.1 punto 2): sul vecchio banco il pavimento di cross-talk era ~0.0003-0.0004, un ordine di grandezza che qui sarebbe vicino o sopra `SOGLIA_ON_F1` - **da verificare con la procedura di isolamento canali prima del pretest in campo**. Restano **assolute**: da rivalidare a ogni cambio di fibra/installazione/accoppiamento (banco di prova vs campo).
 
 ---
 

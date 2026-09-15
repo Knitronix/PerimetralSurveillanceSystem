@@ -7065,3 +7065,4 @@
 {"timestamp": "2026-09-11T16:57:15", "tipo": "rumore", "durata_s": 0.02}
 {"timestamp": "2026-09-11T16:57:15", "tipo": "slot", "counter": 5, "stato": "aperto", "durata_s": 0.04}
 {"timestamp": "2026-09-11T16:57:16", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-14T16:30:22", "tipo": "rumore", "durata_s": 0.02}
