@@ -55,7 +55,10 @@ per il training (nessun vincolo embedded).
   parametri correnti, procedura di taratura soglie. `main.py` è l'interrogatore/rilevatore (riceve
   UDP, riconosce marcatore/slot via filtro di Goertzel). Due percorsi trasmettitore, non mescolarli:
   `DAISY CHAIN/` (N Arduino Mega sincronizzati da bus di trigger condiviso, attivo oggi) e
-  `trasmettitore/trasmettitore.ino` (nodo singolo, riferimento/fallback).
+  `trasmettitore/trasmettitore.ino` (nodo singolo, riferimento/fallback). `GUI CLIENT/gui.py` è
+  l'interfaccia per il cliente finale (non tecnico), separata da `main.py` (resta lo strumento
+  tecnico/di taratura): riusa `main.py` per il rilevamento, non lo sostituisce - dettaglio in
+  `FREQUENCY DETECTION/SPECS.MD` §8.
 
 > Nessuna cartella `arduino/` è attualmente presente nel repository (multiplexing tappeti/vibratori
 > — da aggiungere qui se/quando il codice viene versionato). Il multiplexing reale via Arduino vive

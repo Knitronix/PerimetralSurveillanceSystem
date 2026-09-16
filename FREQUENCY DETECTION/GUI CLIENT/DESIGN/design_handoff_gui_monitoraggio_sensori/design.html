@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Design reference - Sistema di monitoraggio sensori</title>
+<style>body{margin:0;}</style>
+</head>
+<body>
+<div style="background:#F7F5F4; min-height:100vh; padding:36px; font-family:Helvetica,Arial,sans-serif; box-sizing:border-box;">
+  <div style="display:flex; align-items:center; gap:18px; border-bottom:3px solid #1A1A1A; padding-bottom:18px;">
+    <img src="logo-knitronix.png" style="height:64px; width:auto;">
+    <div>
+      <div style="font-size:26px; font-weight:800; color:#1A1A1A; text-transform:uppercase; letter-spacing:0.5px;">Sistema di monitoraggio</div>
+      <div style="font-size:14px; color:#6B6560; margin-top:4px;">Catena di 10 sensori — i primi 2 collegati, gli altri 8 in attesa di collegamento</div>
+    </div>
+  </div>
+
+  <div style="position:relative; margin-top:40px; padding-top:28px;">
+    <div style="position:absolute; left:20px; right:20px; top:88px; height:4px; background:#1A1A1A; border-radius:2px; z-index:0;"></div>
+    <div id="fila" style="display:flex; gap:14px; flex-wrap:nowrap; align-items:flex-end; position:relative; z-index:1; overflow-x:auto; padding-bottom:6px;"></div>
+    <div style="font-size:12px; color:#6B7370; margin-top:10px;">— cavo unico che collega la catena di sensori</div>
+  </div>
+
+  <div style="margin-top:28px; background:#FFFFFF; border:1px dashed #BFBAB6; border-radius:14px; padding:14px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div style="font-size:12px; font-weight:700; color:#6B6560; text-transform:uppercase;">Simulazione (solo per test):</div>
+    <button id="btn1" style="background:#1A1A1A; border:1px solid #1A1A1A; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;">Commuta Sensore 1</button>
+    <button id="btn2" style="background:#E13A2E; border:1px solid #E13A2E; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:700; color:#fff; cursor:pointer;">Commuta Sensore 2</button>
+  </div>
+</div>
+
+<script>
+const stati = [false, true]; // false=libero, true=allarme, per Sensore 1 e 2
+const orari = ['—', '—'];
+
+function render() {
+  const fila = document.getElementById('fila');
+  fila.innerHTML = '';
+  for (let i = 0; i < 10; i++) {
+    const attivo = i < 2;
+    const allarme = attivo && stati[i];
+    const bg = !attivo ? '#EDEBE9' : (allarme ? '#FBE2DF' : '#E9E7E5');
+    const accento = !attivo ? '#BFBAB6' : (allarme ? '#E13A2E' : '#1A1A1A');
+    const testoStato = !attivo ? 'Non collegato' : (allarme ? 'Rilevata pressione' : 'Libero');
+    const orario = attivo ? ('Ultimo cambio: ' + orari[i]) : '—';
+    const larghezza = attivo ? 140 : 100;
+    const padding = attivo ? 22 : 14;
+    const dimIcona = attivo ? 100 : 64;
+    const altIcona = attivo ? 150 : 96;
+    const fontNome = attivo ? 16 : 13;
+    const fontStato = attivo ? 15 : 12;
+    const opacita = attivo ? 1 : 0.55;
+
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex; flex-direction:column; align-items:center; flex-shrink:0;';
+    col.innerHTML = `
+      <div style="width:${larghezza}px; background:${bg}; border:1px solid #DCD8D4; border-radius:16px; padding:${padding}px; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 3px 16px rgba(0,0,0,0.05); opacity:${opacita};">
+        <div style="font-size:${fontNome}px; font-weight:700; color:#1A1A1A; text-transform:uppercase;">Sensore ${i + 1}</div>
+        <div style="width:${dimIcona}px; height:${altIcona}px; background:${accento}; border-radius:18px;"></div>
+        <div style="font-size:${fontStato}px; font-weight:700; color:${accento};">${testoStato}</div>
+        <div style="font-size:11px; color:#6B7370; text-align:center;">${orario}</div>
+      </div>
+      <div style="width:2px; height:16px; background:#1A1A1A;"></div>`;
+    fila.appendChild(col);
+  }
+}
+
+function commuta(i) {
+  stati[i] = !stati[i];
+  orari[i] = new Date().toLocaleTimeString('it-IT');
+  render();
+}
+
+document.getElementById('btn1').addEventListener('click', () => commuta(0));
+document.getElementById('btn2').addEventListener('click', () => commuta(1));
+render();
+</script>
+</body>
+</html>

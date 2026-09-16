@@ -16337,3 +16337,126 @@
 {"timestamp": "2026-09-16T12:13:23", "tipo": "rumore", "durata_s": 0.02}
 {"timestamp": "2026-09-16T12:13:23", "tipo": "slot", "counter": 4, "stato": "chiuso", "durata_s": 0.04}
 {"timestamp": "2026-09-16T12:13:32", "tipo": "rumore", "durata_s": 0.02}
+{"timestamp": "2026-09-16T14:45:37", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": null, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:37", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:37", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:38", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:38", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:38", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:39", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:39", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:39", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:40", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:40", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:40", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:41", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:41", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:41", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:42", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:43", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:43", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:43", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:44", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:44", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:45", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:45", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:45", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:46", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:46", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:46", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:47", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:47", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:47", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:48", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:48", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:48", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:49", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:49", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:49", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:50", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:50", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:50", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:51", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:51", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:51", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:52", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:52", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:52", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:53", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:53", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:53", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:54", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:54", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:54", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:55", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:55", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:55", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:56", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:57", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:57", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:57", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:58", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:58", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:45:59", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:45:59", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:45:59", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:00", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:00", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:00", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:01", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:01", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:01", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:02", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:02", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:02", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:03", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:03", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:03", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:04", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:04", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:04", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:05", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:05", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:05", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:06", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:06", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:06", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:07", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:07", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:07", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:08", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:08", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:08", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:09", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:09", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:09", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:10", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:10", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:11", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:11", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:11", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:12", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:12", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:13", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:13", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:14", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:14", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:14", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:15", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:15", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:15", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:16", "tipo": "zero", "durata_s": 0.2, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:16", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:16", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:17", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:17", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:17", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
+{"timestamp": "2026-09-16T14:46:18", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:18", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:18", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:19", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:19", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:19", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:20", "tipo": "zero", "durata_s": 0.22, "conteggio_ciclo_precedente": 2, "pacchetti_scartati": 0, "anomalie_raffica": 0}
+{"timestamp": "2026-09-16T14:46:20", "tipo": "slot", "counter": 1, "stato": "aperto", "durata_s": 0.06}
+{"timestamp": "2026-09-16T14:46:20", "tipo": "slot", "counter": 2, "stato": "aperto", "durata_s": 0.08}
