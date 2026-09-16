@@ -61,18 +61,20 @@ const unsigned long SOGLIA_TIMEOUT_RESET_MS = 300;
 
 const unsigned long DEBOUNCE_US = 2000; // 2ms, rimbalzi elettrici sul fronte (restart.md)
 
-// Placeholder per test SENZA hardware reale collegato, stesso schema di
-// master.ino/trasmettitore.ino ma per UN SOLO interruttore (quello di
-// questo nodo): sostituire con la lettura reale (digitalRead su un pin
-// dedicato, o dal multiplexer) quando cablato - vedi aggiorna_interruttore()
-// sotto.
-const bool SIMULA_INTERRUTTORE_CASUALE = true;
-const uint8_t PERCENTUALE_CHIUSO_SIMULATO = 15; // 0-100
-// Solo per la simulazione: ogni quanto ri-estrarre un valore casuale, per
-// esercitare anche da banco il caso "l'interruttore cambia mentre il nodo
-// non sta trasmettendo" (monitoraggio continuo, non piu' legato al ciclo).
-const unsigned long INTERVALLO_SIMULAZIONE_MS = 3000;
-unsigned long ultimo_redraw_simulazione_ms = 0;
+// Interruttore locale reale su A0: chiuso = HIGH (pull-down esterno 10k
+// verso GND, switch verso 5V/VCC - stesso schema gia' usato per il bus di
+// trigger D8/D2, vedi restart.md).
+const int PIN_INTERRUTTORE = A0;
+
+// Debounce software sulla lettura del pin (rimbalzo meccanico tipico
+// 5-30ms): una transizione e' accettata solo se la lettura resta stabile
+// per almeno questo tempo, altrimenti un singolo click rischierebbe di
+// generare piu' fronti spuri e far scattare il latch per rumore elettrico
+// invece che per una pressione vera.
+const unsigned long DEBOUNCE_INTERRUTTORE_MS = 30;
+bool letturaGrezzaCorrente = false; // ultima lettura del pin, non ancora stabilizzata
+unsigned long ultimo_cambio_lettura_ms = 0;
+
 // Latch, non una lettura istantanea: true se l'interruttore e' stato chiuso
 // in QUALSIASI momento dall'ultimo reset, anche se esattamente nel momento
 // del proprio slot risulta di nuovo aperto - altrimenti un click breve tra
@@ -82,17 +84,29 @@ unsigned long ultimo_redraw_simulazione_ms = 0;
 // (vedi aggiorna_slave()) - nessun altro punto del codice deve scriverci.
 bool interruttoreChiuso = false;
 
+// Valore GREZZO (debounced) del pin, sale E scende liberamente - usato
+// internamente da aggiorna_interruttore() per decidere quando riarmare il
+// latch sotto. Non stampato (debug via pin HIGH/LOW rimosso, non serve
+// piu': il cablaggio era il problema, non la lettura).
+bool valoreGrezzoInterruttore = false;
+
 // Isolamento canali per la procedura di taratura soglie (SPECS.MD §5.1),
 // identico a master.ino/trasmettitore.ino.
 const bool CANALE1_ABILITATO = true;
 const bool CANALE2_ABILITATO = true;
 
-// Il suono parte attivo dall'accensione (niente piu' controllo seriale
-// ON/OFF, vedi setup()/loop()): canale1_on/canale2_on partono comunque a
-// false, quindi resta silenzioso finche' la macchina a stati non accende
-// davvero un tono.
+// --- Controllo via seriale (vedi gestisci_seriale()): il suono parte GIA'
+// ACCESO al boot/reset (comodo per non dover scrivere "ON" ad ogni
+// accensione, ogni nodo comunque indipendente dagli altri), ma resta
+// comunque disattivabile/riattivabile a mano scrivendo "OFF"/"ON" sul
+// Serial Monitor DI QUESTA scheda. ---
+volatile bool soundEnabled = true;
 volatile bool canale1_on = false;
 volatile bool canale2_on = false;
+
+// Per stampare lo stato dell'interruttore solo quando cambia (debug, vedi
+// stampa_stato_interruttore()), non ad ogni giro di loop().
+bool interruttoreChiuso_stampato = false;
 
 // --- Macchina a stati minimale: IDLE -> impulso col conteggio giusto ->
 // esegui slot -> torna IDLE. Nessun invio di trigger (bus a stella, non
@@ -133,8 +147,9 @@ void setup() {
 
   pinMode(12, OUTPUT); // OC1B, uscita audio f1/f2 (verso il trasduttore/fibra)
   pinMode(11, OUTPUT);
-  digitalWrite(11, HIGH); // abilita audio permanentemente, niente piu' controllo seriale ON/OFF
+  digitalWrite(11, HIGH); // coerente con soundEnabled = true
   pinMode(PIN_TRIGGER_IN, INPUT); // pull-down 10k esterno gia' cablato, non serve INPUT_PULLUP
+  pinMode(PIN_INTERRUTTORE, INPUT); // pull-down 10k esterno gia' cablato
 
   // Timer1: Fast PWM 8 bit, nessun prescaler -> portante PWM a 62.5kHz
   TCCR1A = _BV(COM1B1) | _BV(WGM10);
@@ -151,10 +166,11 @@ void setup() {
   // impulso in ingresso HIGH) - restart.md.
   attachInterrupt(digitalPinToInterrupt(PIN_TRIGGER_IN), onImpulsoRicevuto, RISING);
 
-  randomSeed(analogRead(A0)); // pin scollegato = rumore, seed diverso ad ogni boot
-  // Stato iniziale del latch: coerente con "mai sovrascrivere a false", solo
-  // eventualmente a true (vedi dichiarazione di interruttoreChiuso sopra).
-  if (SIMULA_INTERRUTTORE_CASUALE && random(0, 100) < PERCENTUALE_CHIUSO_SIMULATO) {
+  // Stato iniziale: leggi subito il pin reale, cosi' non si parte sempre da
+  // "aperto" per un giro intero se l'interruttore e' gia' chiuso al boot.
+  letturaGrezzaCorrente = (digitalRead(PIN_INTERRUTTORE) == HIGH);
+  valoreGrezzoInterruttore = letturaGrezzaCorrente;
+  if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
   }
 
@@ -168,7 +184,8 @@ void setup() {
   Serial.print(F("  GAP_MS=")); Serial.println(GAP_MS);
   Serial.print(F("SOGLIA_TIMEOUT_RESET_MS=")); Serial.println(SOGLIA_TIMEOUT_RESET_MS);
   Serial.print(F("interruttore proprio: ")); Serial.println(interruttoreChiuso ? "CHIUSO" : "aperto");
-  Serial.println(F("In ascolto sul bus (D2), sincronizzazione automatica dall'accensione."));
+  interruttoreChiuso_stampato = interruttoreChiuso;
+  Serial.println(F("Pronto, suono GIA' ACCESO, in ascolto sul bus (D2). Scrivi 'OFF' o 'ON' per disattivare/riattivare."));
 }
 
 ISR(TIMER2_COMPA_vect) {
@@ -176,6 +193,11 @@ ISR(TIMER2_COMPA_vect) {
   phase2 += inc2;
   uint8_t idx1 = phase1 >> 24;
   uint8_t idx2 = phase2 >> 24;
+
+  if (!soundEnabled) {
+    OCR1B = 128; // silenzio totale, ma le fasi continuano ad avanzare sopra
+    return;
+  }
 
   uint8_t contrib1 = canale1_on ? sineTable[idx1] : 128;
   uint8_t contrib2 = canale2_on ? sineTable[idx2] : 128;
@@ -247,27 +269,66 @@ void aggiorna_slave(unsigned long ora_ms) {
 // sta trasmettendo il prossimo TONO_SLOT_PROPRIO lo trova gia' aggiornato -
 // non serve piu' rileggerlo "a mano" in un punto fisso del ciclo.
 void aggiorna_interruttore() {
-  if (!SIMULA_INTERRUTTORE_CASUALE) {
-    // TODO: quando si passa al pin reale, aggiungere debounce (hardware o
-    // software) - un rimbalzo meccanico di pochi ms rischia di far scattare
-    // il latch per un click involontario.
-    // if (digitalRead(PIN_INTERRUTTORE) == HIGH) interruttoreChiuso = true;
+  bool letturaOra = (digitalRead(PIN_INTERRUTTORE) == HIGH);
+  if (letturaOra != letturaGrezzaCorrente) {
+    // Il pin ha appena cambiato stato: potrebbe essere un rimbalzo, riparti
+    // a cronometrare la stabilita' da qui invece di accettarlo subito.
+    letturaGrezzaCorrente = letturaOra;
+    ultimo_cambio_lettura_ms = millis();
     return;
   }
-  unsigned long ora = millis();
-  if (ora - ultimo_redraw_simulazione_ms >= INTERVALLO_SIMULAZIONE_MS) {
-    ultimo_redraw_simulazione_ms = ora;
-    // Solo true, mai false: il redraw simula "e' stato premuto", non
-    // sostituisce lo stato attuale (vedi dichiarazione di interruttoreChiuso).
-    if (random(0, 100) < PERCENTUALE_CHIUSO_SIMULATO) {
-      interruttoreChiuso = true;
+  if (millis() - ultimo_cambio_lettura_ms < DEBOUNCE_INTERRUTTORE_MS) {
+    return; // non ancora stabile per abbastanza tempo, aspetta
+  }
+  // Stabile da almeno DEBOUNCE_INTERRUTTORE_MS: accetta la lettura.
+  // Valore grezzo (debounced): sale E scende liberamente, riflette il pin
+  // cosi' com'e' (a differenza del latch sotto) - usato solo internamente
+  // per decidere quando riarmare il latch.
+  valoreGrezzoInterruttore = letturaGrezzaCorrente;
+  // Latch: va a true ad OGNI passaggio in cui il pin risulta stabilmente
+  // chiuso, non solo alla prima transizione false->true - altrimenti un
+  // interruttore tenuto chiuso per piu' cicli smetterebbe di essere
+  // rilevato subito dopo il primo consumo (TONO_SLOT_PROPRIO lo resetta a
+  // false, e senza questo il valore grezzo non cambierebbe piu' finche' il
+  // pin resta fermo, quindi il latch non si riarmerebbe mai). Resta vero
+  // che non va mai messo a false qui dentro (solo TONO_SLOT_PROPRIO lo
+  // consuma, vedi dichiarazione di interruttoreChiuso).
+  if (valoreGrezzoInterruttore) {
+    interruttoreChiuso = true;
+  }
+}
+
+void gestisci_seriale() {
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd.equalsIgnoreCase("ON")) {
+      digitalWrite(11, HIGH);
+      soundEnabled = true;
+      Serial.println("Suono ON");
+    } else if (cmd.equalsIgnoreCase("OFF")) {
+      digitalWrite(11, LOW);
+      soundEnabled = false;
+      Serial.println("Suono OFF");
     }
+  }
+}
+
+// Debug: stampa lo stato del LATCH (vedi interruttoreChiuso) SOLO quando
+// cambia. Per costruzione va sempre a coppie chiuso/aperto (si accende alla
+// chiusura, si spegne quando il proprio slot lo consuma).
+void stampa_stato_interruttore() {
+  if (interruttoreChiuso != interruttoreChiuso_stampato) {
+    interruttoreChiuso_stampato = interruttoreChiuso;
+    Serial.println(interruttoreChiuso ? "INT: chiuso" : "INT: aperto");
   }
 }
 
 void loop() {
   aggiorna_interruttore();
+  stampa_stato_interruttore();
   aggiorna_slave(millis());
+  gestisci_seriale();
   // nessun delay() qui: l'attesa dell'impulso e' event-driven via
   // interrupt (restart.md), nessuno stato qui blocca mai.
 }

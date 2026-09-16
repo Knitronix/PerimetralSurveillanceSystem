@@ -1,5 +1,11 @@
 # Restart — Sincronizzazione daisy chain (open-loop, bus condiviso)
 
+> **Stato: implementato e verificato dal vivo** (2 nodi reali, marcatore e slot
+> riconosciuti stabilmente ad ogni ciclo dopo il fix di `MARGINE_SICUREZZA_MS`
+> sotto e della tolleranza in `config_condivisa.py`, vedi SPECS.MD §3/§7).
+> Questo documento resta la spec di riferimento per l'architettura e per
+> estendere a nuovi nodi - non solo un piano da realizzare.
+
 ## Obiettivo
 Sincronizzare N Arduino Mega (oggi 2: MASTER=SLAVE1 e SLAVE2, in futuro SLAVE3...N)
 in modo che ognuno generi le proprie frequenze f1/f2 solo nel proprio slot temporale,
@@ -50,11 +56,25 @@ Riusa le funzioni di generazione toni (DDS/PWM) già presenti in
 
 ## Timing open-loop
 ```
-INTERVALLO_MS = T1_MS + margine_sicurezza
+INTERVALLO_MS = T1_MS + GAP_MS + MARGINE_SICUREZZA_MS
 ```
 Il master emette un impulso ogni `INTERVALLO_MS`, per N volte, senza aspettare
 risposta. Ogni slave esegue il proprio slot (T1_MS) interamente dentro quella
 finestra, quindi non c'è mai sovrapposizione tra uno slot e il successivo.
+
+**`GAP_MS` e `MARGINE_SICUREZZA_MS` non sono la stessa cosa, anche se sembrano
+entrambi "tempo extra"**: `GAP_MS` serve al RICEVITORE (main.py) per vedere
+silenzio tra due toni e classificarli come eventi separati - esiste già ed è
+condiviso con tutto il resto del protocollo (`config_condivisa.py`).
+`MARGINE_SICUREZZA_MS` è un concetto diverso, solo del master: è il cuscinetto
+che tiene conto della latenza reale del nodo remoto (interrupt, debounce, giri
+di `loop()`), che supera leggermente il tempo nominale `T1_MS+GAP_MS`. Prima
+che questa distinzione fosse esplicita nel codice, `INTERVALLO_MS` era
+`T1_MS + GAP_MS` senza nessun margine dedicato - sintomo osservato dal vivo:
+marcatori misurati 220-240ms invece di 200ms, slot misurati 80ms invece di
+60ms (sempre "troppo lunghi", mai "troppo corti"), perché il tono/gap dello
+slave remoto sconfinava nell'evento successivo prima che il master procedesse.
+Valore attuale: `MARGINE_SICUREZZA_MS = 40`ms, in `master.ino`.
 
 ## Wiring — IMPORTANTE: asimmetria master/slave
 A differenza della vecchia staffetta, master e slave NON hanno più lo stesso
@@ -98,6 +118,26 @@ const int PIN_TRIGGER_OUT = 8;   // SOLO sul master
   lo legge da lì per il warning "interruttori attesi/ciclo" (lo spinbox
   manuale è stato rimosso, non più modificabile a runtime). A parte questo,
   non toccare altro in quei due file senza un motivo equivalente.
+
+## Interruttore locale: latch, non lettura istantanea
+Ogni nodo legge il proprio interruttore su `A0` (chiuso = HIGH, pull-down 10kΩ
+esterno verso GND, switch verso 5V/VCC - stesso schema del bus di trigger).
+La lettura NON è un semplice `digitalRead` usato al volo: è gestita con due
+livelli, per non perdere una chiusura breve avvenuta tra un ciclo e l'altro.
+
+1. **Debounce software** (`DEBOUNCE_INTERRUTTORE_MS = 30`, `aggiorna_interruttore()`,
+   chiamata ad ogni giro di `loop()`): una transizione del pin è accettata solo
+   se resta stabile per almeno questo tempo, per non scambiare un rimbalzo
+   meccanico per una pressione vera.
+2. **Latch** (`interruttoreChiuso`): va a `true` ad OGNI giro in cui il pin
+   risulta stabilmente chiuso (non solo alla prima transizione - un
+   interruttore tenuto chiuso per più cicli deve continuare a generare f2 ad
+   ogni ciclo, non solo al primo). Torna a `false` in UN SOLO punto: dentro
+   `TONO_SLOT_PROPRIO`, subito dopo essere stato consumato per `canale2_on`.
+   Nessun altro punto del codice deve scriverci.
+
+Il controllo seriale (`ON`/`OFF`, invariato rispetto a `trasmettitore.ino`) parte
+già attivo al boot in entrambi gli sketch - resta comunque disattivabile a mano.
 
 ## Nota per estensione futura a N nodi
 Aggiungere un nodo richiede solo: collegare il suo `D2` in parallelo allo

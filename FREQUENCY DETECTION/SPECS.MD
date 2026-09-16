@@ -8,7 +8,9 @@
 
 Si è ripartiti da zero rispetto alla vecchia pipeline MLtoDL (dataset recording, feature extraction, training, classificazione): qui non c'è registrazione, non c'è training, non c'è classificazione.
 
-**Milestone raggiunta:** il metodo di riconoscimento a doppia frequenza (Goertzel + isteresi + macchina a stati sulla durata, vedi §3) **funziona sul canale reale** (motorino/vibrazione → terreno → fibra → interferometro), dopo la taratura delle soglie sui livelli di segnale effettivamente misurati. L'approccio (Goertzel + isteresi + macchina a stati) resta valido — **ma i valori di timing attuali (T1=20ms/GAP=50ms) NON sono validati per il protocollo completo**, vedi §6.1 e §7: un ciclo reale da 50 interruttori si chiude regolarmente in anticipo (intorno al 41°-45° slot), segno di un marcatore di zero falso a metà ciclo. Prima di fidarsi ancora del metodo sul campo va richiuso questo punto.
+**Milestone raggiunta:** il metodo di riconoscimento a doppia frequenza (Goertzel + isteresi + macchina a stati sulla durata, vedi §3) **funziona sul canale reale**, ed è stato validato dal vivo anche sulla nuova architettura multi-nodo (`DAISY CHAIN/`, vedi §4): due Arduino Mega reali, interruttori fisici veri (non più simulati), marcatore e slot riconosciuti in modo stabile ad ogni ciclo dopo due correzioni chiave (§7 le documenta come risolte): il margine di sicurezza nella commutazione tra nodi (`MARGINE_SICUREZZA_MS`) e la tolleranza di classificazione allargata a 30ms per assorbire la quantizzazione a blocchi Goertzel contro l'orologio indipendente del ricevitore.
+
+**Percorso attivo oggi**: `DAISY CHAIN/` (master + slave2, vedi §4) è il transmettitore in uso per i test correnti. Il vecchio `trasmettitore.ino` a nodo singolo resta com'era, non toccato, utilizzabile come riferimento/fallback per un test rapido a un solo nodo.
 
 ---
 
@@ -36,15 +38,17 @@ Pattern riusati da `MLtoDL/0registratoreStalta.py` (senza modificarlo, resta la 
 
 **Altri controlli in UI:** "Azzera picchi" (max-hold su potenza f1/f2, per tarare le soglie a occhio, §5.1); card "Ripetibilità ciclo" (SOLO per test col ciclo Arduino fisso: confronta ogni ciclo completo con un riferimento catturato al primo, segnala slot diversi); bottone per svuotare la lista log a schermo senza toccare il file `.jsonl`.
 
-**Cartelle di supporto** (non toccano `main.py`/`trasmettitore.ino` se non per applicarne i risultati): `TEST ARMONICHE/` e `TEST TEMPI/` (vedi §6), `config_condivisa.py`/`aggiorna_config_ino.py` (vedi §4/§5).
+**Cartelle di supporto** (non toccano `main.py`/`trasmettitore.ino` se non per applicarne i risultati): `TEST ARMONICHE/` e `TEST TEMPI/` (vedi §6), `config_condivisa.py`/`aggiorna_config_ino.py` (vedi §4/§5), `DAISY CHAIN/` (percorso multi-nodo attivo, vedi §4 e `DAISY CHAIN/restart.md`).
 
 ---
 
 ## 2. Protocollo logico f1 / f2
 
 **f1 — "clock/counter":** una singola frequenza nota, emessa con due durate possibili:
-- `t0` (200 ms) → marcatore di **zero** (inizio ciclo / reset del contatore)
-- `t1` (80 ms) → **slot** incrementale (conta 1, 2, 3, ... N)
+- `t0` (`T0_MS`, oggi 200ms) → marcatore di **zero** (inizio ciclo / reset del contatore)
+- `t1` (`T1_MS`, oggi 50ms) → **slot** incrementale (conta 1, 2, 3, ... N)
+
+Valori correnti sempre in `config_condivisa.py` (§5) - non duplicarli qui a memoria, sono già cambiati più volte nel corso del progetto.
 
 **f2 — "stato interruttore":** una seconda frequenza nota, durata sempre `t1`, emessa **in sovrapposizione temporale** a uno slot `t1` di f1 **solo se** l'interruttore corrispondente a quello slot è chiuso.
 
@@ -70,7 +74,7 @@ Pattern riusati da `MLtoDL/0registratoreStalta.py` (senza modificarlo, resta la 
 **Pipeline (implementata in `main.py`):**
 
 1. Due filtri di Goertzel indipendenti in parallelo, uno su f1 e uno su f2, calcolati sugli stessi blocchi di campioni dello stream a 24 kHz.
-2. Blocco da 20 ms (480 campioni) → 4 blocchi per slot `t1` (80 ms), 10 blocchi per marcatore `t0` (200 ms).
+2. Blocco da 20 ms (480 campioni, `BLOCCO_GOERTZEL_MS` in `main.py`) → con `T1_MS=50ms`/`T0_MS=200ms` correnti, uno slot è 2.5 blocchi (non un multiplo intero!) e un marcatore è 10 blocchi.
 3. Per ogni blocco: potenza Goertzel normalizzata, confrontata con **doppia soglia (isteresi)** per decidere lo stato ON/OFF di quella frequenza, evitando sfarfallio sul confine di soglia.
 4. Macchina a stati per ciascuna frequenza: misura la durata continuativa di ON; quando torna OFF, classifica la durata:
    - vicino a `t0` (± tolleranza) → marcatore di zero
@@ -80,11 +84,17 @@ Pattern riusati da `MLtoDL/0registratoreStalta.py` (senza modificarlo, resta la 
 6. Per ogni slot f1 valido, verifica la sovrapposizione temporale con eventuali impulsi f2 nella stessa finestra: sovrapposizione → chiuso, altrimenti → aperto.
 7. Output: sequenza di coppie `(counter, stato)` per ogni ciclo (vedi §1 per dove va a finire).
 
+**Perché la tolleranza non può scendere troppo (lezione da `DAISY CHAIN/`, §7):** il ricevitore campiona con un orologio proprio, indipendente da qualsiasi trasmettitore (nodo singolo o daisy chain). Un tono reale quasi mai inizia/finisce esattamente allineato ai blocchi da 20ms, quindi la durata misurata arrotonda per eccesso di un blocco in modo abbastanza sistematico - non è rumore vero, è quantizzazione. La tolleranza (`TOLLERANZA_MS`, oggi 30ms) deve coprire questo arrotondamento oltre al rumore vero, altrimenti si perdono slot/marcatori validi regolarmente. Dettaglio completo in `config_condivisa.py`.
+
 **Nota di taratura (dal test sul canale reale):** i primi default assoluti (soglie tarate per un tono a piena scala) non funzionavano affatto sul canale reale, dove i livelli sono molto più bassi del previsto. Vedi §5 per i valori attuali. Restano soglie **assolute**: sensibili al guadagno del canale, quindi da rivalidare a ogni cambio di fibra/installazione — non è stato necessario finora passare a una misura relativa (tipo STA/LTA), ma è l'alternativa da tenere in mente se la sensibilità a soglie assolute diventasse un problema pratico.
 
 ---
 
 ## 4. Codice Arduino (trasmettitore)
+
+**Due percorsi disponibili, non mescolarli:**
+- **`DAISY CHAIN/` — percorso ATTIVO oggi**: N Arduino Mega distinti (oggi 2: master + slave2), ognuno genera il proprio slot in un momento diverso, sincronizzati da un bus di trigger condiviso open-loop. Stesso protocollo f1/f2 di questa sezione (marcatore + slot), solo distribuito su più schede fisiche invece che generato da una sola. Dettaglio completo (architettura, wiring, timing, interruttore reale con latch/debounce) in `DAISY CHAIN/restart.md` - non duplicato qui.
+- **`trasmettitore/trasmettitore.ino` — nodo singolo, riferimento/fallback**: genera l'intero ciclo (marcatore + tutti gli slot) da una sola scheda, con `NUM_SWITCH` interruttori simulati internamente. Non toccato dal lavoro su `DAISY CHAIN/`, resta utilizzabile per un test rapido a un solo nodo. Descritto nel resto di questa sezione.
 
 File: `trasmettitore/trasmettitore.ino`.
 
@@ -106,15 +116,16 @@ Comportamento:
 Fonte di verità: `config_condivisa.py` per frequenze/timing, cima di `main.py` per le soglie — non duplicare i valori qui, per non andare fuori sincronia (già successo una volta: `T0_MS` a 180 su Arduino contro 200 atteso da `main.py`, corretto con `aggiorna_config_ino.py`).
 
 - **Frequenze** (`F1_HZ`/`F2_HZ`): scelte con lo sweep di §6.2 — 4600Hz/3200Hz, sotto il limite di banda del sistema (~5400Hz), senza cross-talk misurabile tra loro.
-- **Timing** (`T0_MS`/`T1_MS`/`GAP_MS`): validati con lo sweep di §6.1 — T0=200ms (marcatore), T1=20ms (uno slot, il minimo teorico = un blocco Goertzel), GAP=50ms.
-- **Tolleranza** (`TOLLERANZA_MS_DEFAULT` in `main.py`, non nel config condiviso): 10ms — stretta apposta perché T1 è già al minimo rappresentabile (vedi commento in `main.py`).
+- **Timing** (`T0_MS`/`T1_MS`/`GAP_MS`): T0=200ms (marcatore), T1=50ms, GAP=70ms — allargati rispetto al minimo teorico (§6.1) dopo aver scoperto che T1/GAP non erano mai stati validati INSIEME (§7, risolto). Non più al limite teorico del sistema, con margine reale.
+- **Tolleranza** (`TOLLERANZA_MS` in `config_condivisa.py`, letta da `main.py`): 30ms — non più "il minimo che passa", ma dimensionata per assorbire la quantizzazione a blocchi Goertzel contro l'orologio indipendente del ricevitore (§3), oltre al rumore vero.
+- **`NUMERO_NODI`** (`config_condivisa.py`, usato solo da `DAISY CHAIN/master.ino` e dal warning di conteggio ciclo in `main.py`): 2 oggi (master + slave2). Non esiste per `trasmettitore.ino`, che usa il proprio `NUM_SWITCH` locale indipendente.
 - **Soglie**: ritarate per il setup daisy chain (accoppiamento molto più debole del banco di sweep originale) - picchi misurati "Azzera picchi" f1(4600Hz)=0.00041, f2(3200Hz)=0.0028 (contro 0.0365/0.0278 del vecchio banco). `SOGLIA_ON = 20%` del picco, `SOGLIA_OFF = 65%` della ON (§5.1): F1 ON=0.000082/OFF=0.000053, F2 ON=0.00056/OFF=0.000364. **Calcolate solo contro il rumore puro** (~0.000004, invariato) - il cross-talk tra f1/f2 su questo hardware non è ancora stato rimisurato (§5.1 punto 2): sul vecchio banco il pavimento di cross-talk era ~0.0003-0.0004, un ordine di grandezza che qui sarebbe vicino o sopra `SOGLIA_ON_F1` - **da verificare con la procedura di isolamento canali prima del pretest in campo**. Restano **assolute**: da rivalidare a ogni cambio di fibra/installazione/accoppiamento (banco di prova vs campo).
 
 ---
 
 ## 5.1 Come ritarare le soglie da soli (senza dover richiedere aiuto)
 
-Le soglie (`SOGLIA_ON_F1/F2`, `SOGLIA_OFF_F1/F2`) vanno ricalcolate ogni volta che cambia qualcosa che altera il livello del segnale reale: fibra diversa, installazione diversa, frequenze f1/f2 diverse, accoppiamento diverso (banco di prova vs campo). Procedura, usando solo gli strumenti già in `main.py` e i flag di isolamento in `trasmettitore.ino`:
+Le soglie (`SOGLIA_ON_F1/F2`, `SOGLIA_OFF_F1/F2`) vanno ricalcolate ogni volta che cambia qualcosa che altera il livello del segnale reale: fibra diversa, installazione diversa, frequenze f1/f2 diverse, accoppiamento diverso (banco di prova vs campo). Procedura, usando solo gli strumenti già in `main.py` e i flag di isolamento `CANALE1_ABILITATO`/`CANALE2_ABILITATO` — presenti sia in `trasmettitore.ino` sia in `DAISY CHAIN/master.ino`/`DAISY CHAIN/slave2.ino` (isola un canale alla volta sul nodo che stai tarando, gli altri nodi restano come sono):
 
 **1. Misura il rumore puro** (nessun tono trasmesso):
 - In `trasmettitore.ino` metti `CANALE1_ABILITATO = false` e `CANALE2_ABILITATO = false`, riflasha.
@@ -144,10 +155,10 @@ Le soglie (`SOGLIA_ON_F1/F2`, `SOGLIA_OFF_F1/F2`) vanno ricalcolate ogni volta c
 
 Entrambi i punti sotto erano "prossimi passi" aperti, ora risolti con strumenti dedicati in cartelle a parte (non toccano `main.py`/`trasmettitore.ino` se non per il risultato finale già applicato in §5).
 
-### 6.1 Delta t minimo — `TEST TEMPI/` — ⚠️ risultato NON valido per la combinazione usata in produzione, vedi sotto
+### 6.1 Delta t minimo — `TEST TEMPI/` — limite noto, aggirato con margine invece che richiuso
 `sweep_tempi/sweep_tempi.ino` genera un tono a durata decrescente in due fasi (ON più corto a gap fisso largo, poi gap più corto a ON fisso sicuro); `analizza_tempi_minimi.py` rigioca sui dati la stessa macchina a stati a isteresi di `main.py` e conta le transizioni rilevate contro quelle attese, per trovare il limite reale senza bisogno di leggere uno spettrogramma a occhio.
 
-**Limite del metodo, scoperto dopo (bagno di umiltà, non toccare finché non si rifà il test):** le due fasi dello sweep variano UN parametro alla volta tenendo l'altro largo — fase A riduce l'ON fino a 20ms ma con GAP fisso a 300ms, fase B riduce il GAP fino a 20ms ma con ON fisso a 80ms. Il valore poi "fissato" in produzione (T1=20ms **e** GAP=50ms insieme) non è mai stato la combinazione testata: ognuno dei due era ok solo perché l'altro aveva margine enorme, non perché la coppia stretta regge. Lo sweep, inoltre, usa solo f1 in isolamento — non riproduce la sovrapposizione reale con f2 né l'intero ciclo a 50 interruttori. Risultato: su un ciclo reale di produzione il conteggio si interrompe in anticipo regolarmente (vedi §0, §7) — non un caso isolato di rumore, ma la conseguenza diretta di questo buco di validazione. Prima di fidarsi di nuovi valori T1/GAP serve un test che sweepa la COPPIA (T1, GAP) insieme, con f1+f2 sovrapposti come nel protocollo vero, non i due assi separatamente.
+**Limite del metodo (bagno di umiltà, ancora valido come lezione):** le due fasi dello sweep variano UN parametro alla volta tenendo l'altro largo — non testano mai la COPPIA (T1, GAP) stretta insieme, né la sovrapposizione reale con f2, né un ciclo multi-nodo reale. Questo aveva causato il blocco descritto nella versione precedente di questo documento (conteggio che si interrompeva in anticipo su un ciclo a 50 interruttori, nodo singolo). **Non è stato richiuso rifacendo lo sweep correttamente** - è stato aggirato dal basso: T1/GAP sono stati allargati (20→50ms / 50→70ms, §5) e la tolleranza di classificazione allargata a 30ms (§3), poi validato per davvero dal vivo sull'hardware reale `DAISY CHAIN/` (due nodi fisici, marcatore e slot riconosciuti stabilmente ad ogni ciclo - vedi §7). Se in futuro si vuole tornare a stringere T1/GAP verso il minimo teorico, questo sweep va comunque rifatto sulla coppia insieme, non sui due assi separati - il problema di metodo resta lì, solo aggirato con margine per ora.
 
 ### 6.2 Risposta in frequenza — `TEST ARMONICHE/`
 `sweep_gradini/sweep_gradini.ino` spazza un tono a gradini di frequenza (200-6000Hz); `analizza_armoniche_sweep.py` fa FFT per gradino e cerca automaticamente pattern di cross-talk (armoniche, intermodulazione a offset fisso, risonanze assolute). Risultati: il sistema smette di rispondere sopra ~5400Hz; **4600Hz/3200Hz** sono risultate le due frequenze con segnale più forte, meno armoniche proprie e senza cross-talk misurabile tra loro (applicate in §5).
@@ -156,7 +167,14 @@ Entrambi i punti sotto erano "prossimi passi" aperti, ora risolti con strumenti 
 
 ## 7. Aperti / da decidere
 
-- **BLOCCANTE, priorità corrente:** T1=20ms/GAP=50ms non è validato per il protocollo completo (vedi §6.1) — su un ciclo reale a 50 interruttori il counter si resetta in anticipo (intorno al 41°-45° slot, sempre senza buchi interni prima di lì → non è rumore sparso, è un marcatore di zero falso a metà ciclo). Serve un test che sweepa T1 e GAP INSIEME (non uno alla volta) con f1+f2 sovrapposti come in produzione, prima di rimettere mano ai valori o al firmware. Diagnostica aggiunta in `main.py` (log di marcatori zero e durate scartate come rumore, con snapshot statistiche di rete) per il prossimo giro di test dal vivo.
-- valore reale di `NUM_SWITCH` da usare nei test (fino a 100)
-- tolleranze t0/t1 validate finora solo in laboratorio (banco di prova): da riverificare con dati di campo, dove il canale è più debole (motorino/vibrazione → terreno → fibra, non l'accoppiamento diretto del banco)
-- soglie da §5.1 derivate dagli sweep di caratterizzazione, non da un test a 3 punti dedicato con protocollo f1/f2 completo attivo — da confermare con "Azzera picchi" dal vivo prima del pretest in campo
+**Risolti in questa iterazione (`DAISY CHAIN/`):**
+- ~~T1/GAP non validati insieme~~ — allargati con margine (§5/§6.1) e validati dal vivo su hardware reale a 2 nodi.
+- ~~Marcatore/slot persi regolarmente~~ — due cause distinte trovate e corrette: (1) `INTERVALLO_MS` nel master non aveva un margine dedicato per la latenza reale del nodo remoto, causava sconfinamenti misurati come rumore (fix: `MARGINE_SICUREZZA_MS`, vedi `DAISY CHAIN/restart.md`); (2) tolleranza troppo stretta per la quantizzazione a blocchi Goertzel contro l'orologio indipendente del ricevitore (fix: `TOLLERANZA_MS` 10→30ms, §3).
+- ~~Interruttore simulato~~ — ora letto per davvero su A0 (entrambi i nodi), con debounce software e logica a latch (cattura una chiusura avvenuta in qualsiasi momento del ciclo, non solo nell'istante esatto del proprio slot) — dettaglio in `DAISY CHAIN/restart.md`.
+
+**Ancora aperti:**
+- Cross-talk f1/f2 non ancora rimisurato sul nuovo hardware daisy chain (§5.1 punto 2) — le soglie attuali sono calcolate solo contro il rumore puro, non contro il cross-talk reale su questo accoppiamento; rischio concreto già segnalato in §5.
+- Debounce dell'interruttore (30ms, `DEBOUNCE_INTERRUTTORE_MS` in `master.ino`/`slave2.ino`) validato solo con test manuali brevi, non con uso prolungato sul campo.
+- Estensione a slave3+: architettura già pensata per N nodi (`NUMERO_NODI`, bus condiviso), ma mai testata oltre 2.
+- `NUM_SWITCH` di `trasmettitore.ino` (nodo singolo, percorso non più attivo): valore reale da usare nei test se si torna a quel percorso, non applicabile a `DAISY CHAIN/` che usa `NUMERO_NODI`.
+- Tolleranze/soglie validate finora solo su banco di prova (accoppiamento diretto): da riverificare in campo (motorino/vibrazione → terreno → fibra), dove il canale è più debole.

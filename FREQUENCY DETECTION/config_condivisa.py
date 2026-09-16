@@ -42,10 +42,23 @@ GAP_MS = 70.0
 
 # Tolleranza di classificazione delle durate in main.py: quanto vicino a
 # T0_MS/T1_MS deve cadere una durata misurata per contare come marcatore/
-# slot valido invece che rumore. Con T1_MS=20ms (un solo blocco Goertzel da
-# 20ms, il minimo rappresentabile) va tenuta stretta - vedi il commento
-# dettagliato accanto a TOLLERANZA_MS_DEFAULT in main.py.
-TOLLERANZA_MS = 20.0
+# slot valido invece che rumore.
+#
+# Alzata da 20 a 30ms dopo il passaggio a daisy chain (DAISY CHAIN/restart.md):
+# il ricevitore campiona l'audio con un orologio TERZO e indipendente,
+# diverso sia dal master sia dallo slave (quei due sono sincronizzati tra
+# loro dal bus di trigger, ma non col ricevitore). Un tono reale quasi mai
+# inizia/finisce allineato esattamente ai blocchi Goertzel da 20ms, quindi
+# la durata misurata arrotonda per eccesso di un blocco in modo abbastanza
+# sistematico: un marcatore da 200ms (10 blocchi) viene spesso letto 220ms
+# (11 blocchi), uno slot da 50ms (2.5 blocchi) puo' essere letto 60ms (3
+# blocchi) o 80ms (4 blocchi) a seconda della fase. Con tolleranza=20ms la
+# banda slot [30,70]ms non copriva il caso a 4 blocchi (80ms), scartato
+# come rumore - osservato dal vivo, ogni ciclo perdeva uno dei due slot.
+# Con tolleranza=30ms: banda marcatore [170,230]ms, banda slot [20,80]ms -
+# margine anche per la deriva naturale tra i tre orologi nel tempo, non solo
+# per la fase misurata oggi.
+TOLLERANZA_MS = 30.0
 
 # Numero totale di nodi nella catena daisy chain (DAISY CHAIN/master/master.ino
 # + DAISY CHAIN/slave2/slave2.ino + eventuali slaveN futuri) - deve stare

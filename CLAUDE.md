@@ -47,9 +47,19 @@ per il training (nessun vincolo embedded).
   `kpi_calibration_log.jsonl` (scritto direttamente qui da `MLtoDL/0registratoreStalta.py`),
   `kpi_tracking.xlsx` (valori misurati per fase), `PROTOCOLLOkpi.MD` (procedura dettagliata per
   ciascun KPI), `listaScriptUtiliPerKPI.md` (mappa KPI → script).
+- `FREQUENCY DETECTION/` — flusso separato e indipendente da ML/DL: riconoscimento di eventi tramite
+  doppia frequenza nota (f1 "clock/counter", f2 "stato interruttore") invece di classificazione,
+  pensato per identificare quale interruttore/tappeto fisico ha generato l'evento (equivalente allo
+  scopo di TRAINING 2 sopra, ma con un metodo diverso da ML). Documentazione tecnica completa e
+  sempre aggiornata in `FREQUENCY DETECTION/SPECS.MD` (non duplicata qui): architettura, protocollo,
+  parametri correnti, procedura di taratura soglie. `main.py` è l'interrogatore/rilevatore (riceve
+  UDP, riconosce marcatore/slot via filtro di Goertzel). Due percorsi trasmettitore, non mescolarli:
+  `DAISY CHAIN/` (N Arduino Mega sincronizzati da bus di trigger condiviso, attivo oggi) e
+  `trasmettitore/trasmettitore.ino` (nodo singolo, riferimento/fallback).
 
 > Nessuna cartella `arduino/` è attualmente presente nel repository (multiplexing tappeti/vibratori
-> — da aggiungere qui se/quando il codice viene versionato).
+> — da aggiungere qui se/quando il codice viene versionato). Il multiplexing reale via Arduino vive
+> per ora in `FREQUENCY DETECTION/DAISY CHAIN/`, non qui.
 
 ## Fasi del progetto
 1. **Laboratorio**: segnali/energie non rappresentativi, serve solo a testare l'apparato ML.
@@ -81,8 +91,11 @@ Integrazione ML in due fasi:
 - NON modificare nulla dentro `CONFRONTO FIBRE/OLD CONFRONTO/` o `MLtoDLseparateFasiSUPERATO/`:
   è materiale archiviato, sostituito da versioni più recenti nelle rispettive cartelle attive.
 - Prima di modifiche strutturali, fare commit git dello stato funzionante corrente.
-- Mantenere separati il flusso `CONFRONTO FIBRE/` e il flusso `MLtoDL/` (training/ML): non
-  mescolare logica o file tra le due aree.
+- Mantenere separati il flusso `CONFRONTO FIBRE/`, il flusso `MLtoDL/` (training/ML) e il flusso
+  `FREQUENCY DETECTION/` (doppia frequenza): non mescolare logica o file tra queste aree.
+- Dentro `FREQUENCY DETECTION/`, non mescolare i due percorsi trasmettitore: `DAISY CHAIN/`
+  (attivo) e `trasmettitore/trasmettitore.ino` (nodo singolo, riferimento/fallback) restano
+  indipendenti - vedi `FREQUENCY DETECTION/SPECS.MD` §4.
 - Il file `MLtoDL/0registratoreStalta.py` è unico con due modalità (Dataset/Riconoscimento):
   evitare di duplicare la logica STA/LTA in script separati.
 - Gli script KPI (`sensor_integrity_verification.py`, `calcola_kpi.py`, `curva_apprendimento.py`,

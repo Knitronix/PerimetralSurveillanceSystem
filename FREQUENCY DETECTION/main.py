@@ -105,26 +105,15 @@ F1_HZ_DEFAULT = config_condivisa.F1_HZ
 F2_HZ_DEFAULT = config_condivisa.F2_HZ
 T0_MS_DEFAULT = config_condivisa.T0_MS      # marcatore di zero
 T1_MS_DEFAULT = config_condivisa.T1_MS      # durata di uno slot
-# Tolleranza stretta a 10ms (era 50ms quando t1 era 100/40ms): con t1=20ms
-# uguale esattamente a un blocco Goertzel (BLOCCO_GOERTZEL_MS=20 sotto), una
-# tolleranza di 50ms accetterebbe come "slot valido" anche una durata di 40
-# o 60ms (2-3 blocchi, il doppio/triplo del previsto) - cioè non farebbe
-# più da filtro anti-rumore, quasi ogni impulso più lungo del previsto
-# passerebbe comunque come slot invece di essere scartato come rumore. Con
-# tolleranza=10ms la fascia "slot" copre solo [10,30]ms: dato che le durate
-# misurate sono multipli di 20ms, l'unico valore che ci cade dentro è
-# esattamente 20ms - un vero controllo, non un pass-through.
+# Tolleranza a 30ms (vedi commento dettagliato accanto a TOLLERANZA_MS in
+# config_condivisa.py - fonte di verità del valore, non duplicarlo qui):
+# col passaggio a daisy chain il ricevitore campia l'audio con un orologio
+# indipendente sia dal master sia dallo slave, quindi le durate misurate
+# arrotondano per eccesso di un blocco Goertzel (20ms) in modo abbastanza
+# sistematico - la tolleranza deve coprire questo arrotondamento, non solo
+# il rumore. Bande risultanti: marcatore [170,230]ms, slot [20,80]ms -
+# separate, nessuna sovrapposizione tra le due.
 TOLLERANZA_MS_DEFAULT = config_condivisa.TOLLERANZA_MS
-# Blocco Goertzel: 20ms -> t1=20ms è ESATTAMENTE un blocco (il minimo
-# teorico rappresentabile), t0=200ms sono 10 blocchi. Con tolleranza=10ms
-# la fascia "slot" copre [10,30]ms (solo 20ms quantizzato ci cade dentro) e
-# quella "marcatore zero" [190,210]ms (solo 200ms): separate, nessuna
-# sovrapposizione. Girare a questa scala è il limite teorico del sistema:
-# verificare con TEST TEMPI/ (stessa frequenza/soglie) che il canale regga
-# davvero un ON così corto e un gap di 50ms prima di fidarsene sul campo -
-# se in pratica capitano falsi "slot"/"zero" da rumore prolungato, la
-# tolleranza è già al minimo sensato, il problema è a monte (soglie o
-# durata stessa, non più questo parametro).
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 # Soglie sulla potenza Goertzel normalizzata (0..1 = piena scala int16).
