@@ -36,6 +36,9 @@ checkpoints/
 *.tmp
 *.bak
 
+# --- Log eventi generati a runtime (crescono ad ogni test, non da versionare) ---
+FREQUENCY DETECTION/eventi_f1_f2_log.jsonl
+
 # --- OS / editor ---
 .DS_Store
 Thumbs.db
