@@ -15,7 +15,7 @@ Uso:
 import sys
 import requests
 
-SHELLY_IP = "192.168.0.64"  # IP della presa Shelly
+SHELLY_IP = "192.168.1.2"  # IP della presa Shelly
 TIMEOUT = 5  # secondi
 
 

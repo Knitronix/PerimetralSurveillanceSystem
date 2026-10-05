@@ -32,6 +32,7 @@ nel pannello a destra.
 from __future__ import annotations
 
 import logging
+import math
 import socket
 import time
 from dataclasses import dataclass
@@ -97,7 +98,7 @@ STA_LTA_SOGLIA_OFF_DEFAULT = 1.2
 # in AMBIENTE scatterebbe un risveglio falso sul solo transitorio - inutile
 # per tarare (il pannello smetterebbe di aggiornarsi subito) e sbagliato in
 # produzione (sveglierebbe i tappeti senza nessun evento vero).
-ATTESA_STABILIZZAZIONE_STALTA_S = 10.0
+ATTESA_STABILIZZAZIONE_STALTA_S = 1.0
 
 
 # ============================================================
@@ -106,9 +107,20 @@ ATTESA_STABILIZZAZIONE_STALTA_S = 10.0
 # ============================================================
 @dataclass
 class Config:
-    ATTESA_BOOT_DAISY_CHAIN_S: float = 5.0  # TODO misurare (boot Arduino + primo ciclo)
-    TIMEOUT_NESSUNA_CHIUSURA_MIN: float = 10.0  # TODO decidere insieme
-    SMART_PLUG_HOST: str = "TODO-inserire-ip-plug"
+    ATTESA_BOOT_DAISY_CHAIN_S: float = 2.0  # abbassato per ora, TODO misurare davvero (boot Arduino + primo ciclo)
+    # Timeout inattività: si resetta ad ogni chiusura. Ottimizza il caso
+    # normale (evento reale breve, poi silenzio) - si torna ad AMBIENTE
+    # appena finisce l'attività, non dopo un tempo fisso.
+    TIMEOUT_INATTIVITA_MIN: float = 2.0  # abbassato per le sessioni di test, TODO decidere il valore reale insieme
+    # Timeout massimo: a differenza di quello sopra NON si resetta mai - è la
+    # rete di sicurezza per il caso patologico (sensore bloccato chiuso,
+    # rumore continuo) in cui il timeout di inattività non scatterebbe mai da
+    # solo. float('inf') = "mai" (disattivato): nessun tetto, resta armato
+    # finché non arriva un'inattività vera o un riarmo manuale - scelta
+    # esplicita per un cliente che preferisce non avere un limite di tempo
+    # prevedibile su quanto resta armato, vedi cambia_timeout_massimo.
+    TIMEOUT_MASSIMO_MIN: float = 5.0  # TODO decidere il valore reale insieme
+    SMART_PLUG_HOST: str = "192.168.1.2"
     SMART_PLUG_CHANNEL: int = 0
 
 
@@ -131,6 +143,16 @@ COLORE_STATO_RGB = {
     Stato.RISVEGLIO: (232, 163, 61),
     Stato.ARMATO: (0, 210, 196),
 }
+
+# Tetto a quanti "Sensore N" mostrare in tab Ascolto: il counter di
+# RilevatoreProtocolloF1F2 non ha un limite proprio (sale finché non arriva
+# un marcatore di zero) - se in ARMATO non c'è un vero segnale daisy chain
+# (rumore/silenzio sulla fibra), il counter può salire a valori assurdi
+# (es. 178) senza mai resettarsi. Mostrarne uno per ogni valore visto
+# creerebbe widget senza fine; un pool fisso, ordinato per numero (i sensori
+# veri 1/2 restano sempre in cima), evita sia l'esplosione di widget sia il
+# pattern crea/cancella dinamico che causava il crash "already deleted".
+MAX_TAPPETI_VISUALIZZATI = 8
 
 
 # ============================================================
@@ -360,8 +382,8 @@ QGroupBox {{
     background-color: {COLORI['bg_elevato']};
     border: 1px solid {COLORI['bordo']};
     border-radius: 10px;
-    margin-top: 16px;
-    padding: 16px 12px 12px 12px;
+    margin-top: 12px;
+    padding: 10px 10px 8px 10px;
 }}
 QGroupBox::title {{
     subcontrol-origin: margin;
@@ -524,6 +546,9 @@ class SmartPlug:
         self.host = host
         self.channel = channel
 
+    def imposta_host(self, host: str) -> None:
+        self.host = host.strip()
+
     def _host_configurato(self) -> bool:
         return not self.host.startswith("TODO")
 
@@ -562,8 +587,11 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._modalita_dry_run = True
         self._inizio_risveglio_s = 0.0
         self._ultima_chiusura_s = 0.0
+        self._inizio_armato_s = 0.0
         self.protocollo_tappeti: RilevatoreProtocolloF1F2 | None = None
         self._accumulo_tappeti = np.empty(0, dtype=np.int16)
+        self.stato_tappeti: dict[int, bool] = {}  # counter -> chiuso?
+        self._visti_questo_ciclo: set[int] = set()  # counter visti nel ciclo daisy chain in corso
 
         # --- buffer forma d'onda (sempre aggiornato, in qualunque stato) ---
         self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int16)
@@ -691,6 +719,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.curva_onda_taratura = self.plot_widget_taratura.plot(
             self.asse_tempo, self.buffer_audio, pen=pg.mkPen(color="#00d2c4", width=1.2)
         )
+        self._applica_ottimizzazioni_curva(self.curva_onda_taratura)
         self.plot_widget_taratura.setYRange(-20000, 20000, padding=0)
         self.plot_widget_taratura.setXRange(-SECONDI_VISIBILI, 0, padding=0)
         colonna_sinistra.addWidget(self.plot_widget_taratura, stretch=3)
@@ -706,6 +735,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.linea_stalta = self.plot_stalta.plot(
             self.asse_tempo_stalta, self.storico_stalta, pen=pg.mkPen(color="#ffb02e", width=1.5)
         )
+        self._applica_ottimizzazioni_curva(self.linea_stalta)
         self.linea_soglia_on = pg.InfiniteLine(
             angle=0, movable=False, pen=pg.mkPen(color="#ff4757", width=1.5, style=QtCore.Qt.DashLine)
         )
@@ -722,16 +752,16 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.label_rete.setStyleSheet(f"color: {COLORI['testo_tenue']}; font-family: 'Consolas', monospace; font-size: 11px;")
         colonna_sinistra.addWidget(self.label_rete)
 
-        layout_principale.addLayout(colonna_sinistra, stretch=3)
+        layout_principale.addLayout(colonna_sinistra, stretch=2)
 
         # --- colonna destra: STA/LTA + soglie + log + conferma ---
         contenitore_destra = QtWidgets.QWidget()
         colonna_destra = QtWidgets.QVBoxLayout(contenitore_destra)
-        colonna_destra.setSpacing(8)
+        colonna_destra.setSpacing(6)
 
         card_stalta = QtWidgets.QGroupBox("STA/LTA — SOGLIE LIVE")
         layout_stalta = QtWidgets.QVBoxLayout(card_stalta)
-        layout_stalta.setSpacing(6)
+        layout_stalta.setSpacing(4)
         self.label_stalta = QtWidgets.QLabel("STA/LTA: --")
         self.label_stalta.setStyleSheet(
             f"color: {COLORI['accento']}; font-family: 'Consolas', monospace; font-size: 16px; font-weight: 700;"
@@ -754,7 +784,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         layout_stalta.addWidget(btn_azzera_minmax)
 
         griglia_soglie = QtWidgets.QGridLayout()
-        griglia_soglie.setVerticalSpacing(6)
+        griglia_soglie.setVerticalSpacing(3)
         self.spin_soglia_on = self._crea_spin(1.0, 500.0, STA_LTA_SOGLIA_ON_DEFAULT, 0.1)
         self.spin_soglia_off = self._crea_spin(0.5, 500.0, STA_LTA_SOGLIA_OFF_DEFAULT, 0.1)
         self.spin_soglia_on.valueChanged.connect(self.cambia_soglie_stalta)
@@ -777,12 +807,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         # card ON/OFF con solo una riga a separarle.
         card_finestre = QtWidgets.QGroupBox("FINESTRE STA/LTA")
         layout_finestre = QtWidgets.QVBoxLayout(card_finestre)
-        layout_finestre.setSpacing(6)
+        layout_finestre.setSpacing(4)
         label_finestre_nota = QtWidgets.QLabel("Richiede Applica: ricostruisce il rilevatore da zero")
         label_finestre_nota.setStyleSheet(STILE_NOTA_TENUE)
         layout_finestre.addWidget(label_finestre_nota)
         griglia_finestre = QtWidgets.QGridLayout()
-        griglia_finestre.setVerticalSpacing(6)
+        griglia_finestre.setVerticalSpacing(3)
         self.spin_finestra_sta = self._crea_spin(0.02, 5.0, STA_FINESTRA_SEC_DEFAULT, 0.02)
         self.spin_finestra_lta = self._crea_spin(0.5, 60.0, LTA_FINESTRA_SEC_DEFAULT, 0.5)
         griglia_finestre.addWidget(QtWidgets.QLabel("STA (s)"), 0, 0)
@@ -815,7 +845,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
         self.btn_ok_tarato = QtWidgets.QPushButton("✓  OK STALTA TARATO — passa ad ASCOLTO")
         self.btn_ok_tarato.setObjectName("Primario")
-        self.btn_ok_tarato.setMinimumHeight(44)
+        self.btn_ok_tarato.setMinimumHeight(36)
         self.btn_ok_tarato.clicked.connect(self._conferma_stalta_tarato)
         colonna_destra.addWidget(self.btn_ok_tarato)
 
@@ -845,6 +875,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         condivisa con la fase 1."""
         tab = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(tab)
+
         self.plot_widget_ascolto = pg.PlotWidget()
         self.plot_widget_ascolto.setBackground("#111111")
         self.plot_widget_ascolto.showGrid(x=True, y=True, alpha=0.2)
@@ -854,9 +885,10 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.curva_onda_ascolto = self.plot_widget_ascolto.plot(
             self.asse_tempo, self.buffer_audio, pen=pg.mkPen(color="#00d2c4", width=1.2)
         )
+        self._applica_ottimizzazioni_curva(self.curva_onda_ascolto)
         self.plot_widget_ascolto.setYRange(-20000, 20000, padding=0)
         self.plot_widget_ascolto.setXRange(-SECONDI_VISIBILI, 0, padding=0)
-        layout.addWidget(self.plot_widget_ascolto, stretch=1)
+        layout.addWidget(self.plot_widget_ascolto, stretch=2)
 
         pannello = QtWidgets.QGroupBox("STATO ASCOLTO")
         layout_pannello = QtWidgets.QHBoxLayout(pannello)
@@ -875,21 +907,108 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         colonna_allarme.addWidget(self.label_countdown_riarmo)
         layout_pannello.addLayout(colonna_allarme, stretch=1)
 
-        layout_pannello.addWidget(QtWidgets.QLabel("Timeout riarmo (min):"))
-        self.spin_timeout_riarmo = self._crea_spin(0.5, 120.0, self.config.TIMEOUT_NESSUNA_CHIUSURA_MIN, 0.5)
-        self.spin_timeout_riarmo.valueChanged.connect(self.cambia_timeout_riarmo)
-        layout_pannello.addWidget(self.spin_timeout_riarmo)
+        # Due timer diversi governano il rientro ad AMBIENTE, entrambi
+        # regolabili qui: il timeout inattività si resetta ad ogni chiusura
+        # (può non scadere mai se le chiusure continuano ad arrivare), il
+        # timeout massimo no - vedi controlla_transizioni_temporali. Il
+        # countdown a sinistra mostra sempre quello dei due più vicino a
+        # scadere, non solo l'inattività (altrimenti, con chiusure continue,
+        # sembrava che "non partisse mai" anche se il massimo stava comunque
+        # scorrendo sotto).
+        griglia_timer = QtWidgets.QGridLayout()
+        griglia_timer.setVerticalSpacing(4)
+        griglia_timer.addWidget(QtWidgets.QLabel("Timeout inattività (min):"), 0, 0)
+        self.spin_timeout_inattivita = self._crea_spin(0.5, 120.0, self.config.TIMEOUT_INATTIVITA_MIN, 0.5)
+        self.spin_timeout_inattivita.valueChanged.connect(self.cambia_timeout_inattivita)
+        griglia_timer.addWidget(self.spin_timeout_inattivita, 0, 1)
 
-        pannello.setMaximumWidth(560)
-        layout_centrato = QtWidgets.QHBoxLayout()
-        layout_centrato.addStretch(1)
-        layout_centrato.addWidget(pannello)
-        layout_centrato.addStretch(1)
-        layout.addLayout(layout_centrato)
+        griglia_timer.addWidget(QtWidgets.QLabel("Timeout massimo (min):"), 1, 0)
+        self.spin_timeout_massimo = self._crea_spin(0.5, 120.0, self.config.TIMEOUT_MASSIMO_MIN, 0.5)
+        self.spin_timeout_massimo.valueChanged.connect(self.cambia_timeout_massimo)
+        griglia_timer.addWidget(self.spin_timeout_massimo, 1, 1)
+
+        # "Mai": nessun tetto, resta armato finché non arriva un'inattività
+        # vera o un riarmo manuale - scelta esplicita (vedi Config), non il
+        # default, perché toglie la rete di sicurezza per il caso
+        # patologico (sensore bloccato, rumore continuo).
+        self.check_timeout_massimo_mai = QtWidgets.QCheckBox("Mai (nessun tetto massimo)")
+        self.check_timeout_massimo_mai.toggled.connect(self._cambia_timeout_massimo_mai)
+        griglia_timer.addWidget(self.check_timeout_massimo_mai, 2, 0, 1, 2)
+
+        # IP della smart plug, modificabile qui invece che nel codice: l'IP
+        # della Shelly cambia da solo ogni tanto (riassegnazione DHCP del
+        # router) - niente da editare a mano in shelly_control.py/main.py e
+        # rilanciare ad ogni volta, basta scrivere il nuovo indirizzo qui.
+        griglia_timer.addWidget(QtWidgets.QLabel("Smart plug IP:"), 3, 0)
+        riga_ip = QtWidgets.QHBoxLayout()
+        self.campo_smart_plug_ip = QtWidgets.QLineEdit(self.config.SMART_PLUG_HOST)
+        self.campo_smart_plug_ip.setPlaceholderText("es. 192.168.1.2")
+        self.campo_smart_plug_ip.returnPressed.connect(self.cambia_smart_plug_ip)
+        riga_ip.addWidget(self.campo_smart_plug_ip)
+        btn_applica_ip = QtWidgets.QPushButton("Applica")
+        btn_applica_ip.clicked.connect(self.cambia_smart_plug_ip)
+        riga_ip.addWidget(btn_applica_ip)
+        griglia_timer.addLayout(riga_ip, 3, 1)
+        layout_pannello.addLayout(griglia_timer)
+
+        # Tappeti: counter del ciclo daisy chain + un'etichetta "Sensore N"
+        # per interruttore (verde = chiuso/premuto, rosso = aperto) - vive
+        # solo mentre self.protocollo_tappeti esiste (ARMATO), vedi
+        # _elabora_tappeti e _aggiorna_ui_tappeti. Pool FISSO di
+        # MAX_TAPPETI_VISUALIZZATI etichette, create una volta sola e solo
+        # mostrate/nascoste (mai deleteLater()+ricreate): il counter non ha
+        # un limite proprio e su rumore può salire senza mai resettarsi,
+        # creare/distruggere widget dinamicamente in quel caso è sia uno
+        # spreco sia la causa di un crash "already deleted" già visto dal
+        # vivo con cicli di risveglio ravvicinati.
+        pannello_tappeti = QtWidgets.QGroupBox("TAPPETI (in ARMATO)")
+        layout_tappeti_ui = QtWidgets.QVBoxLayout(pannello_tappeti)
+        self.label_tappeti_counter = QtWidgets.QLabel("Counter: --")
+        self.label_tappeti_counter.setStyleSheet(
+            f"color: {COLORI['accento']}; font-family: 'Consolas', monospace; font-size: 13px; font-weight: 700;"
+        )
+        layout_tappeti_ui.addWidget(self.label_tappeti_counter)
+        self.layout_indicatori_tappeti = QtWidgets.QHBoxLayout()
+        self.label_nessun_tappeto = QtWidgets.QLabel("(nessun tappeto visto ancora)")
+        self.layout_indicatori_tappeti.addWidget(self.label_nessun_tappeto)
+        self._indicatori_tappeti: list[QtWidgets.QLabel] = []
+        for _ in range(MAX_TAPPETI_VISUALIZZATI):
+            etichetta = QtWidgets.QLabel("")
+            etichetta.setAlignment(QtCore.Qt.AlignCenter)
+            etichetta.hide()
+            self.layout_indicatori_tappeti.addWidget(etichetta)
+            self._indicatori_tappeti.append(etichetta)
+        layout_tappeti_ui.addLayout(self.layout_indicatori_tappeti)
+
+        # Affiancati (sinistra/destra), non impilati: stessa altezza, si
+        # dividono la larghezza della tab invece di stare al centro strette.
+        riga_pannelli = QtWidgets.QHBoxLayout()
+        riga_pannelli.setSpacing(14)
+        riga_pannelli.addWidget(pannello, stretch=1)
+        riga_pannelli.addWidget(pannello_tappeti, stretch=1)
+        layout.addLayout(riga_pannelli, stretch=1)
         return tab
 
-    def cambia_timeout_riarmo(self) -> None:
-        self.config.TIMEOUT_NESSUNA_CHIUSURA_MIN = self.spin_timeout_riarmo.value()
+    def cambia_timeout_inattivita(self) -> None:
+        self.config.TIMEOUT_INATTIVITA_MIN = self.spin_timeout_inattivita.value()
+
+    def cambia_timeout_massimo(self) -> None:
+        self.config.TIMEOUT_MASSIMO_MIN = self.spin_timeout_massimo.value()
+
+    def _cambia_timeout_massimo_mai(self, mai: bool) -> None:
+        self.spin_timeout_massimo.setEnabled(not mai)
+        if mai:
+            self.config.TIMEOUT_MASSIMO_MIN = float("inf")
+        else:
+            self.config.TIMEOUT_MASSIMO_MIN = self.spin_timeout_massimo.value()
+
+    def cambia_smart_plug_ip(self) -> None:
+        nuovo_host = self.campo_smart_plug_ip.text().strip()
+        if not nuovo_host:
+            return
+        self.config.SMART_PLUG_HOST = nuovo_host
+        self.plug.imposta_host(nuovo_host)
+        self._aggiungi_log(f"Smart plug IP aggiornato: {nuovo_host}")
 
     def _conferma_stalta_tarato(self) -> None:
         self._modalita_dry_run = False
@@ -1037,6 +1156,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.label_ultimo_allarme.setText(f"Ultimo allarme: {time.strftime('%H:%M:%S')}")
         self.plug.accendi()
         self._accumulo_tappeti = np.empty(0, dtype=np.int16)
+        self._pulisci_indicatori_tappeti()
         self.protocollo_tappeti = RilevatoreProtocolloF1F2(
             SAMPLE_RATE, BLOCCO_GOERTZEL_CAMPIONI,
             F1_HZ, F2_HZ, T0_MS, T1_MS, TOLLERANZA_MS,
@@ -1050,13 +1170,67 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         if self.protocollo_tappeti is None:
             return
         self._accumulo_tappeti = np.concatenate((self._accumulo_tappeti, campioni))
+        eventi_slot = False
         while len(self._accumulo_tappeti) >= BLOCCO_GOERTZEL_CAMPIONI:
             blocco = self._accumulo_tappeti[:BLOCCO_GOERTZEL_CAMPIONI]
             self._accumulo_tappeti = self._accumulo_tappeti[BLOCCO_GOERTZEL_CAMPIONI:]
             for evento in self.protocollo_tappeti.elabora_blocco(blocco):
-                if evento["tipo"] == "slot" and evento["stato"] == "chiuso":
-                    self._ultima_chiusura_s = time.monotonic()
-                    self._aggiungi_log(f"ALLARME: interruttore {evento['counter']} chiuso")
+                if evento["tipo"] == "zero":
+                    # Fine del ciclo appena concluso: un sensore che era
+                    # visualizzato ma non si è ripresentato in QUESTO ciclo
+                    # (comparso per rumore, mai esistito davvero) va tolto -
+                    # ma solo lui, non tutto. Cancellare e ricreare l'intero
+                    # pannello ad ogni marcatore di zero (una volta a ciclo,
+                    # ~1s) faceva "flashare" anche i sensori veri e stabili,
+                    # oltre a essere lavoro sprecato quando non cambia nulla.
+                    mancanti = self.stato_tappeti.keys() - self._visti_questo_ciclo
+                    for numero in mancanti:
+                        del self.stato_tappeti[numero]
+                    if mancanti:
+                        eventi_slot = True
+                    self._visti_questo_ciclo = set()
+                elif evento["tipo"] == "slot":
+                    eventi_slot = True
+                    self.stato_tappeti[evento["counter"]] = evento["stato"] == "chiuso"
+                    self._visti_questo_ciclo.add(evento["counter"])
+                    if evento["stato"] == "chiuso":
+                        self._ultima_chiusura_s = time.monotonic()
+                        self._aggiungi_log(f"ALLARME: interruttore {evento['counter']} chiuso")
+        if eventi_slot:
+            self._aggiorna_ui_tappeti()
+
+    def _aggiorna_ui_tappeti(self) -> None:
+        counter = self.protocollo_tappeti.counter if self.protocollo_tappeti is not None else "--"
+        self.label_tappeti_counter.setText(f"Counter: {counter}")
+
+        numeri = sorted(self.stato_tappeti.items())  # i numeri bassi (sensori veri) vengono sempre per primi
+        if len(numeri) > MAX_TAPPETI_VISUALIZZATI:
+            log.warning(
+                "Counter tappeti oltre %d valori distinti (%d) - probabile rumore, non un vero ciclo daisy chain",
+                MAX_TAPPETI_VISUALIZZATI, len(numeri),
+            )
+        self.label_nessun_tappeto.setVisible(not numeri)
+
+        for indice, etichetta in enumerate(self._indicatori_tappeti):
+            if indice >= len(numeri):
+                etichetta.hide()
+                continue
+            numero, chiuso = numeri[indice]
+            colore = COLORI["pericolo"] if chiuso else "#1fbf75"
+            etichetta.setText(f"Sensore {numero}")
+            etichetta.setStyleSheet(
+                f"background-color: {colore}; color: white; font-weight: 800; "
+                "border-radius: 8px; font-size: 12px; padding: 8px 14px;"
+            )
+            etichetta.show()
+
+    def _pulisci_indicatori_tappeti(self) -> None:
+        self.stato_tappeti = {}
+        self._visti_questo_ciclo = set()
+        self.label_tappeti_counter.setText("Counter: --")
+        self.label_nessun_tappeto.show()
+        for etichetta in self._indicatori_tappeti:
+            etichetta.hide()
 
     # ------------------------------------------------------------------
     # Transizioni temporali (boot daisy chain, timeout spegnimento)
@@ -1067,14 +1241,21 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         if self.stato == Stato.RISVEGLIO:
             if ora - self._inizio_risveglio_s >= self.config.ATTESA_BOOT_DAISY_CHAIN_S:
                 self._ultima_chiusura_s = ora
+                self._inizio_armato_s = ora
                 self._aggiungi_log("Daisy chain considerata sincronizzata -> ARMATO")
                 self.stato = Stato.ARMATO
                 self._applica_stile_stato()
 
         elif self.stato == Stato.ARMATO:
-            timeout_s = self.config.TIMEOUT_NESSUNA_CHIUSURA_MIN * 60
-            if ora - self._ultima_chiusura_s >= timeout_s:
-                self._torna_ad_ambiente(f"nessuna chiusura da {self.config.TIMEOUT_NESSUNA_CHIUSURA_MIN:.0f} min")
+            timeout_inattivita_s = self.config.TIMEOUT_INATTIVITA_MIN * 60
+            timeout_massimo_s = self.config.TIMEOUT_MASSIMO_MIN * 60  # inf se "Mai" e' attivo, il confronto sotto resta sempre False
+            if ora - self._ultima_chiusura_s >= timeout_inattivita_s:
+                self._torna_ad_ambiente(f"nessuna chiusura da {self.config.TIMEOUT_INATTIVITA_MIN:.0f} min (timeout inattività)")
+            elif ora - self._inizio_armato_s >= timeout_massimo_s:
+                self._torna_ad_ambiente(
+                    f"timeout massimo raggiunto ({self.config.TIMEOUT_MASSIMO_MIN:.0f} min, "
+                    "nonostante chiusure continue)"
+                )
 
         self._aggiorna_countdown_riarmo(ora)
 
@@ -1082,11 +1263,44 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         if self.stato == Stato.AMBIENTE:
             self.label_countdown_riarmo.setText("Riarmo tra: -- (già in ascolto ambiente)")
         elif self.stato == Stato.RISVEGLIO:
-            self.label_countdown_riarmo.setText("Riarmo tra: -- (in attesa sync daisy chain)")
+            # Anche qui un conto alla rovescia vero, non un "--" statico:
+            # altrimenti sembrano 5s morti tra "sento il rumore" e "vedo un
+            # numero", anche se in realtà l'attesa di boot sta già scorrendo.
+            rimanenti_s = max(0.0, self.config.ATTESA_BOOT_DAISY_CHAIN_S - (ora - self._inizio_risveglio_s))
+            self.label_countdown_riarmo.setText(f"Sync daisy chain tra: {rimanenti_s:.1f}s")
         else:  # ARMATO
-            rimanenti_s = max(0.0, self.config.TIMEOUT_NESSUNA_CHIUSURA_MIN * 60 - (ora - self._ultima_chiusura_s))
-            minuti, secondi = divmod(int(rimanenti_s), 60)
-            self.label_countdown_riarmo.setText(f"Riarmo tra: {minuti:02d}:{secondi:02d}")
+            # Due timer possono far scattare il riarmo (vedi
+            # controlla_transizioni_temporali). Se le chiusure sono continue
+            # (un sensore che resta premuto, o rumore), il timeout di
+            # inattività si resetta ad ogni ciclo (~1s) e mostrarlo sembra un
+            # countdown bloccato - fermo per davvero, non solo per come
+            # veniva disegnato. In quel caso mostro il timeout massimo (l'unico
+            # che progredisce sempre, non si resetta mai) con un'etichetta
+            # che spiega perché non è quello di inattività a comandare -
+            # a meno che il timeout massimo sia "Mai" (infinito), nel qual
+            # caso non c'è nessun numero da contare: int(inf) esploderebbe.
+            massimo_disattivato = math.isinf(self.config.TIMEOUT_MASSIMO_MIN)
+            secondi_da_ultima_chiusura = ora - self._ultima_chiusura_s
+            rimanenti_massima_s = (
+                float("inf") if massimo_disattivato
+                else max(0.0, self.config.TIMEOUT_MASSIMO_MIN * 60 - (ora - self._inizio_armato_s))
+            )
+            if secondi_da_ultima_chiusura < 1.5:
+                if massimo_disattivato:
+                    self.label_countdown_riarmo.setText("Riarmo: mai (timeout massimo disattivato) - chiusure in corso")
+                else:
+                    minuti, secondi = divmod(int(rimanenti_massima_s), 60)
+                    self.label_countdown_riarmo.setText(
+                        f"Riarmo tra: {minuti:02d}:{secondi:02d} (timeout massimo - chiusure in corso)"
+                    )
+            else:
+                rimanenti_timeout_s = max(0.0, self.config.TIMEOUT_INATTIVITA_MIN * 60 - secondi_da_ultima_chiusura)
+                if massimo_disattivato or rimanenti_timeout_s <= rimanenti_massima_s:
+                    rimanenti_s, motivo = rimanenti_timeout_s, "inattività"
+                else:
+                    rimanenti_s, motivo = rimanenti_massima_s, "timeout massimo"
+                minuti, secondi = divmod(int(rimanenti_s), 60)
+                self.label_countdown_riarmo.setText(f"Riarmo tra: {minuti:02d}:{secondi:02d} ({motivo})")
 
     def _torna_ad_ambiente(self, motivo: str) -> None:
         """Comune a timeout vero e al pulsante "Forza AMBIENTE": riparte da
@@ -1097,6 +1311,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._aggiungi_log(f"{motivo} -> AMBIENTE")
         self.plug.spegni()
         self.protocollo_tappeti = None
+        self._pulisci_indicatori_tappeti()
         self.rilevatore_stalta = RilevatoreStaLta(
             SAMPLE_RATE, CAMPIONI_PER_PACCHETTO,
             STA_FINESTRA_SEC_DEFAULT, LTA_FINESTRA_SEC_DEFAULT,
@@ -1120,6 +1335,22 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             (self.storico_stalta[self.write_pos_stalta:], self.storico_stalta[: self.write_pos_stalta])
         )
         self.linea_stalta.setData(self.asse_tempo_stalta, storico_ordinato)
+
+    @staticmethod
+    def _applica_ottimizzazioni_curva(curva) -> None:
+        """Downsampling + clip alla vista: senza questo pyqtgraph ridisegna
+        tutti i 360.000 campioni della finestra da 15s ad ogni frame (20fps),
+        il costo vero dietro alla lentezza percepita - stesso accorgimento
+        già usato in FREQUENCY DETECTION/main.py e 0registratoreStalta.py."""
+        try:
+            curva.setDownsampling(auto=True, method="peak")
+        except TypeError:
+            curva.setDownsampling(auto=True)
+        curva.setClipToView(True)
+        try:
+            curva.setSkipFiniteCheck(True)
+        except AttributeError:
+            pass
 
     # ------------------------------------------------------------------
     def closeEvent(self, event) -> None:
