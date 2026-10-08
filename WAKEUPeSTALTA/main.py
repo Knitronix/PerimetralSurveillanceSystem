@@ -39,10 +39,14 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 import numpy as np
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 
 import shelly_control
+from pannello_timer import PannelloTimer
+from tema import (COLORI, FONT_MONO, SPAZIO, STYLE_QSS, T_VALORE, Stepper, applica_palette,
+                  crea_card, etichetta, legenda_linea, rgba, separatore, stile_chip, stile_plot)
+from vista_impianto import VistaImpianto
 
 logging.basicConfig(
     level=logging.INFO,
@@ -99,6 +103,12 @@ STA_LTA_SOGLIA_OFF_DEFAULT = 1.2
 # per tarare (il pannello smetterebbe di aggiornarsi subito) e sbagliato in
 # produzione (sveglierebbe i tappeti senza nessun evento vero).
 ATTESA_STABILIZZAZIONE_STALTA_S = 1.0
+
+# Se la smart plug non risponde (RPC falso/timeout, IP cambiato da DHCP...)
+# non si deve procedere come se la daisy chain fosse alimentata: si resta in
+# RISVEGLIO e si riprova a intervalli, invece di martellare l'host ogni 200ms
+# (tick di controlla_transizioni_temporali).
+RITARDO_RETRY_PLUG_S = 2.0
 
 
 # ============================================================
@@ -338,161 +348,9 @@ class RilevatoreStaLta:
 
 
 # ============================================================
-# UI: pattern riusati dal resto del progetto
+# Design system: palette, QSS e componenti condivisi con pannello_timer.py
+# e vista_impianto.py - tutto in tema.py, un posto solo.
 # ============================================================
-class SpinBoxSenzaRotella(QtWidgets.QDoubleSpinBox):
-    """QDoubleSpinBox che ignora la rotella del mouse (vedi
-    FREQUENCY DETECTION/main.py per il motivo: cambia soglie per sbaglio
-    scorrendo il pannello, senza nemmeno il focus/click)."""
-
-    def wheelEvent(self, event):
-        event.ignore()
-
-
-# ============================================================
-# Design system minimo: una palette sola, riusata da QSS e dai punti che
-# costruiscono stringhe di stile a runtime (badge di stato, pillola
-# allarme) - per non finire con due tavolozze di colori scoordinate.
-# ============================================================
-COLORI = {
-    "bg": "#14161a",
-    "bg_elevato": "#1c1f24",
-    "bg_input": "#232730",
-    "bg_lista": "#101216",
-    "bordo": "#2b2f37",
-    "bordo_forte": "#3a3f48",
-    "testo": "#e4e6eb",
-    "testo_tenue": "#8b92a0",
-    "accento": "#00d2c4",
-    "accento_hover": "#33ddd1",
-    "accento_testo_su": "#0a1210",
-    "pericolo": "#ff4757",
-}
-
-STYLE_QSS = f"""
-QMainWindow, QWidget {{
-    background-color: {COLORI['bg']};
-    color: {COLORI['testo']};
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 12px;
-}}
-QLabel {{ color: {COLORI['testo']}; background: transparent; }}
-
-QGroupBox {{
-    background-color: {COLORI['bg_elevato']};
-    border: 1px solid {COLORI['bordo']};
-    border-radius: 10px;
-    margin-top: 12px;
-    padding: 10px 10px 8px 10px;
-}}
-QGroupBox::title {{
-    subcontrol-origin: margin;
-    subcontrol-position: top left;
-    left: 10px;
-    padding: 0 6px;
-    color: {COLORI['accento']};
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}}
-
-QPushButton {{
-    background-color: {COLORI['bg_input']};
-    border: 1px solid {COLORI['bordo_forte']};
-    border-radius: 6px;
-    padding: 8px 14px;
-    color: {COLORI['testo']};
-    font-weight: 600;
-}}
-QPushButton:hover {{
-    background-color: #33383f;
-    border-color: {COLORI['accento']};
-    color: {COLORI['accento']};
-}}
-QPushButton:pressed {{ background-color: #1c1f24; }}
-QPushButton:disabled {{ color: {COLORI['testo_tenue']}; border-color: {COLORI['bordo']}; }}
-
-QPushButton#Primario {{
-    background-color: {COLORI['accento']};
-    color: {COLORI['accento_testo_su']};
-    border: none;
-    font-weight: 800;
-    font-size: 13px;
-}}
-QPushButton#Primario:hover {{
-    background-color: {COLORI['accento_hover']};
-    color: {COLORI['accento_testo_su']};
-    border: none;
-}}
-
-QPushButton#Accento {{
-    background-color: {COLORI['bg_input']};
-    border: 1px solid {COLORI['accento']};
-    color: {COLORI['accento']};
-    font-weight: 700;
-}}
-QPushButton#Accento:hover {{
-    background-color: #1f3a37;
-    border-color: {COLORI['accento_hover']};
-    color: {COLORI['accento_hover']};
-}}
-
-QDoubleSpinBox {{
-    background-color: {COLORI['bg_input']};
-    border: 1px solid {COLORI['bordo']};
-    border-radius: 5px;
-    padding: 4px 6px;
-    color: {COLORI['testo']};
-    selection-background-color: {COLORI['accento']};
-}}
-QDoubleSpinBox:focus {{ border: 1px solid {COLORI['accento']}; }}
-
-QListWidget {{
-    background-color: {COLORI['bg_lista']};
-    border: 1px solid {COLORI['bordo']};
-    border-radius: 8px;
-    padding: 4px;
-    font-family: 'Consolas', monospace;
-    font-size: 11px;
-}}
-QListWidget::item {{ border: none; padding: 4px 6px; border-radius: 4px; color: {COLORI['testo_tenue']}; }}
-QListWidget::item:hover {{ background-color: {COLORI['bg_elevato']}; }}
-
-QTabWidget::pane {{
-    border: 1px solid {COLORI['bordo']};
-    border-radius: 10px;
-    background-color: {COLORI['bg_elevato']};
-    top: -1px;
-}}
-QTabBar::tab {{
-    background-color: transparent;
-    color: {COLORI['testo_tenue']};
-    padding: 10px 20px;
-    margin-right: 4px;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    font-weight: 600;
-}}
-QTabBar::tab:selected {{
-    background-color: {COLORI['bg_elevato']};
-    color: {COLORI['accento']};
-    border: 1px solid {COLORI['bordo']};
-    border-bottom: none;
-}}
-QTabBar::tab:hover:!selected {{ color: {COLORI['testo']}; }}
-QTabBar::tab:disabled {{ color: #454a52; }}
-
-QScrollArea {{ border: none; background: transparent; }}
-QScrollBar:vertical {{ background: {COLORI['bg']}; width: 10px; margin: 2px; }}
-QScrollBar::handle:vertical {{ background: {COLORI['bordo_forte']}; border-radius: 5px; min-height: 20px; }}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
-
-QFrame#Separatore {{ background-color: {COLORI['bordo']}; max-height: 1px; border: none; }}
-"""
-
-STILE_HEADER = f"background-color: {COLORI['bg_elevato']}; border: none; border-radius: 10px; padding: 10px 14px;"
-
-STILE_NOTA_TENUE = f"color: {COLORI['testo_tenue']}; font-size: 11px; background: none;"
 
 
 class NetworkWorker(QtCore.QThread):
@@ -552,15 +410,20 @@ class SmartPlug:
     def _host_configurato(self) -> bool:
         return not self.host.startswith("TODO")
 
-    def accendi(self) -> None:
+    def accendi(self) -> bool:
+        """Ritorna True solo se la chiamata RPC è andata a buon fine: il
+        chiamante (_tenta_accensione_plug) deve saperlo, per non far partire
+        il boot della daisy chain su una presa che non si è mai accesa."""
         if not self._host_configurato():
             log.info("SMART PLUG: host non ancora configurato (Config.SMART_PLUG_HOST), salto la chiamata")
-            return
+            return False
         try:
             shelly_control.turn_on(self.host, self.channel)
             log.info("SMART PLUG: ON (host=%s)", self.host)
+            return True
         except Exception as e:
             log.error("SMART PLUG: accensione fallita (host=%s): %s", self.host, e)
+            return False
 
     def spegni(self) -> None:
         if not self._host_configurato():
@@ -588,6 +451,11 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._inizio_risveglio_s = 0.0
         self._ultima_chiusura_s = 0.0
         self._inizio_armato_s = 0.0
+        # Vedi _tenta_accensione_plug: finché la smart plug non confirma
+        # l'accensione, il boot della daisy chain non parte - si resta in
+        # RISVEGLIO e si riprova.
+        self._plug_confermato = False
+        self._prossimo_tentativo_plug_s = 0.0
         self.protocollo_tappeti: RilevatoreProtocolloF1F2 | None = None
         self._accumulo_tappeti = np.empty(0, dtype=np.int16)
         self.stato_tappeti: dict[int, bool] = {}  # counter -> chiuso?
@@ -614,7 +482,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._tempo_ultimo_ingresso_ambiente = time.monotonic()
 
         self.setStyleSheet(STYLE_QSS)
-        self.setWindowTitle("WAKEUPeSTALTA — orchestratore ambiente/tappeti")
+        self.setWindowTitle("FIBRA&TAPPETI")
         self.resize(1300, 850)
 
         self._costruisci_ui()
@@ -641,366 +509,479 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     # ------------------------------------------------------------------
     def _costruisci_ui(self):
         centrale = QtWidgets.QWidget()
+        centrale.setObjectName("Radice")
         self.setCentralWidget(centrale)
         layout_esterno = QtWidgets.QVBoxLayout(centrale)
-        layout_esterno.setContentsMargins(12, 12, 12, 12)
+        layout_esterno.setContentsMargins(14, 12, 14, 12)
         layout_esterno.setSpacing(10)
 
         layout_esterno.addWidget(self._crea_barra_stato())
 
         # GUI a fasi: fase 1 tara lo STA/LTA (onda + STA/LTA + soglie + log),
-        # fase 2 è l'ascolto vero e proprio (solo onda + stato nella barra
-        # sopra) - sbloccata solo premendo "OK STALTA TARATO" nella fase 1.
+        # fase 2 è l'ascolto vero e proprio (onda + timer + tappeti), fase 3
+        # è la vista impianto per il cliente (timer compatti + anello e
+        # tappeti colorati) - 2 e 3 sbloccate solo premendo "OK STALTA
+        # TARATO" nella fase 1: prima di quel momento il sistema è ancora in
+        # dry-run, non ha senso mostrare al cliente uno stato che non
+        # corrisponde a niente di reale.
         self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabBar().setDrawBase(False)  # niente riga sotto le tab
         self.tabs.addTab(self._crea_tab_taratura(), "1 · Taratura STA/LTA")
-        self.tabs.addTab(self._crea_tab_ascolto(), "2 · Ascolto")
+        self.tabs.addTab(self._crea_tab_ascolto(), "2 · Pannello di controllo")
+        self.tabs.addTab(self._crea_tab_vista_impianto(), "3 · Pannello di visualizzazione")
         self.tabs.setTabEnabled(1, False)
+        self.tabs.setTabEnabled(2, False)
+        # RESET vive solo nell'header, uguale in tutte e tre le tab (la vista
+        # impianto in tab 3 non ne ha più uno suo).
         layout_esterno.addWidget(self.tabs, stretch=1)
 
     def _crea_barra_stato(self) -> QtWidgets.QWidget:
-        """Stato e RIARMA FIBRA: fuori dalle tab, sempre visibili in entrambe
-        le fasi (in fase 1 per leggere se scatta risveglio, in fase 2 perché
-        è l'unica cosa che si vede oltre all'onda, per ora)."""
-        barra = QtWidgets.QWidget()
-        barra.setStyleSheet(STILE_HEADER)
-        layout = QtWidgets.QHBoxLayout(barra)
-        layout.setSpacing(14)
+        """Header fuori dalle tab, sempre visibile.
 
-        titolo = QtWidgets.QLabel("WAKEUPeSTALTA")
-        titolo.setStyleSheet(
-            f"font-weight: 800; font-size: 15px; color: {COLORI['accento']}; letter-spacing: 0.5px;"
-        )
+        Riga 1, a destra:  [RISVEGLIO]  ( ASCOLTO ) ──▶ ( ARMATO )  [RESET]
+          - le due fasi del flusso sono SEMPRE visibili: quella attiva è
+            piena e colorata, l'altra spenta (contorno grigio);
+          - RISVEGLIO (transizione, 2 s di boot daisy chain) compare solo
+            mentre è in corso, a sinistra di tutto, arancione e pulsante; in
+            quel momento anche la freccia tra le due fasi diventa arancione.
+        Riga 2 (solo se c'è qualcosa da dire): avvisi ed errori in rosso -
+        rumore rilevato, smart plug che non risponde. Vedi _imposta_avviso.
+        """
+        barra = QtWidgets.QFrame()
+        # objectName + selettore in tema.STYLE_QSS: uno stile senza
+        # selettore finirebbe su TUTTI i figli.
+        barra.setObjectName("Header")
+        esterno = QtWidgets.QVBoxLayout(barra)
+        esterno.setContentsMargins(18, 8, 12, 8)
+        esterno.setSpacing(6)
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.setSpacing(10)
+        titolo = QtWidgets.QLabel("FIBRA&TAPPETI")
+        titolo.setStyleSheet(f"font-weight: 800; font-size: 16px; color: {COLORI['accento']}; letter-spacing: 0.5px;")
         layout.addWidget(titolo)
-
         layout.addStretch(1)
 
-        # Allarme testuale, tra il titolo e lo stato: visibile solo quando si
-        # esce da AMBIENTE - "unknown" perché a questo punto la STA/LTA sa
-        # solo che è successo qualcosa di forte, non ancora cosa (quello lo
-        # scoprirebbe l'identificazione tappeti, quando ci arriva).
-        self.label_allarme = QtWidgets.QLabel("⚠  UNKNOWN NOISE DETECTED")
-        self.label_allarme.setStyleSheet(
-            f"background-color: rgba(255, 71, 87, 40); color: {COLORI['pericolo']}; "
-            "font-size: 13px; font-weight: 800; letter-spacing: 0.5px; "
-            "border: 1px solid rgba(255, 71, 87, 120); border-radius: 14px; padding: 6px 14px;"
+        # RISVEGLIO: arancione, solo durante la transizione, con pulsazione
+        # di opacità per non passare inosservato nei suoi pochi secondi.
+        self.label_risveglio = QtWidgets.QLabel("◉  RISVEGLIO")
+        colore_r = COLORE_STATO[Stato.RISVEGLIO]
+        self.label_risveglio.setStyleSheet(
+            f"background-color: {colore_r}; color: #1a1205; font-size: 13px; font-weight: 800;"
+            f" letter-spacing: 1px; border: 1px solid {colore_r}; border-radius: 15px; padding: 6px 14px;"
         )
-        self.label_allarme.hide()
-        layout.addWidget(self.label_allarme)
+        effetto = QtWidgets.QGraphicsOpacityEffect(self.label_risveglio)
+        self.label_risveglio.setGraphicsEffect(effetto)
+        self._pulsazione_risveglio = QtCore.QPropertyAnimation(effetto, b"opacity", self)
+        self._pulsazione_risveglio.setDuration(900)
+        self._pulsazione_risveglio.setStartValue(1.0)
+        self._pulsazione_risveglio.setKeyValueAt(0.5, 0.45)
+        self._pulsazione_risveglio.setEndValue(1.0)
+        self._pulsazione_risveglio.setLoopCount(-1)
+        self.label_risveglio.hide()
+        layout.addWidget(self.label_risveglio)
+        layout.addSpacing(6)
 
-        self.label_stato = QtWidgets.QLabel(self.stato.name)
-        self._applica_stile_stato()
-        layout.addWidget(self.label_stato)
+        # Flusso ASCOLTO ──▶ ARMATO
+        self.pillola_ascolto = QtWidgets.QLabel()
+        self.freccia_flusso = QtWidgets.QLabel("──▶")
+        self.pillola_armato = QtWidgets.QLabel()
+        layout.addWidget(self.pillola_ascolto)
+        layout.addWidget(self.freccia_flusso)
+        layout.addWidget(self.pillola_armato)
+        layout.addSpacing(6)
 
-        btn_riarma = QtWidgets.QPushButton("⟲  RIARMA FIBRA")
-        btn_riarma.setObjectName("Accento")
-        btn_riarma.setToolTip(
+        self.btn_riarma = QtWidgets.QPushButton("⟲  RESET")
+        self.btn_riarma.setObjectName("Accento")
+        self.btn_riarma.setCursor(QtCore.Qt.PointingHandCursor)
+        self.btn_riarma.setToolTip(
             "Spegne la smart plug e torna subito a fibra in ascolto ambiente,"
-            " senza aspettare il timeout - comodo mentre si tara facendo più prove"
+            " senza aspettare il timeout."
         )
-        btn_riarma.clicked.connect(lambda: self._torna_ad_ambiente("RIARMA FIBRA premuto"))
-        layout.addWidget(btn_riarma)
+        self.btn_riarma.clicked.connect(lambda: self._torna_ad_ambiente("RESET premuto"))
+        layout.addWidget(self.btn_riarma)
+        esterno.addLayout(layout)
+
+        # Riga avvisi/errori in rosso, sempre presente ad altezza fissa (vuota = "nessun avviso").
+        self._avvisi: dict[str, str] = {}
+        self._riga_avvisi = QtWidgets.QWidget()
+        layout_avvisi = QtWidgets.QVBoxLayout(self._riga_avvisi)
+        layout_avvisi.setContentsMargins(0, 0, 0, 0)
+        layout_avvisi.setSpacing(6)
+        layout_avvisi.addWidget(separatore())
+        self._layout_chip_avvisi = QtWidgets.QHBoxLayout()
+        self._layout_chip_avvisi.setSpacing(8)
+        self._layout_chip_avvisi.addStretch(1)  # stretch per primo: gli avvisi si allineano a destra
+        # Segnaposto tenue quando non ci sono avvisi: la riga resta sempre lì
+        # (header ad altezza fissa, con o senza errori) e non sembra un buco.
+        self._nessun_avviso = QtWidgets.QLabel("✓  Nessun avviso")
+        self._nessun_avviso.setStyleSheet(
+            f"color: {COLORI['testo_spento']}; font-size: 12px; font-weight: 600; padding: 4px 2px;"
+        )
+        self._layout_chip_avvisi.addWidget(self._nessun_avviso)
+        contenitore_chip = QtWidgets.QWidget()
+        contenitore_chip.setLayout(self._layout_chip_avvisi)
+        self._layout_chip_avvisi.setContentsMargins(0, 0, 0, 0)
+        contenitore_chip.setFixedHeight(24)  # = altezza di un chip avviso
+        layout_avvisi.addWidget(contenitore_chip)
+        self._chip_avvisi: dict[str, QtWidgets.QLabel] = {}
+        esterno.addWidget(self._riga_avvisi)  # sempre visibile: spazio riservato
+
+        self._applica_stile_stato()
         return barra
+
+    def _imposta_avviso(self, chiave: str, testo: str | None) -> None:
+        """Mostra (testo) o toglie (None) un avviso rosso nella riga sotto
+        l'header. Una chiave per tipo di problema ("rumore", "plug", ...):
+        richiamarla col nuovo testo aggiorna l'avviso invece di duplicarlo."""
+        if testo is None:
+            chip = self._chip_avvisi.pop(chiave, None)
+            if chip is not None:
+                chip.deleteLater()
+            self._avvisi.pop(chiave, None)
+        else:
+            self._avvisi[chiave] = testo
+            chip = self._chip_avvisi.get(chiave)
+            if chip is None:
+                chip = QtWidgets.QLabel()
+                chip.setStyleSheet(
+                    f"background-color: {rgba(COLORI['pericolo'], 34)}; color: {COLORI['pericolo']}; "
+                    "font-size: 13px; font-weight: 800; letter-spacing: 0.5px; "
+                    f"border: 1px solid {rgba(COLORI['pericolo'], 120)}; border-radius: 11px; padding: 2px 12px;"
+                )
+                self._layout_chip_avvisi.addWidget(chip)
+                self._chip_avvisi[chiave] = chip
+            chip.setText(f"⚠  {testo}")
+        self._nessun_avviso.setVisible(not self._avvisi)
+
+    @staticmethod
+    def _stile_fase(colore: str, attiva: bool) -> str:
+        if attiva:
+            r, g, b = QtGui.QColor(colore).getRgb()[:3]
+            return (
+                f"background-color: rgba({r}, {g}, {b}, 40); color: {colore}; font-size: 13px; "
+                f"font-weight: 800; letter-spacing: 1px; border: 1px solid {colore}; "
+                "border-radius: 15px; padding: 6px 16px;"
+            )
+        return (
+            f"background-color: transparent; color: {COLORI['testo_spento']}; font-size: 13px; "
+            f"font-weight: 700; letter-spacing: 1px; border: 1px solid {COLORI['bordo_forte']}; "
+            "border-radius: 15px; padding: 6px 16px;"
+        )
+
+    def _crea_plot_onda(self) -> tuple[pg.PlotWidget, object]:
+        plot = pg.PlotWidget()
+        stile_plot(plot, "Ampiezza")
+        curva = plot.plot(self.asse_tempo, self.buffer_audio, pen=pg.mkPen(color=COLORI["accento"], width=1.2))
+        self._applica_ottimizzazioni_curva(curva)
+        plot.setYRange(-20000, 20000, padding=0)
+        plot.setXRange(-SECONDI_VISIBILI, 0, padding=0)
+        return plot, curva
 
     def _crea_tab_taratura(self) -> QtWidgets.QWidget:
         tab = QtWidgets.QWidget()
         layout_principale = QtWidgets.QHBoxLayout(tab)
-        layout_principale.setSpacing(14)
+        layout_principale.setContentsMargins(0, 0, 0, 0)
+        layout_principale.setSpacing(SPAZIO)
 
-        # --- colonna sinistra: forma d'onda + STA/LTA ---
+        # --- colonna sinistra: forma d'onda + storico STA/LTA ---
         colonna_sinistra = QtWidgets.QVBoxLayout()
-        colonna_sinistra.setSpacing(10)
+        colonna_sinistra.setSpacing(SPAZIO)
 
-        self.plot_widget_taratura = pg.PlotWidget()
-        self.plot_widget_taratura.setBackground("#111111")
-        self.plot_widget_taratura.showGrid(x=True, y=True, alpha=0.2)
-        self.plot_widget_taratura.setLabel("bottom", "Tempo", units="s")
-        self.plot_widget_taratura.setLabel("left", "Ampiezza")
-        self.plot_widget_taratura.setTitle("Segnale audio (tempo reale)")
-        self.curva_onda_taratura = self.plot_widget_taratura.plot(
-            self.asse_tempo, self.buffer_audio, pen=pg.mkPen(color="#00d2c4", width=1.2)
+        card_onda, layout_onda, testata_onda = crea_card("Segnale audio · tempo reale", spaziatura=8)
+        self.label_rete = etichetta("Rete: in attesa di pacchetti…", "Mono")
+        testata_onda.addWidget(self.label_rete)
+        self.plot_widget_taratura, self.curva_onda_taratura = self._crea_plot_onda()
+        layout_onda.addWidget(self.plot_widget_taratura)
+        colonna_sinistra.addWidget(card_onda, stretch=3)
+
+        card_storico, layout_storico, testata_storico = crea_card(
+            "Storico STA/LTA", colore_titolo=COLORI["ambra"], spaziatura=8
         )
-        self._applica_ottimizzazioni_curva(self.curva_onda_taratura)
-        self.plot_widget_taratura.setYRange(-20000, 20000, padding=0)
-        self.plot_widget_taratura.setXRange(-SECONDI_VISIBILI, 0, padding=0)
-        colonna_sinistra.addWidget(self.plot_widget_taratura, stretch=3)
-
+        testata_storico.addWidget(legenda_linea("soglia ON", COLORI["pericolo"]))
+        testata_storico.addSpacing(8)
+        testata_storico.addWidget(legenda_linea("soglia OFF", COLORI["blu"]))
         self.plot_stalta = pg.PlotWidget()
-        self.plot_stalta.setBackground("#111111")
-        self.plot_stalta.showGrid(x=True, y=True, alpha=0.2)
-        self.plot_stalta.setLabel("bottom", "Tempo", units="s")
-        self.plot_stalta.setLabel("left", "Rapporto STA/LTA")
-        self.plot_stalta.setTitle("Storico STA/LTA (linee tratteggiate = soglie ON/OFF)")
+        stile_plot(self.plot_stalta, "STA/LTA")
         self.plot_stalta.setXRange(-SECONDI_VISIBILI, 0, padding=0)
         self.plot_stalta.setXLink(self.plot_widget_taratura)
         self.linea_stalta = self.plot_stalta.plot(
-            self.asse_tempo_stalta, self.storico_stalta, pen=pg.mkPen(color="#ffb02e", width=1.5)
+            self.asse_tempo_stalta, self.storico_stalta, pen=pg.mkPen(color=COLORI["ambra"], width=1.6)
         )
         self._applica_ottimizzazioni_curva(self.linea_stalta)
         self.linea_soglia_on = pg.InfiniteLine(
-            angle=0, movable=False, pen=pg.mkPen(color="#ff4757", width=1.5, style=QtCore.Qt.DashLine)
+            angle=0, movable=False, pen=pg.mkPen(color=COLORI["pericolo"], width=1.5, style=QtCore.Qt.DashLine)
         )
         self.linea_soglia_off = pg.InfiniteLine(
-            angle=0, movable=False, pen=pg.mkPen(color="#5eb1ff", width=1.5, style=QtCore.Qt.DashLine)
+            angle=0, movable=False, pen=pg.mkPen(color=COLORI["blu"], width=1.5, style=QtCore.Qt.DashLine)
         )
         self.linea_soglia_on.setValue(STA_LTA_SOGLIA_ON_DEFAULT)
         self.linea_soglia_off.setValue(STA_LTA_SOGLIA_OFF_DEFAULT)
         self.plot_stalta.addItem(self.linea_soglia_on)
         self.plot_stalta.addItem(self.linea_soglia_off)
-        colonna_sinistra.addWidget(self.plot_stalta, stretch=2)
+        layout_storico.addWidget(self.plot_stalta)
+        colonna_sinistra.addWidget(card_storico, stretch=2)
 
-        self.label_rete = QtWidgets.QLabel("Rete: in attesa di pacchetti...")
-        self.label_rete.setStyleSheet(f"color: {COLORI['testo_tenue']}; font-family: 'Consolas', monospace; font-size: 11px;")
-        colonna_sinistra.addWidget(self.label_rete)
+        layout_principale.addLayout(colonna_sinistra, stretch=3)
 
-        layout_principale.addLayout(colonna_sinistra, stretch=2)
-
-        # --- colonna destra: STA/LTA + soglie + log + conferma ---
+        # --- colonna destra: conferma + lettura live + soglie + finestre + log ---
+        # Niente QScrollArea: la colonna si adatta all'altezza della finestra.
+        # Tutte le card hanno altezza fissa (la loro minima, con margini
+        # compatti) tranne il log, che è l'unica parte elastica: si allunga
+        # o si accorcia (fino a ~3 righe) e scorre lui al suo interno.
         contenitore_destra = QtWidgets.QWidget()
+        contenitore_destra.setMinimumWidth(380)
+        contenitore_destra.setMaximumWidth(500)
         colonna_destra = QtWidgets.QVBoxLayout(contenitore_destra)
-        colonna_destra.setSpacing(6)
+        colonna_destra.setContentsMargins(0, 0, 0, 0)
+        colonna_destra.setSpacing(8)
+        fissa = (QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
 
-        card_stalta = QtWidgets.QGroupBox("STA/LTA — SOGLIE LIVE")
-        layout_stalta = QtWidgets.QVBoxLayout(card_stalta)
-        layout_stalta.setSpacing(4)
-        self.label_stalta = QtWidgets.QLabel("STA/LTA: --")
-        self.label_stalta.setStyleSheet(
-            f"color: {COLORI['accento']}; font-family: 'Consolas', monospace; font-size: 16px; font-weight: 700;"
-        )
-        layout_stalta.addWidget(self.label_stalta)
-        # Risposta esplicita a "quale soglia stiamo usando per detectare":
-        # non solo dentro la stringa STA/LTA sopra, una riga dedicata.
-        self.label_soglia_attiva = QtWidgets.QLabel("Soglia di rilevamento (ON): --")
-        self.label_soglia_attiva.setStyleSheet(
-            f"color: {COLORI['pericolo']}; font-family: 'Consolas', monospace; font-size: 12px; font-weight: 700;"
-        )
-        layout_stalta.addWidget(self.label_soglia_attiva)
-        self.label_stalta_minmax = QtWidgets.QLabel("Min/Max osservati: --")
-        self.label_stalta_minmax.setStyleSheet(
-            f"color: {COLORI['testo_tenue']}; font-family: 'Consolas', monospace; font-size: 11px;"
-        )
-        layout_stalta.addWidget(self.label_stalta_minmax)
+        # Conferma in alto a destra, sopra i parametri: è la prima cosa che
+        # si vede arrivando dall'alto.
+        riga_conferma = QtWidgets.QHBoxLayout()
+        self.btn_ok_tarato = QtWidgets.QPushButton("✓  OK STA/LTA TARATO — passa ad ASCOLTO")
+        self.btn_ok_tarato.setObjectName("Primario")
+        self.btn_ok_tarato.setCursor(QtCore.Qt.PointingHandCursor)
+        self.btn_ok_tarato.clicked.connect(self._conferma_stalta_tarato)
+        riga_conferma.addWidget(self.btn_ok_tarato)
+
+        # Sostituisce il pulsante sopra dopo la conferma (vedi
+        # _conferma_stalta_tarato): spiega perché i controlli sono bloccati.
+        self.label_tarato_confermato = QtWidgets.QLabel("✓  STA/LTA tarato — parametri in sola lettura")
+        self.label_tarato_confermato.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_tarato_confermato.setStyleSheet(stile_chip(COLORI["accento"]) + "padding: 8px 12px; border-radius: 8px;")
+        self.label_tarato_confermato.hide()
+        riga_conferma.addWidget(self.label_tarato_confermato)
+        colonna_destra.addLayout(riga_conferma)
+
+        card_stalta, layout_stalta, testata_stalta = crea_card("STA/LTA · soglie live", spaziatura=6, compatta=True)
+        card_stalta.setSizePolicy(*fissa)
         btn_azzera_minmax = QtWidgets.QPushButton("Azzera min/max")
+        btn_azzera_minmax.setObjectName("Piatto")
+        btn_azzera_minmax.setCursor(QtCore.Qt.PointingHandCursor)
         btn_azzera_minmax.clicked.connect(self.azzera_minmax_stalta)
-        layout_stalta.addWidget(btn_azzera_minmax)
+        testata_stalta.addWidget(btn_azzera_minmax)
 
+        # Lettura grande del rapporto attuale + a destra soglia ON e min/max
+        riga_lettura = QtWidgets.QHBoxLayout()
+        riga_lettura.setSpacing(12)
+        blocco_valore = QtWidgets.QVBoxLayout()
+        blocco_valore.setSpacing(0)
+        blocco_valore.addWidget(etichetta("RAPPORTO ATTUALE", "EyebrowTenue"))
+        self.label_stalta = QtWidgets.QLabel("--")
+        self.label_stalta.setStyleSheet(
+            f"color: {COLORI['accento']}; font-family: {FONT_MONO}; font-size: 24px; font-weight: 700;"
+        )
+        blocco_valore.addWidget(self.label_stalta)
+        riga_lettura.addLayout(blocco_valore)
+        riga_lettura.addStretch(1)
+        blocco_dettagli = QtWidgets.QVBoxLayout()
+        blocco_dettagli.setSpacing(4)
+        blocco_dettagli.addStretch(1)
+        # Risposta esplicita a "quale soglia stiamo usando per detectare"
+        self.label_soglia_attiva = QtWidgets.QLabel("rileva sopra --")
+        self.label_soglia_attiva.setStyleSheet(stile_chip(COLORI["pericolo"]))
+        blocco_dettagli.addWidget(self.label_soglia_attiva, 0, QtCore.Qt.AlignRight)
+        self.label_stalta_minmax = etichetta("min -- · max --", "Mono")
+        blocco_dettagli.addWidget(self.label_stalta_minmax, 0, QtCore.Qt.AlignRight)
+        riga_lettura.addLayout(blocco_dettagli)
+        layout_stalta.addLayout(riga_lettura)
+        # Nota di stabilizzazione (compare solo nei primi secondi)
+        self.label_stalta_nota = etichetta("", "Nota")
+        self.label_stalta_nota.hide()
+        layout_stalta.addWidget(self.label_stalta_nota)
+
+        layout_stalta.addWidget(separatore())
         griglia_soglie = QtWidgets.QGridLayout()
-        griglia_soglie.setVerticalSpacing(3)
-        self.spin_soglia_on = self._crea_spin(1.0, 500.0, STA_LTA_SOGLIA_ON_DEFAULT, 0.1)
-        self.spin_soglia_off = self._crea_spin(0.5, 500.0, STA_LTA_SOGLIA_OFF_DEFAULT, 0.1)
+        griglia_soglie.setHorizontalSpacing(12)
+        griglia_soglie.setVerticalSpacing(6)
+        stepper_on = self._crea_stepper(1.0, 500.0, STA_LTA_SOGLIA_ON_DEFAULT, 0.1)
+        stepper_off = self._crea_stepper(0.5, 500.0, STA_LTA_SOGLIA_OFF_DEFAULT, 0.1)
+        self.spin_soglia_on, self.spin_soglia_off = stepper_on.spin, stepper_off.spin
         self.spin_soglia_on.valueChanged.connect(self.cambia_soglie_stalta)
         self.spin_soglia_off.valueChanged.connect(self.cambia_soglie_stalta)
-        griglia_soglie.addWidget(QtWidgets.QLabel("ON"), 0, 0)
-        griglia_soglie.addWidget(self.spin_soglia_on, 0, 1)
-        griglia_soglie.addWidget(QtWidgets.QLabel("OFF"), 1, 0)
-        griglia_soglie.addWidget(self.spin_soglia_off, 1, 1)
+        for riga, (testo, colore, stepper) in enumerate((
+            ("Soglia ON", COLORI["pericolo"], stepper_on),
+            ("Soglia OFF", COLORI["blu"], stepper_off),
+        )):
+            griglia_soglie.addWidget(self._etichetta_con_pallino(testo, colore), riga, 0)
+            griglia_soglie.addWidget(stepper, riga, 1, QtCore.Qt.AlignRight)
         layout_stalta.addLayout(griglia_soglie)
         colonna_destra.addWidget(card_stalta)
 
-        # Finestre STA/LTA: a differenza di ON/OFF sopra (soglie, si
-        # applicano a caldo) cambiare la durata delle finestre richiede
-        # ricostruire il rilevatore (gli alpha della EMA dipendono da
-        # sta_sec/lta_sec calcolati una volta sola al costruttore) - serve
-        # un "Applica" esplicito, non un aggiornamento automatico ad ogni
-        # tocco dello spinbox. Card separata dalle soglie sopra: azione
-        # diversa (ricostruisce il rilevatore invece di applicare a caldo),
-        # merita un contenitore proprio invece di stare appesa in fondo alla
-        # card ON/OFF con solo una riga a separarle.
-        card_finestre = QtWidgets.QGroupBox("FINESTRE STA/LTA")
-        layout_finestre = QtWidgets.QVBoxLayout(card_finestre)
-        layout_finestre.setSpacing(4)
-        label_finestre_nota = QtWidgets.QLabel("Richiede Applica: ricostruisce il rilevatore da zero")
-        label_finestre_nota.setStyleSheet(STILE_NOTA_TENUE)
-        layout_finestre.addWidget(label_finestre_nota)
-        griglia_finestre = QtWidgets.QGridLayout()
-        griglia_finestre.setVerticalSpacing(3)
-        self.spin_finestra_sta = self._crea_spin(0.02, 5.0, STA_FINESTRA_SEC_DEFAULT, 0.02)
-        self.spin_finestra_lta = self._crea_spin(0.5, 60.0, LTA_FINESTRA_SEC_DEFAULT, 0.5)
-        griglia_finestre.addWidget(QtWidgets.QLabel("STA (s)"), 0, 0)
-        griglia_finestre.addWidget(self.spin_finestra_sta, 0, 1)
-        griglia_finestre.addWidget(QtWidgets.QLabel("LTA (s)"), 1, 0)
-        griglia_finestre.addWidget(self.spin_finestra_lta, 1, 1)
-        layout_finestre.addLayout(griglia_finestre)
-        self.btn_applica_finestre = QtWidgets.QPushButton("Applica finestre STA/LTA")
+        # Finestre STA/LTA: a differenza di ON/OFF (soglie, si applicano a
+        # caldo) cambiare la durata delle finestre richiede ricostruire il
+        # rilevatore (gli alpha della EMA dipendono da sta_sec/lta_sec,
+        # calcolati una volta sola al costruttore) - serve un "Applica"
+        # esplicito. Per risparmiare righe: "Applica" sta nella testata e la
+        # nota "ricostruisce da zero" è il suo tooltip.
+        card_finestre, layout_finestre, testata_finestre = crea_card("Finestre STA/LTA", spaziatura=6, compatta=True)
+        card_finestre.setSizePolicy(*fissa)
+        self.btn_applica_finestre = QtWidgets.QPushButton("Applica")
+        self.btn_applica_finestre.setObjectName("Accento")
+        self.btn_applica_finestre.setStyleSheet("padding: 4px 14px;")
+        self.btn_applica_finestre.setCursor(QtCore.Qt.PointingHandCursor)
         self.btn_applica_finestre.setToolTip(
-            "Ricostruisce il rilevatore con le nuove durate - riparte da zero,"
-            " quindi rientra nella stabilizzazione come a un nuovo avvio"
+            "Ricostruisce il rilevatore da zero con le nuove durate:"
+            " rientra nella stabilizzazione come a un nuovo avvio"
         )
         self.btn_applica_finestre.clicked.connect(self.applica_finestre_stalta)
-        layout_finestre.addWidget(self.btn_applica_finestre)
+        testata_finestre.addWidget(self.btn_applica_finestre)
+        griglia_finestre = QtWidgets.QGridLayout()
+        griglia_finestre.setHorizontalSpacing(12)
+        griglia_finestre.setVerticalSpacing(6)
+        stepper_sta = self._crea_stepper(0.02, 5.0, STA_FINESTRA_SEC_DEFAULT, 0.02, " s")
+        stepper_lta = self._crea_stepper(0.5, 60.0, LTA_FINESTRA_SEC_DEFAULT, 0.5, " s")
+        self.spin_finestra_sta, self.spin_finestra_lta = stepper_sta.spin, stepper_lta.spin
+        griglia_finestre.addWidget(etichetta("STA · breve"), 0, 0)
+        griglia_finestre.addWidget(stepper_sta, 0, 1, QtCore.Qt.AlignRight)
+        griglia_finestre.addWidget(etichetta("LTA · lunga"), 1, 0)
+        griglia_finestre.addWidget(stepper_lta, 1, 1, QtCore.Qt.AlignRight)
+        layout_finestre.addLayout(griglia_finestre)
         colonna_destra.addWidget(card_finestre)
 
-        # Log eventi: qui si legge "Evento rilevato... => accensione smart
-        # plug" quando scatta il risveglio - la prova, fatto un rumore, che
-        # la soglia attuale lo riconosce (o silenzio, che NON deve comparire).
-        card_log = QtWidgets.QGroupBox("LOG EVENTI")
-        layout_log = QtWidgets.QVBoxLayout(card_log)
+        # Log eventi: qui si legge "Avrei attivato RISVEGLIO…" quando scatta
+        # - la prova, fatto un rumore, che la soglia attuale lo riconosce.
+        # Unica parte elastica della colonna (stretch=1).
+        card_log, layout_log, _ = crea_card("Log eventi", spaziatura=6, compatta=True)
         self.lista_log = QtWidgets.QListWidget()
-        # Le righe di log sono spesso più lunghe della card (spiegano il
-        # motivo di ogni transizione): a capo invece di tagliate a bordo,
-        # altrimenti la parte più importante del messaggio sparisce.
+        # Le righe di log spiegano il motivo di ogni transizione: a capo
+        # invece di tagliate, altrimenti la parte importante sparisce.
         self.lista_log.setWordWrap(True)
         self.lista_log.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.lista_log.setMinimumHeight(48)
         layout_log.addWidget(self.lista_log)
         colonna_destra.addWidget(card_log, stretch=1)
 
-        self.btn_ok_tarato = QtWidgets.QPushButton("✓  OK STALTA TARATO — passa ad ASCOLTO")
-        self.btn_ok_tarato.setObjectName("Primario")
-        self.btn_ok_tarato.setMinimumHeight(36)
-        self.btn_ok_tarato.clicked.connect(self._conferma_stalta_tarato)
-        colonna_destra.addWidget(self.btn_ok_tarato)
-
-        # Sostituisce il pulsante sopra dopo la conferma (vedi
-        # _conferma_stalta_tarato): nascosta finché non si preme OK, poi resta
-        # a spiegare perché gli spinbox sopra sono bloccati in sola lettura.
-        self.label_tarato_confermato = QtWidgets.QLabel("✓  STA/LTA tarato — parametri in sola lettura")
-        self.label_tarato_confermato.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_tarato_confermato.setStyleSheet(
-            f"color: {COLORI['accento']}; font-weight: 700; font-size: 12px; padding: 8px;"
-        )
-        self.label_tarato_confermato.hide()
-        colonna_destra.addWidget(self.label_tarato_confermato)
-
-        scroll_destra = QtWidgets.QScrollArea()
-        scroll_destra.setWidgetResizable(True)
-        scroll_destra.setFrameShape(QtWidgets.QFrame.NoFrame)
-        scroll_destra.setWidget(contenitore_destra)
-        layout_principale.addWidget(scroll_destra, stretch=2)
+        layout_principale.addWidget(contenitore_destra, stretch=2)
 
         return tab
 
     def _crea_tab_ascolto(self) -> QtWidgets.QWidget:
-        """Fase 2: onda + un pannello minimo con l'ultimo allarme, il
-        conto alla rovescia del riarmo e il timeout stesso regolabile.
-        Lo stato (AMBIENTE/RISVEGLIO/ARMATO) resta nella barra in alto,
-        condivisa con la fase 1."""
+        """Fase 2: onda + pannello timer + una riga impianto (tappeti e
+        smart plug). Lo stato resta nella barra in alto, condivisa."""
         tab = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(tab)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
 
-        self.plot_widget_ascolto = pg.PlotWidget()
-        self.plot_widget_ascolto.setBackground("#111111")
-        self.plot_widget_ascolto.showGrid(x=True, y=True, alpha=0.2)
-        self.plot_widget_ascolto.setLabel("bottom", "Tempo", units="s")
-        self.plot_widget_ascolto.setLabel("left", "Ampiezza")
-        self.plot_widget_ascolto.setTitle("Segnale audio (tempo reale)")
-        self.curva_onda_ascolto = self.plot_widget_ascolto.plot(
-            self.asse_tempo, self.buffer_audio, pen=pg.mkPen(color="#00d2c4", width=1.2)
+        card_onda, layout_onda, _ = crea_card("Segnale audio · tempo reale", spaziatura=6, compatta=True)
+        self.plot_widget_ascolto, self.curva_onda_ascolto = self._crea_plot_onda()
+        # Il grafico è la parte elastica della tab: con poca altezza (schermo
+        # scalato, finestra bassa) cede lui, non i timer sotto.
+        self.plot_widget_ascolto.setMinimumHeight(70)
+        layout_onda.addWidget(self.plot_widget_ascolto)
+        layout.addWidget(card_onda, stretch=1)
+
+        # Pannello timer: la logica dei due timer resta tutta in
+        # controlla_transizioni_temporali, qui si mostra/regola soltanto.
+        self.pannello_timer = PannelloTimer(
+            self.config.TIMEOUT_INATTIVITA_MIN,
+            self.config.TIMEOUT_MASSIMO_MIN if not math.isinf(self.config.TIMEOUT_MASSIMO_MIN) else 5.0,
+            mai=math.isinf(self.config.TIMEOUT_MASSIMO_MIN),
         )
-        self._applica_ottimizzazioni_curva(self.curva_onda_ascolto)
-        self.plot_widget_ascolto.setYRange(-20000, 20000, padding=0)
-        self.plot_widget_ascolto.setXRange(-SECONDI_VISIBILI, 0, padding=0)
-        layout.addWidget(self.plot_widget_ascolto, stretch=2)
+        self.pannello_timer.timeout_inattivita_cambiato.connect(self._su_timeout_inattivita_cambiato)
+        self.pannello_timer.timeout_massimo_cambiato.connect(self._su_timeout_massimo_cambiato)
+        layout.addWidget(self.pannello_timer)
 
-        pannello = QtWidgets.QGroupBox("STATO ASCOLTO")
-        layout_pannello = QtWidgets.QHBoxLayout(pannello)
+        # Riga impianto: counter tappeti + IP della smart plug, una sola
+        # card bassa invece di un QGroupBox enorme per una riga di testo.
+        card_impianto = QtWidgets.QFrame()
+        card_impianto.setObjectName("Card")
+        riga = QtWidgets.QHBoxLayout(card_impianto)
+        riga.setContentsMargins(14, 8, 12, 8)
+        riga.setSpacing(12)
 
-        colonna_allarme = QtWidgets.QVBoxLayout()
-        colonna_allarme.setSpacing(4)
-        self.label_ultimo_allarme = QtWidgets.QLabel("Ultimo allarme: --")
-        self.label_ultimo_allarme.setStyleSheet(
-            f"color: {COLORI['pericolo']}; font-family: 'Consolas', monospace; font-size: 12px; font-weight: 700;"
-        )
-        colonna_allarme.addWidget(self.label_ultimo_allarme)
-        self.label_countdown_riarmo = QtWidgets.QLabel("Riarmo tra: --")
-        self.label_countdown_riarmo.setStyleSheet(
-            f"color: {COLORI['testo']}; font-family: 'Consolas', monospace; font-size: 12px;"
-        )
-        colonna_allarme.addWidget(self.label_countdown_riarmo)
-        layout_pannello.addLayout(colonna_allarme, stretch=1)
-
-        # Due timer diversi governano il rientro ad AMBIENTE, entrambi
-        # regolabili qui: il timeout inattività si resetta ad ogni chiusura
-        # (può non scadere mai se le chiusure continuano ad arrivare), il
-        # timeout massimo no - vedi controlla_transizioni_temporali. Il
-        # countdown a sinistra mostra sempre quello dei due più vicino a
-        # scadere, non solo l'inattività (altrimenti, con chiusure continue,
-        # sembrava che "non partisse mai" anche se il massimo stava comunque
-        # scorrendo sotto).
-        griglia_timer = QtWidgets.QGridLayout()
-        griglia_timer.setVerticalSpacing(4)
-        griglia_timer.addWidget(QtWidgets.QLabel("Timeout inattività (min):"), 0, 0)
-        self.spin_timeout_inattivita = self._crea_spin(0.5, 120.0, self.config.TIMEOUT_INATTIVITA_MIN, 0.5)
-        self.spin_timeout_inattivita.valueChanged.connect(self.cambia_timeout_inattivita)
-        griglia_timer.addWidget(self.spin_timeout_inattivita, 0, 1)
-
-        griglia_timer.addWidget(QtWidgets.QLabel("Timeout massimo (min):"), 1, 0)
-        self.spin_timeout_massimo = self._crea_spin(0.5, 120.0, self.config.TIMEOUT_MASSIMO_MIN, 0.5)
-        self.spin_timeout_massimo.valueChanged.connect(self.cambia_timeout_massimo)
-        griglia_timer.addWidget(self.spin_timeout_massimo, 1, 1)
-
-        # "Mai": nessun tetto, resta armato finché non arriva un'inattività
-        # vera o un riarmo manuale - scelta esplicita (vedi Config), non il
-        # default, perché toglie la rete di sicurezza per il caso
-        # patologico (sensore bloccato, rumore continuo).
-        self.check_timeout_massimo_mai = QtWidgets.QCheckBox("Mai (nessun tetto massimo)")
-        self.check_timeout_massimo_mai.toggled.connect(self._cambia_timeout_massimo_mai)
-        griglia_timer.addWidget(self.check_timeout_massimo_mai, 2, 0, 1, 2)
-
-        # IP della smart plug, modificabile qui invece che nel codice: l'IP
-        # della Shelly cambia da solo ogni tanto (riassegnazione DHCP del
-        # router) - niente da editare a mano in shelly_control.py/main.py e
-        # rilanciare ad ogni volta, basta scrivere il nuovo indirizzo qui.
-        griglia_timer.addWidget(QtWidgets.QLabel("Smart plug IP:"), 3, 0)
-        riga_ip = QtWidgets.QHBoxLayout()
-        self.campo_smart_plug_ip = QtWidgets.QLineEdit(self.config.SMART_PLUG_HOST)
-        self.campo_smart_plug_ip.setPlaceholderText("es. 192.168.1.2")
-        self.campo_smart_plug_ip.returnPressed.connect(self.cambia_smart_plug_ip)
-        riga_ip.addWidget(self.campo_smart_plug_ip)
-        btn_applica_ip = QtWidgets.QPushButton("Applica")
-        btn_applica_ip.clicked.connect(self.cambia_smart_plug_ip)
-        riga_ip.addWidget(btn_applica_ip)
-        griglia_timer.addLayout(riga_ip, 3, 1)
-        layout_pannello.addLayout(griglia_timer)
-
-        # Tappeti: counter del ciclo daisy chain + un'etichetta "Sensore N"
-        # per interruttore (verde = chiuso/premuto, rosso = aperto) - vive
-        # solo mentre self.protocollo_tappeti esiste (ARMATO), vedi
-        # _elabora_tappeti e _aggiorna_ui_tappeti. Pool FISSO di
-        # MAX_TAPPETI_VISUALIZZATI etichette, create una volta sola e solo
-        # mostrate/nascoste (mai deleteLater()+ricreate): il counter non ha
-        # un limite proprio e su rumore può salire senza mai resettarsi,
-        # creare/distruggere widget dinamicamente in quel caso è sia uno
-        # spreco sia la causa di un crash "already deleted" già visto dal
-        # vivo con cicli di risveglio ravvicinati.
-        pannello_tappeti = QtWidgets.QGroupBox("TAPPETI (in ARMATO)")
-        layout_tappeti_ui = QtWidgets.QVBoxLayout(pannello_tappeti)
+        riga.addWidget(etichetta("TAPPETI", "Eyebrow"))
+        # Counter del ciclo daisy chain - vive solo in ARMATO, vedi
+        # _elabora_tappeti. (Il pool di etichette "Sensore N" resta
+        # disattivato: la vista impianto in tab 3 fa già il lavoro visivo.)
         self.label_tappeti_counter = QtWidgets.QLabel("Counter: --")
         self.label_tappeti_counter.setStyleSheet(
-            f"color: {COLORI['accento']}; font-family: 'Consolas', monospace; font-size: 13px; font-weight: 700;"
+            f"color: {COLORI['testo']}; font-family: {FONT_MONO}; font-size: {T_VALORE}px; font-weight: 700;"
         )
-        layout_tappeti_ui.addWidget(self.label_tappeti_counter)
-        self.layout_indicatori_tappeti = QtWidgets.QHBoxLayout()
-        self.label_nessun_tappeto = QtWidgets.QLabel("(nessun tappeto visto ancora)")
-        self.layout_indicatori_tappeti.addWidget(self.label_nessun_tappeto)
-        self._indicatori_tappeti: list[QtWidgets.QLabel] = []
-        for _ in range(MAX_TAPPETI_VISUALIZZATI):
-            etichetta = QtWidgets.QLabel("")
-            etichetta.setAlignment(QtCore.Qt.AlignCenter)
-            etichetta.hide()
-            self.layout_indicatori_tappeti.addWidget(etichetta)
-            self._indicatori_tappeti.append(etichetta)
-        layout_tappeti_ui.addLayout(self.layout_indicatori_tappeti)
+        riga.addWidget(self.label_tappeti_counter)
+        riga.addSpacing(8)
+        riga.addWidget(separatore(verticale=True))
+        riga.addSpacing(8)
 
-        # Affiancati (sinistra/destra), non impilati: stessa altezza, si
-        # dividono la larghezza della tab invece di stare al centro strette.
-        riga_pannelli = QtWidgets.QHBoxLayout()
-        riga_pannelli.setSpacing(14)
-        riga_pannelli.addWidget(pannello, stretch=1)
-        riga_pannelli.addWidget(pannello_tappeti, stretch=1)
-        layout.addLayout(riga_pannelli, stretch=1)
+        # IP della smart plug, modificabile qui invece che nel codice: l'IP
+        # della Shelly cambia da solo ogni tanto (riassegnazione DHCP).
+        riga.addWidget(etichetta("SMART PLUG", "Eyebrow"))
+        self.campo_smart_plug_ip = QtWidgets.QLineEdit(self.config.SMART_PLUG_HOST)
+        self.campo_smart_plug_ip.setPlaceholderText("es. 192.168.1.2")
+        self.campo_smart_plug_ip.setFixedWidth(170)
+        self.campo_smart_plug_ip.returnPressed.connect(self.cambia_smart_plug_ip)
+        riga.addWidget(self.campo_smart_plug_ip)
+        btn_applica_ip = QtWidgets.QPushButton("Applica")
+        btn_applica_ip.setCursor(QtCore.Qt.PointingHandCursor)
+        btn_applica_ip.clicked.connect(self.cambia_smart_plug_ip)
+        riga.addWidget(btn_applica_ip)
+        riga.addStretch(1)
+        layout.addWidget(card_impianto)
         return tab
 
-    def cambia_timeout_inattivita(self) -> None:
-        self.config.TIMEOUT_INATTIVITA_MIN = self.spin_timeout_inattivita.value()
+    def _crea_tab_vista_impianto(self) -> QtWidgets.QWidget:
+        """Fase 3, quella da mostrare al cliente: a sinistra lo stesso
+        pannello timer di tab 2 in colonna (seconda istanza, tenuta
+        sincronizzata), a destra l'anello/tappeti di VistaImpianto in una
+        card - niente numeri grezzi, soglie o log tecnico."""
+        tab = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(tab)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPAZIO)
 
-    def cambia_timeout_massimo(self) -> None:
-        self.config.TIMEOUT_MASSIMO_MIN = self.spin_timeout_massimo.value()
+        self.pannello_timer_vista = PannelloTimer(
+            self.config.TIMEOUT_INATTIVITA_MIN,
+            self.config.TIMEOUT_MASSIMO_MIN if not math.isinf(self.config.TIMEOUT_MASSIMO_MIN) else 5.0,
+            mai=math.isinf(self.config.TIMEOUT_MASSIMO_MIN),
+            compatto=True,
+        )
+        # Larghezza elastica 320-400: con finestra stretta cede spazio
+        # invece di spingere.
+        self.pannello_timer_vista.setMinimumWidth(320)
+        self.pannello_timer_vista.setMaximumWidth(400)
+        self.pannello_timer_vista.timeout_inattivita_cambiato.connect(self._su_timeout_inattivita_cambiato)
+        self.pannello_timer_vista.timeout_massimo_cambiato.connect(self._su_timeout_massimo_cambiato)
+        layout.addWidget(self.pannello_timer_vista, stretch=0)
 
-    def _cambia_timeout_massimo_mai(self, mai: bool) -> None:
-        self.spin_timeout_massimo.setEnabled(not mai)
-        if mai:
-            self.config.TIMEOUT_MASSIMO_MIN = float("inf")
-        else:
-            self.config.TIMEOUT_MASSIMO_MIN = self.spin_timeout_massimo.value()
+        card_vista, layout_vista, _ = crea_card("Impianto")
+        # Senza RESET proprio: il RESET è quello dell'header, come nelle
+        # altre tab.
+        # Né RESET (sta nell'header) né didascalia di stato (lo stato è già
+        # nel flusso ASCOLTO → ARMATO dell'header).
+        self.vista_impianto = VistaImpianto(con_reset=False, con_didascalia=False)
+        self.vista_impianto.imposta_stato(self.stato.name)
+        layout_vista.addWidget(self.vista_impianto, stretch=1)
+        layout.addWidget(card_vista, stretch=1)
+        return tab
+
+    @staticmethod
+    def _etichetta_con_pallino(testo: str, colore: str) -> QtWidgets.QLabel:
+        """Etichetta col pallino dello stesso colore della linea nel grafico:
+        lega lo spinbox alla sua linea tratteggiata senza doverlo spiegare."""
+        e = QtWidgets.QLabel(f"<span style='color:{colore}; font-size:16px;'>●</span>&nbsp;&nbsp;{testo}")
+        e.setObjectName("Campo")
+        e.setTextFormat(QtCore.Qt.RichText)
+        return e
+
+    def _su_timeout_inattivita_cambiato(self, valore: float) -> None:
+        self.config.TIMEOUT_INATTIVITA_MIN = valore
+        # Sincronizza l'altra istanza (tab 2 <-> tab 3): setValue() su Qt non
+        # riemette il segnale se il valore è già quello, quindi qui non si
+        # torna in loop infinito tra i due pannelli.
+        for pannello in (self.pannello_timer, self.pannello_timer_vista):
+            pannello.stepper_inattivita.spin.setValue(valore)
+
+    def _su_timeout_massimo_cambiato(self, valore: float) -> None:
+        self.config.TIMEOUT_MASSIMO_MIN = valore
+        mai = math.isinf(valore)
+        for pannello in (self.pannello_timer, self.pannello_timer_vista):
+            pannello.switch_mai.setChecked(mai)
+            if not mai:
+                pannello.stepper_massimo.spin.setValue(valore)
 
     def cambia_smart_plug_ip(self) -> None:
         nuovo_host = self.campo_smart_plug_ip.text().strip()
@@ -1030,27 +1011,39 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         ):
             controllo.setEnabled(False)
         self.tabs.setTabEnabled(1, True)
+        self.tabs.setTabEnabled(2, True)
         self.tabs.setCurrentIndex(1)
 
     @staticmethod
-    def _crea_spin(minimo, massimo, valore, passo):
-        spin = SpinBoxSenzaRotella()
-        spin.setRange(minimo, massimo)
-        spin.setSingleStep(passo)
-        spin.setDecimals(2)
-        spin.setValue(valore)
-        return spin
+    def _crea_stepper(minimo, massimo, valore, passo, suffisso: str = "") -> Stepper:
+        """Stesso controllo −/+ dei timer (tema.Stepper): `.spin` è lo
+        spinbox vero, disabilitarlo blocca anche i pulsanti."""
+        return Stepper(minimo, massimo, valore, passo, decimali=2, suffisso=suffisso, larghezza=96)
 
     def _applica_stile_stato(self):
-        colore = COLORE_STATO[self.stato]
-        r, g, b = COLORE_STATO_RGB[self.stato]
-        self.label_stato.setText(f"●  {self.stato.name}")
-        self.label_stato.setStyleSheet(
-            f"background-color: rgba({r}, {g}, {b}, 35); color: {colore}; font-size: 14px; "
-            f"font-weight: 800; letter-spacing: 1px; border: 1px solid rgba({r}, {g}, {b}, 130); "
-            "border-radius: 14px; padding: 6px 16px;"
-        )
-        self.label_allarme.setVisible(self.stato != Stato.AMBIENTE)
+        in_ascolto = self.stato == Stato.AMBIENTE
+        armato = self.stato == Stato.ARMATO
+        risveglio = self.stato == Stato.RISVEGLIO
+        self.pillola_ascolto.setText(("●" if in_ascolto else "○") + "  ASCOLTO")
+        self.pillola_ascolto.setStyleSheet(self._stile_fase(COLORE_STATO[Stato.AMBIENTE], in_ascolto))
+        self.pillola_armato.setText(("●" if armato else "○") + "  ARMATO")
+        self.pillola_armato.setStyleSheet(self._stile_fase(COLORE_STATO[Stato.ARMATO], armato))
+        colore_freccia = COLORE_STATO[Stato.RISVEGLIO] if risveglio else COLORI["bordo_forte"]
+        self.freccia_flusso.setStyleSheet(f"color: {colore_freccia}; font-size: 14px; font-weight: 800;")
+
+        self.label_risveglio.setVisible(risveglio)
+        if risveglio:
+            self._pulsazione_risveglio.start()
+        else:
+            self._pulsazione_risveglio.stop()
+            self.label_risveglio.graphicsEffect().setOpacity(1.0)
+
+        self._imposta_avviso("rumore", None if in_ascolto else "UNKNOWN NOISE DETECTED")
+        # Guardia hasattr: la primissima chiamata arriva da _crea_barra_stato,
+        # costruita prima della tab 3 (vedi _costruisci_ui) - vista_impianto
+        # non esiste ancora in quel momento.
+        if hasattr(self, "vista_impianto"):
+            self.vista_impianto.imposta_stato(self.stato.name)
 
     def _aggiungi_log(self, testo: str):
         log.info(testo)
@@ -1065,12 +1058,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.rilevatore_stalta.imposta_soglie(self.spin_soglia_on.value(), self.spin_soglia_off.value())
         self.linea_soglia_on.setValue(self.spin_soglia_on.value())
         self.linea_soglia_off.setValue(self.spin_soglia_off.value())
-        self.label_soglia_attiva.setText(f"Soglia di rilevamento (ON): {self.spin_soglia_on.value():.2f}")
+        self.label_soglia_attiva.setText(f"rileva sopra {self.spin_soglia_on.value():.2f}")
 
     def azzera_minmax_stalta(self):
         self.stalta_min_osservato = float("inf")
         self.stalta_max_osservato = float("-inf")
-        self.label_stalta_minmax.setText("Min/Max osservati: -- (azzerato)")
+        self.label_stalta_minmax.setText("min -- · max --")
 
     def applica_finestre_stalta(self) -> None:
         """Ricostruisce il rilevatore con le nuove durate STA/LTA (a
@@ -1106,7 +1099,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.write_pos = fine % STORICO_CAMPIONI
 
         rms = np.sqrt(np.mean(nuovi_campioni.astype(np.float64) ** 2))
-        self.label_rete.setText(f"Rete: OK  RMS={int(rms)}")
+        self.label_rete.setText(f"● rete OK · RMS {int(rms)}")
 
         if self.stato == Stato.AMBIENTE:
             self._elabora_ambiente(nuovi_campioni)
@@ -1119,11 +1112,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         evento_iniziato = self.rilevatore_stalta.aggiorna(campioni)
         rapporto = self.rilevatore_stalta.ultimo_rapporto
         secondi_rimanenti = ATTESA_STABILIZZAZIONE_STALTA_S - (time.monotonic() - self._tempo_ultimo_ingresso_ambiente)
-        suffisso = f"  [stabilizzazione, ancora {secondi_rimanenti:.0f}s]" if secondi_rimanenti > 0 else ""
-        self.label_stalta.setText(
-            f"STA/LTA: {rapporto:.2f}  (ON={self.rilevatore_stalta.soglia_on:.2f} "
-            f"OFF={self.rilevatore_stalta.soglia_off:.2f}){suffisso}"
-        )
+        self.label_stalta.setText(f"{rapporto:.2f}")
+        in_stab = secondi_rimanenti > 0
+        if in_stab:
+            self.label_stalta_nota.setText(f"Stabilizzazione in corso, ancora {secondi_rimanenti:.0f} s: i trigger vengono ignorati.")
+        if self.label_stalta_nota.isVisible() != in_stab:
+            self.label_stalta_nota.setVisible(in_stab)
 
         self.storico_stalta[self.write_pos_stalta] = rapporto
         self.write_pos_stalta = (self.write_pos_stalta + 1) % self.n_storico_stalta
@@ -1133,7 +1127,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         if rapporto > self.stalta_max_osservato:
             self.stalta_max_osservato = rapporto
         self.label_stalta_minmax.setText(
-            f"Min/Max osservati: {self.stalta_min_osservato:.2f} / {self.stalta_max_osservato:.2f}"
+            f"min {self.stalta_min_osservato:.2f} · max {self.stalta_max_osservato:.2f}"
         )
 
         in_stabilizzazione = (time.monotonic() - self._tempo_ultimo_ingresso_ambiente) < ATTESA_STABILIZZAZIONE_STALTA_S
@@ -1153,8 +1147,8 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._aggiungi_log(
             f"Evento rilevato (STA/LTA={rapporto:.2f} > ON={soglia_on:.2f}) => accensione smart plug"
         )
-        self.label_ultimo_allarme.setText(f"Ultimo allarme: {time.strftime('%H:%M:%S')}")
-        self.plug.accendi()
+        self.pannello_timer.segna_allarme()
+        self.pannello_timer_vista.segna_allarme()
         self._accumulo_tappeti = np.empty(0, dtype=np.int16)
         self._pulisci_indicatori_tappeti()
         self.protocollo_tappeti = RilevatoreProtocolloF1F2(
@@ -1162,9 +1156,31 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             F1_HZ, F2_HZ, T0_MS, T1_MS, TOLLERANZA_MS,
             SOGLIA_ON_F1, SOGLIA_OFF_F1, SOGLIA_ON_F2, SOGLIA_OFF_F2,
         )
-        self._inizio_risveglio_s = time.monotonic()
+        # Il boot della daisy chain (_inizio_risveglio_s) parte solo quando
+        # _tenta_accensione_plug conferma l'accensione, non qui - vedi la
+        # guardia su _plug_confermato in controlla_transizioni_temporali.
+        self._plug_confermato = False
+        self._inizio_risveglio_s = 0.0
         self.stato = Stato.RISVEGLIO
         self._applica_stile_stato()
+        self._tenta_accensione_plug()
+
+    def _tenta_accensione_plug(self) -> None:
+        """Un tentativo di accensione. Se fallisce NON si avanza: si resta
+        in RISVEGLIO (la UI mostra un avviso) e si riprova al prossimo tick
+        utile - vedi RITARDO_RETRY_PLUG_S, per non martellare l'host ogni
+        200ms mentre il problema persiste."""
+        if self.plug.accendi():
+            self._plug_confermato = True
+            self._inizio_risveglio_s = time.monotonic()
+            self._imposta_avviso("plug", None)
+            self._aggiungi_log("Smart plug accesa -> attendo sincronizzazione daisy chain")
+        else:
+            self._prossimo_tentativo_plug_s = time.monotonic() + RITARDO_RETRY_PLUG_S
+            self._imposta_avviso("plug", f"SMART PLUG NON RISPONDE ({self.plug.host}) — nuovo tentativo in corso…")
+            self._aggiungi_log(
+                f"Smart plug: accensione non riuscita, resto in RISVEGLIO e riprovo tra {RITARDO_RETRY_PLUG_S:.0f}s"
+            )
 
     def _elabora_tappeti(self, campioni: np.ndarray) -> None:
         if self.protocollo_tappeti is None:
@@ -1209,28 +1225,37 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
                 "Counter tappeti oltre %d valori distinti (%d) - probabile rumore, non un vero ciclo daisy chain",
                 MAX_TAPPETI_VISUALIZZATI, len(numeri),
             )
-        self.label_nessun_tappeto.setVisible(not numeri)
+        # Commentato per ora insieme alla creazione in _crea_tab_ascolto (vedi
+        # lì il motivo): niente rettangoli "Sensore N" in tab 2 finché serve
+        # solo gestire i 2 sensori fissi, già mostrati dalla vista impianto.
+        # self.label_nessun_tappeto.setVisible(not numeri)
+        #
+        # for indice, etichetta in enumerate(self._indicatori_tappeti):
+        #     if indice >= len(numeri):
+        #         etichetta.hide()
+        #         continue
+        #     numero, chiuso = numeri[indice]
+        #     colore = COLORI["pericolo"] if chiuso else "#1fbf75"
+        #     etichetta.setText(f"Sensore {numero}")
+        #     etichetta.setStyleSheet(
+        #         f"background-color: {colore}; color: white; font-weight: 800; "
+        #         "border-radius: 8px; font-size: 12px; padding: 8px 14px;"
+        #     )
+        #     etichetta.show()
 
-        for indice, etichetta in enumerate(self._indicatori_tappeti):
-            if indice >= len(numeri):
-                etichetta.hide()
-                continue
-            numero, chiuso = numeri[indice]
-            colore = COLORI["pericolo"] if chiuso else "#1fbf75"
-            etichetta.setText(f"Sensore {numero}")
-            etichetta.setStyleSheet(
-                f"background-color: {colore}; color: white; font-weight: 800; "
-                "border-radius: 8px; font-size: 12px; padding: 8px 14px;"
-            )
-            etichetta.show()
+        # stato_tappeti usa già True = chiuso, lo stesso significato atteso
+        # da VistaImpianto.imposta_tappeti (vedi sua docstring) - nessuna
+        # conversione necessaria.
+        self.vista_impianto.imposta_tappeti(self.stato_tappeti)
 
     def _pulisci_indicatori_tappeti(self) -> None:
         self.stato_tappeti = {}
         self._visti_questo_ciclo = set()
         self.label_tappeti_counter.setText("Counter: --")
-        self.label_nessun_tappeto.show()
-        for etichetta in self._indicatori_tappeti:
-            etichetta.hide()
+        # self.label_nessun_tappeto.show()
+        # for etichetta in self._indicatori_tappeti:
+        #     etichetta.hide()
+        self.vista_impianto.imposta_tappeti({})
 
     # ------------------------------------------------------------------
     # Transizioni temporali (boot daisy chain, timeout spegnimento)
@@ -1239,7 +1264,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         ora = time.monotonic()
 
         if self.stato == Stato.RISVEGLIO:
-            if ora - self._inizio_risveglio_s >= self.config.ATTESA_BOOT_DAISY_CHAIN_S:
+            if not self._plug_confermato:
+                # Niente boot daisy chain finché la presa non è confermata
+                # accesa - vedi _tenta_accensione_plug per il motivo.
+                if ora >= self._prossimo_tentativo_plug_s:
+                    self._tenta_accensione_plug()
+            elif ora - self._inizio_risveglio_s >= self.config.ATTESA_BOOT_DAISY_CHAIN_S:
                 self._ultima_chiusura_s = ora
                 self._inizio_armato_s = ora
                 self._aggiungi_log("Daisy chain considerata sincronizzata -> ARMATO")
@@ -1257,50 +1287,18 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
                     "nonostante chiusure continue)"
                 )
 
-        self._aggiorna_countdown_riarmo(ora)
-
-    def _aggiorna_countdown_riarmo(self, ora: float) -> None:
-        if self.stato == Stato.AMBIENTE:
-            self.label_countdown_riarmo.setText("Riarmo tra: -- (già in ascolto ambiente)")
-        elif self.stato == Stato.RISVEGLIO:
-            # Anche qui un conto alla rovescia vero, non un "--" statico:
-            # altrimenti sembrano 5s morti tra "sento il rumore" e "vedo un
-            # numero", anche se in realtà l'attesa di boot sta già scorrendo.
-            rimanenti_s = max(0.0, self.config.ATTESA_BOOT_DAISY_CHAIN_S - (ora - self._inizio_risveglio_s))
-            self.label_countdown_riarmo.setText(f"Sync daisy chain tra: {rimanenti_s:.1f}s")
-        else:  # ARMATO
-            # Due timer possono far scattare il riarmo (vedi
-            # controlla_transizioni_temporali). Se le chiusure sono continue
-            # (un sensore che resta premuto, o rumore), il timeout di
-            # inattività si resetta ad ogni ciclo (~1s) e mostrarlo sembra un
-            # countdown bloccato - fermo per davvero, non solo per come
-            # veniva disegnato. In quel caso mostro il timeout massimo (l'unico
-            # che progredisce sempre, non si resetta mai) con un'etichetta
-            # che spiega perché non è quello di inattività a comandare -
-            # a meno che il timeout massimo sia "Mai" (infinito), nel qual
-            # caso non c'è nessun numero da contare: int(inf) esploderebbe.
-            massimo_disattivato = math.isinf(self.config.TIMEOUT_MASSIMO_MIN)
-            secondi_da_ultima_chiusura = ora - self._ultima_chiusura_s
-            rimanenti_massima_s = (
-                float("inf") if massimo_disattivato
-                else max(0.0, self.config.TIMEOUT_MASSIMO_MIN * 60 - (ora - self._inizio_armato_s))
+        # PannelloTimer.aggiorna() fa già tutto il lavoro che prima era qui
+        # dentro (quale dei due timer comanda, countdown, caso "Mai", caso
+        # "chiusure in corso") - due istanze (tab 2 e tab 3), stesso stato.
+        for pannello in (self.pannello_timer, self.pannello_timer_vista):
+            pannello.aggiorna(
+                self.stato.name, ora, self._ultima_chiusura_s, self._inizio_armato_s,
+                # Finché la plug non è confermata passo "ora" invece del
+                # vero inizio: il countdown resta fermo al valore pieno
+                # invece di scorrere come se il boot fosse già in corso.
+                self._inizio_risveglio_s if self._plug_confermato else ora,
+                self.config.ATTESA_BOOT_DAISY_CHAIN_S,
             )
-            if secondi_da_ultima_chiusura < 1.5:
-                if massimo_disattivato:
-                    self.label_countdown_riarmo.setText("Riarmo: mai (timeout massimo disattivato) - chiusure in corso")
-                else:
-                    minuti, secondi = divmod(int(rimanenti_massima_s), 60)
-                    self.label_countdown_riarmo.setText(
-                        f"Riarmo tra: {minuti:02d}:{secondi:02d} (timeout massimo - chiusure in corso)"
-                    )
-            else:
-                rimanenti_timeout_s = max(0.0, self.config.TIMEOUT_INATTIVITA_MIN * 60 - secondi_da_ultima_chiusura)
-                if massimo_disattivato or rimanenti_timeout_s <= rimanenti_massima_s:
-                    rimanenti_s, motivo = rimanenti_timeout_s, "inattività"
-                else:
-                    rimanenti_s, motivo = rimanenti_massima_s, "timeout massimo"
-                minuti, secondi = divmod(int(rimanenti_s), 60)
-                self.label_countdown_riarmo.setText(f"Riarmo tra: {minuti:02d}:{secondi:02d} ({motivo})")
 
     def _torna_ad_ambiente(self, motivo: str) -> None:
         """Comune a timeout vero e al pulsante "Forza AMBIENTE": riparte da
@@ -1310,6 +1308,9 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             return
         self._aggiungi_log(f"{motivo} -> AMBIENTE")
         self.plug.spegni()
+        self._plug_confermato = False
+        self._prossimo_tentativo_plug_s = 0.0
+        self._imposta_avviso("plug", None)
         self.protocollo_tappeti = None
         self._pulisci_indicatori_tappeti()
         self.rilevatore_stalta = RilevatoreStaLta(
@@ -1325,16 +1326,27 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     # Grafica
     # ------------------------------------------------------------------
     def aggiorna_grafico(self) -> None:
+        # Ridisegna solo i grafici della tab attualmente visibile: prima
+        # aggiornavamo sempre entrambe le curve onda (tab 1 e tab 2) ad ogni
+        # frame (20fps) anche quando una delle due non si vedeva nemmeno -
+        # lavoro sprecato, lo stesso genere di costo per cui avevamo valutato
+        # un pulsante "nascondi grafico" manuale. La tab 3 (vista impianto)
+        # non ha grafici pyqtgraph, nessun aggiornamento da fare per lei.
+        indice_tab = self.tabs.currentIndex()
+        if indice_tab not in (0, 1):
+            return
+
         dati_ordinati = np.concatenate(
             (self.buffer_audio[self.write_pos:], self.buffer_audio[: self.write_pos])
         )
-        self.curva_onda_taratura.setData(self.asse_tempo, dati_ordinati)
-        self.curva_onda_ascolto.setData(self.asse_tempo, dati_ordinati)
-
-        storico_ordinato = np.concatenate(
-            (self.storico_stalta[self.write_pos_stalta:], self.storico_stalta[: self.write_pos_stalta])
-        )
-        self.linea_stalta.setData(self.asse_tempo_stalta, storico_ordinato)
+        if indice_tab == 0:
+            self.curva_onda_taratura.setData(self.asse_tempo, dati_ordinati)
+            storico_ordinato = np.concatenate(
+                (self.storico_stalta[self.write_pos_stalta:], self.storico_stalta[: self.write_pos_stalta])
+            )
+            self.linea_stalta.setData(self.asse_tempo_stalta, storico_ordinato)
+        else:
+            self.curva_onda_ascolto.setData(self.asse_tempo, dati_ordinati)
 
     @staticmethod
     def _applica_ottimizzazioni_curva(curva) -> None:
@@ -1354,14 +1366,18 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
     # ------------------------------------------------------------------
     def closeEvent(self, event) -> None:
+        # Senza questa wait, Qt può distruggere il QThread mentre il suo
+        # run() è ancora nel loop (fino a 0.5s, il settimeout del socket) ->
+        # "QThread: Destroyed while thread is still running" in chiusura.
         self.worker.running = False
+        self.worker.wait(1000)
         self.plug.spegni()
         event.accept()
 
 
 def main() -> None:
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    app.setStyle("Fusion")
+    applica_palette(app)
     finestra = FinestraWakeupStalta()
     finestra.show()
     app.exec()
