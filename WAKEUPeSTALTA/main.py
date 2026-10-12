@@ -1,8 +1,7 @@
 """
 main.py — WAKEUPeSTALTA
 ------------------------
-Interrogatore + visualizzatore + orchestratore, in un unico file/processo
-(stesso pattern di MLtoDL/0registratoreStalta.py e FREQUENCY DETECTION/main.py):
+Interrogatore + visualizzatore + orchestratore, in un unico file/processo:
 decide quando la fibra ascolta l'ambiente (STA/LTA, alla ricerca di un evento
 vibrazionale forte) e quando svegliare la daisy chain per identificare quale
 tappeto ha generato l'evento — e mostra dal vivo la forma d'onda e il
@@ -10,13 +9,11 @@ rapporto STA/LTA, con soglie ON/OFF regolabili a schermo, perché tararle
 guardando solo numeri in console non basta a capire su che tipo di evento si
 sta tarando.
 
-Progetto separato da MLtoDL/ e FREQUENCY DETECTION/: non modifica quei
-flussi. La logica di rilevamento (STA/LTA e protocollo f1/f2, Goertzel +
-isteresi + macchina a stati, SPECS.MD §3) è DUPLICATA qui sotto invece di
-essere richiamata come processo esterno — scelta esplicita per restare un
-progetto autonomo. Occhio al rovescio della medaglia: se frequenze/soglie/
-timing cambiano di là (config_condivisa.py, MLtoDL/0registratoreStalta.py),
-vanno aggiornate a mano anche qui, non si aggiornano da sole.
+Progetto autonomo: non importa logica da nessun altro modulo, pensato per
+essere copiato così com'è (questa cartella, nient'altro) su un'altra
+macchina. La logica di rilevamento (STA/LTA e protocollo f1/f2: Goertzel +
+isteresi + macchina a stati) è implementata per intero qui sotto, non
+richiamata da un processo esterno.
 
 Macchina a stati:
   AMBIENTE  --evento forte rilevato-->        RISVEGLIO
@@ -57,7 +54,7 @@ log = logging.getLogger("wakeup_stalta")
 
 
 # ============================================================
-# Rete (duplicato da FREQUENCY DETECTION/main.py)
+# Rete — riceve via UDP i pacchetti dall'interrogatore collegato alla fibra
 # ============================================================
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
@@ -72,8 +69,9 @@ INTERVALLO_TIMER_MS = int(1000 / FPS_GRAFICO)
 INTERVALLO_TIMER_STATO_MS = 200
 
 # ============================================================
-# Protocollo f1/f2 (duplicato da config_condivisa.py e
-# FREQUENCY DETECTION/main.py — NON importato apposta, vedi docstring sopra)
+# Protocollo f1/f2 — queste costanti DEVONO restare uguali a quelle in
+# arduino/master/master.ino e arduino/slave2/slave2.ino: se cambiano da una
+# parte e non dall'altra, il rilevamento smette di riconoscere marcatori/slot.
 # ============================================================
 F1_HZ = 4600.0
 F2_HZ = 3200.0
@@ -89,7 +87,7 @@ SOGLIA_OFF_F1 = 0.000053
 SOGLIA_ON_F2 = 0.00056
 SOGLIA_OFF_F2 = 0.000364
 
-# --- STA/LTA (duplicato da MLtoDL/0registratoreStalta.py) ---
+# --- STA/LTA ---
 STA_FINESTRA_SEC_DEFAULT = 0.5
 LTA_FINESTRA_SEC_DEFAULT = 3.0
 STA_LTA_SOGLIA_ON_DEFAULT = 1.5
@@ -130,7 +128,7 @@ class Config:
     # esplicita per un cliente che preferisce non avere un limite di tempo
     # prevedibile su quanto resta armato, vedi cambia_timeout_massimo.
     TIMEOUT_MASSIMO_MIN: float = 5.0  # TODO decidere il valore reale insieme
-    SMART_PLUG_HOST: str = "192.168.1.2"
+    SMART_PLUG_HOST: str = "192.168.1.9"
     SMART_PLUG_CHANNEL: int = 0
 
 
@@ -166,9 +164,8 @@ MAX_TAPPETI_VISUALIZZATI = 8
 
 
 # ============================================================
-# Rilevamento f1/f2 — duplicato da FREQUENCY DETECTION/main.py
-# (RilevatoreGoertzel + MacchinaStatoFrequenza + RilevatoreProtocolloF1F2),
-# pure logica, indipendente dalla UI.
+# Rilevamento f1/f2 (RilevatoreGoertzel + MacchinaStatoFrequenza +
+# RilevatoreProtocolloF1F2), pure logica, indipendente dalla UI.
 # ============================================================
 class RilevatoreGoertzel:
     """Filtro di Goertzel su una singola frequenza nota: potenza normalizzata
@@ -307,9 +304,8 @@ class RilevatoreProtocolloF1F2:
 
 
 class RilevatoreStaLta:
-    """Duplicato da MLtoDL/0registratoreStalta.py: STA/LTA in streaming via
-    medie mobili esponenziali (EMA), aggiornate una volta per pacchetto
-    invece che campione per campione."""
+    """STA/LTA in streaming via medie mobili esponenziali (EMA), aggiornate
+    una volta per pacchetto invece che campione per campione."""
 
     def __init__(self, sample_rate, campioni_per_pacchetto, sta_sec, lta_sec, soglia_on, soglia_off):
         durata_pacchetto = campioni_per_pacchetto / sample_rate
@@ -355,10 +351,9 @@ class RilevatoreStaLta:
 
 class NetworkWorker(QtCore.QThread):
     """Riceve i pacchetti UDP grezzi della fibra e li inoltra via segnale Qt.
-    Stesso pattern di NetworkWorker in FREQUENCY DETECTION/main.py — un solo
-    socket per tutto il processo: AMBIENTE e ARMATO non ascoltano mai
-    insieme, quindi condividono la stessa porta senza doverla aprire/chiudere
-    ad ogni cambio di stato."""
+    Un solo socket per tutto il processo: AMBIENTE e ARMATO non ascoltano
+    mai insieme, quindi condividono la stessa porta senza doverla
+    aprire/chiudere ad ogni cambio di stato."""
 
     nuovi_dati_signal = QtCore.Signal(np.ndarray)
 
@@ -1352,8 +1347,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     def _applica_ottimizzazioni_curva(curva) -> None:
         """Downsampling + clip alla vista: senza questo pyqtgraph ridisegna
         tutti i 360.000 campioni della finestra da 15s ad ogni frame (20fps),
-        il costo vero dietro alla lentezza percepita - stesso accorgimento
-        già usato in FREQUENCY DETECTION/main.py e 0registratoreStalta.py."""
+        il costo vero dietro alla lentezza percepita."""
         try:
             curva.setDownsampling(auto=True, method="peak")
         except TypeError:

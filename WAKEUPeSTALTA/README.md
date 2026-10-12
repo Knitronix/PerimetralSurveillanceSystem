@@ -1,0 +1,166 @@
+# WAKEUPeSTALTA
+
+Sistema di sorveglianza perimetrale su fibra ottica (interferometro Sagnac):
+ascolta la fibra in attesa di un evento vibrazionale forte, accende una
+presa Shelly che alimenta una catena di Arduino ("daisy chain") posizionati
+sotto i tappeti/zerbini, e identifica quale tappeto è stato premuto
+leggendo un tono in frequenza (f1/f2) trasmesso dagli Arduino sulla stessa
+fibra.
+
+
+## Cosa fa
+
+1. **AMBIENTE** — ascolto continuo del segnale della fibra, calcolo in
+   tempo reale del rapporto STA/LTA (energia a breve termine vs a lungo
+   termine). Quando il rapporto supera una soglia, è successo qualcosa di
+   forte.
+2. **RISVEGLIO** — accende la presa Shelly che alimenta la daisy chain di
+   Arduino e aspetta che si sincronizzi (qualche secondo).
+3. **ARMATO** — ascolta il protocollo f1/f2 trasmesso dagli Arduino per
+   capire quale tappeto è premuto, e lo mostra a schermo. Resta armato
+   finché c'è attività; torna da solo ad AMBIENTE dopo un periodo di
+   inattività (o comunque dopo un tetto massimo di tempo, anche con
+   attività continua — entrambi i timeout sono regolabili dall'interfaccia).
+
+Se la presa Shelly non risponde (rete, IP cambiato, presa scollegata), il
+sistema **non** prosegue come se la daisy chain fosse alimentata: resta in
+RISVEGLIO, mostra un avviso e riprova a intervalli regolari finché non si
+accende davvero.
+
+## Struttura del progetto
+
+```
+WAKEUPeSTALTA/
+├── main.py              interrogatore + GUI + macchina a stati (avvio: python main.py)
+├── tema.py              design system condiviso (palette, QSS, componenti riusati)
+├── pannello_timer.py    widget dei due timer di riarmo (inattività / tetto massimo)
+├── vista_impianto.py    widget con il disegno dell'impianto (tab 3, vista cliente)
+├── shelly_control.py    controllo diretto della presa Shelly via RPC HTTP (anche da riga di comando)
+├── requirements.txt     dipendenze Python, versioni testate
+└── arduino/
+    ├── master/master.ino    sketch del nodo MASTER (NODE_ID=1) della daisy chain
+    ├── slave2/slave2.ino    sketch del nodo SLAVE2 (NODE_ID=2)
+    └── restart.md           architettura del bus, wiring, timing — leggerlo prima di toccare gli sketch
+```
+
+`main.py` è l'unico punto di ingresso: GUI e logica di rilevamento vivono
+nello stesso processo, nessun altro script da avviare a parte gli Arduino
+(che girano per conto loro una volta flashati e alimentati).
+
+## Requisiti e installazione
+
+Serve Python 3.10 o superiore (testato con 3.14.6 su Windows).
+
+```
+pip install -r requirements.txt
+```
+
+Installa: `PySide6` (GUI), `pyqtgraph` (grafici in tempo reale), `numpy`
+(elaborazione numerica del segnale), `requests` (controllo della presa
+Shelly via RPC HTTP).
+
+## Avvio
+
+```
+python main.py
+```
+
+Si apre un'unica finestra con tre tab.
+
+### Tab 1 · Taratura STA/LTA
+
+Mostra la forma d'onda e lo storico del rapporto STA/LTA dal vivo, con le
+soglie ON/OFF e le finestre STA/LTA regolabili a schermo. **In questa tab
+il sistema è in modalità "a secco" (dry-run)**: un evento sopra soglia viene
+solo loggato ("Avrei attivato RISVEGLIO...") — non accende la presa Shelly
+né cambia stato davvero. Serve per tarare le soglie guardando la forma
+d'onda reale, senza far scattare l'impianto ad ogni prova.
+
+Il pulsante **"OK STA/LTA TARATO"** (in alto a destra) conferma la taratura:
+da quel momento in poi un evento sopra soglia è **reale** (accende la
+Shelly, sveglia la daisy chain) e si sbloccano le tab 2 e 3. La conferma non
+è reversibile dall'interfaccia: i parametri restano poi in sola lettura,
+apposta per evitare di toccare uno spinbox per sbaglio e far scattare un
+risveglio vero.
+
+### Tab 2 · Pannello di controllo
+
+Vista tecnica per chi installa/manutiene il sistema: forma d'onda,
+contatore della daisy chain, timer di riarmo regolabili (vedi sotto), campo
+per l'IP della presa Shelly.
+
+### Tab 3 · Pannello di visualizzazione
+
+Vista pensata per il cliente finale: niente numeri grezzi o soglie, solo lo
+stato dell'impianto (anello colorato: verde = ascolto, rosso pulsante =
+risveglio, grigio con tappeti colorati = armato) e i due timer in versione
+compatta. Un pulsante RESET (disegnato sull'impianto) spegne la presa e
+torna subito in ascolto, senza aspettare i timeout.
+
+### I due timer di riarmo (presenti in tab 2 e 3, sincronizzati)
+
+- **INATTIVITÀ** — prioritario. Si azzera ad ogni chiusura di un tappeto:
+  scade quando i tappeti restano fermi per N minuti. Pensato per il caso
+  normale (evento breve, poi silenzio): si torna in ascolto appena finisce
+  l'attività, non dopo un tempo fisso.
+- **TETTO MASSIMO** — rete di sicurezza. Scorre sempre da quando si entra in
+  ARMATO e **non si azzera mai**, nemmeno con attività continua — copre il
+  caso patologico in cui l'inattività non scatterebbe mai da sola (sensore
+  bloccato, rumore continuo). Può essere disattivato con l'interruttore
+  "Mai" se non si vuole nessun limite di tempo.
+
+## Configurazione
+
+- **IP della presa Shelly**: modificabile a runtime dal campo "SMART PLUG"
+  nella tab 2 (il DHCP può riassegnarlo di tanto in tanto) — non serve
+  toccare il codice. Il valore di partenza è in `Config.SMART_PLUG_HOST`
+  dentro `main.py`.
+- **Soglie e finestre STA/LTA**: regolabili a schermo nella tab 1 (vedi
+  sopra); i valori di partenza sono le costanti `STA_LTA_SOGLIA_*` e
+  `*_FINESTRA_SEC_DEFAULT` in testa a `main.py`.
+- **Timeout di riarmo** (inattività, tetto massimo, attesa di sincronizzazione
+  della daisy chain): regolabili a schermo nelle tab 2/3; i valori di
+  partenza sono in `Config` dentro `main.py` e sono marcati `TODO` nel
+  codice — non ancora validati con un test lungo sul campo.
+- **Frequenze e timing del protocollo f1/f2** (`F1_HZ`, `F2_HZ`, `T0_MS`,
+  `T1_MS` in testa a `main.py`): **devono restare identiche** alle costanti
+  negli sketch Arduino (`arduino/master/master.ino`,
+  `arduino/slave2/slave2.ino`). Se si cambiano da una parte, vanno
+  aggiornate anche dall'altra — non c'è nessuna sincronizzazione
+  automatica.
+
+## La daisy chain Arduino
+
+Gli sketch in `arduino/` sono una **copia di deployment**, pronta per essere
+flashata così com'è (costanti già impostate, nessuna dipendenza esterna a
+parte le librerie AVR standard incluse in ogni file). Leggere
+`arduino/restart.md` prima di modificare qualcosa: spiega la topologia del
+bus condiviso, il wiring (master → tutti gli slave in parallelo), il timing
+e perché i margini di sicurezza sono quei valori.
+
+In breve:
+- Il **master** (NODE_ID=1) scandisce il tempo e genera gli impulsi di
+  trigger sul bus condiviso; genera anche il proprio tono f1/f2 nel suo
+  slot.
+- Ogni **slave** (oggi solo `slave2`, NODE_ID=2) conta gli impulsi sul bus e
+  genera il proprio tono f1/f2 solo nel proprio slot.
+- f1 fa da "clock/contatore" (marcatore di inizio ciclo + numero di slot),
+  f2 si sovrappone a f1 solo se l'interruttore locale di quel nodo è chiuso.
+
+Per aggiungere un terzo nodo: vedi la nota "estensione futura" in
+`arduino/restart.md` — serve un nuovo sketch `slave3` con `NODE_ID=3` e
+incrementare `NUMERO_NODI` in **tutti** gli sketch della catena.
+
+## Note operative
+
+- **Chiudere l'app dalla X della finestra**, non con Ctrl+C o task manager:
+  `closeEvent` spegne la presa Shelly e aspetta che il thread di rete finisca
+  pulito prima di uscire — saltandolo si perde entrambe le cose.
+- All'avvio (o ad ogni ritorno in AMBIENTE) il rapporto STA/LTA ha un
+  transitorio di circa 1 secondo in cui i trigger vengono ignorati
+  (si vede un avviso "Stabilizzazione in corso..."): è normale, serve a non
+  scattare su un falso allarme dovuto solo al riavvio del calcolo.
+- Se la presa Shelly non risponde, il pannello mostra un avviso ambra
+  "SMART PLUG NON RISPONDE" e il sistema riprova da solo ogni 2 secondi,
+  restando in RISVEGLIO (non passa mai ad ARMATO senza una daisy chain
+  davvero alimentata).

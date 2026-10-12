@@ -304,7 +304,7 @@ def legenda_linea(testo: str, colore: str, tratteggiata: bool = True) -> QtWidge
 
 class SpinSenzaRotella(QtWidgets.QDoubleSpinBox):
     """Ignora la rotella: scorrendo il pannello non si cambiano soglie per
-    sbaglio (stesso motivo di FREQUENCY DETECTION/main.py)."""
+    sbaglio senza nemmeno il focus/click."""
 
     def wheelEvent(self, event):
         event.ignore()

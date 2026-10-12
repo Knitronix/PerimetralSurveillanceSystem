@@ -5,11 +5,11 @@ via API RPC HTTP, senza cloud e senza account.
 Requisiti:
     pip install requests
 
-Uso:
-    python shelly_control.py <ip> on
-    python shelly_control.py <ip> off
-    python shelly_control.py <ip> status
-    python shelly_control.py <ip> toggle
+Uso (azione prima, IP opzionale dopo - se omesso usa SHELLY_IP sotto):
+    python shelly_control.py on [ip]
+    python shelly_control.py off [ip]
+    python shelly_control.py status [ip]
+    python shelly_control.py toggle [ip]
 """
 
 import sys
