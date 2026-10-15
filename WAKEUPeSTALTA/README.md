@@ -124,8 +124,8 @@ torna subito in ascolto, senza aspettare i timeout.
   codice — non ancora validati con un test lungo sul campo.
 - **Frequenze e timing del protocollo f1/f2** (`F1_HZ`, `F2_HZ`, `T0_MS`,
   `T1_MS` in testa a `main.py`): **devono restare identiche** alle costanti
-  negli sketch Arduino (`arduino/master/master.ino`,
-  `arduino/slave2/slave2.ino`). Se si cambiano da una parte, vanno
+  in `arduino/master/master.ino` — è l'unico sketch che genera audio (vedi
+  sotto), `slave2.ino` non le usa più. Se si cambiano da una parte, vanno
   aggiornate anche dall'altra — non c'è nessuna sincronizzazione
   automatica.
 
@@ -139,17 +139,27 @@ bus condiviso, il wiring (master → tutti gli slave in parallelo), il timing
 e perché i margini di sicurezza sono quei valori.
 
 In breve:
-- Il **master** (NODE_ID=1) scandisce il tempo e genera gli impulsi di
-  trigger sul bus condiviso; genera anche il proprio tono f1/f2 nel suo
-  slot.
-- Ogni **slave** (oggi solo `slave2`, NODE_ID=2) conta gli impulsi sul bus e
-  genera il proprio tono f1/f2 solo nel proprio slot.
+- Il **master** (NODE_ID=1) è l'**unico** generatore di f1/f2 di tutta la
+  catena: scandisce il tempo, genera gli impulsi di indirizzamento sul bus
+  condiviso, legge il proprio interruttore per il proprio slot e
+  **interroga** ogni slave remoto (sulla stessa linea, a turno) per sapere
+  se è vivo e se il suo interruttore è chiuso — poi genera lui il tono
+  anche per quello slot.
+- Ogni **slave** (oggi solo `slave2`, NODE_ID=2) non genera più nessun
+  tono: legge solo il proprio interruttore locale e, quando il master lo
+  interroga, risponde con un impulso sulla stessa linea del bus (nessun filo
+  in più) la cui durata codifica "vivo + stato interruttore".
 - f1 fa da "clock/contatore" (marcatore di inizio ciclo + numero di slot),
-  f2 si sovrappone a f1 solo se l'interruttore locale di quel nodo è chiuso.
+  f2 si sovrappone a f1 solo se l'interruttore di quel nodo (proprio o
+  remoto) è chiuso. Un nodo remoto che non risponde non lascia un buco nel
+  conteggio: il master genera comunque f1 per quello slot — la diagnosi
+  "nodo non risponde" si legge sul Serial Monitor del master, vedi
+  `arduino/restart.md` § "Interrogazione remota".
 
 Per aggiungere un terzo nodo: vedi la nota "estensione futura" in
-`arduino/restart.md` — serve un nuovo sketch `slave3` con `NODE_ID=3` e
-incrementare `NUMERO_NODI` in **tutti** gli sketch della catena.
+`arduino/restart.md` — serve un nuovo sketch `slave3` (copia di `slave2.ino`
+con `NODE_ID_PROPRIO=3`) e incrementare `NUMERO_NODI` solo in `master.ino`
+(gli slave non hanno bisogno di conoscerlo).
 
 ## Note operative
 

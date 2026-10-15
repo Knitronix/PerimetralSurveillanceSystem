@@ -62,7 +62,7 @@ except ImportError:
     sys.exit(1)
 
 # --- Configurazione: modifica qui la porta seriale dell'Arduino ---
-SERIAL_PORT = 'COM4'  # <-- CAMBIA QUI con la porta giusta (vedi elenco stampato se sbagliata)
+SERIAL_PORT = 'COM8'  # <-- CAMBIA QUI con la porta giusta (vedi elenco stampato se sbagliata)
 SERIAL_BAUD = 9600
 
 UDP_IP = "0.0.0.0"

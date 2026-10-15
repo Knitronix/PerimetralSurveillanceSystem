@@ -66,7 +66,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config_condivisa
 
 # --- Configurazione: modifica qui la porta seriale dell'Arduino ---
-SERIAL_PORT = "COM4"  # <-- CAMBIA QUI con la porta giusta (vedi elenco stampato se sbagliata)
+SERIAL_PORT = "COM8"  # <-- CAMBIA QUI con la porta giusta (vedi elenco stampato se sbagliata)
 SERIAL_BAUD = 9600
 
 UDP_IP = "0.0.0.0"
@@ -82,8 +82,15 @@ SAMPLE_RATE = 24000
 # cascano da config_condivisa perché richiedono una nuova taratura ad ogni
 # cambio di frequenza, non sono derivabili in automatico).
 FREQ_TEST_HZ = config_condivisa.F2_HZ
-SOGLIA_ON = 0.0055   # SOGLIA_ON_F2_DEFAULT in main.py (f2, non f1: FREQ_TEST_HZ è F2_HZ qui sopra)
-SOGLIA_OFF = 0.0036  # SOGLIA_OFF_F2_DEFAULT in main.py
+# Ricalcolate il 12/10/2026 sul picco misurato dal vivo con TEST ARMONICHE
+# sull'hardware attuale (master unico generatore): f2(3200Hz) picco=0.0293,
+# ~10x più forte di quanto misurato sulla vecchia daisy chain distribuita
+# (0.0028, vedi SPECS.MD §5) - le soglie vecchie (0.0055/0.0036, dal banco
+# di prova originale) e quelle di WAKEUPeSTALTA/main.py (0.00056/0.000364,
+# dalla vecchia daisy chain) sono entrambe sballate per questo hardware.
+# Stessa regola di sempre: ON ~= 20% del picco, OFF ~= 65% dell'ON.
+SOGLIA_ON = 0.00586
+SOGLIA_OFF = 0.0038
 
 BLOCCO_MS = 20.0
 BLOCCO_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_MS / 1000.0))

@@ -70,10 +70,11 @@ INTERVALLO_TIMER_STATO_MS = 200
 
 # ============================================================
 # Protocollo f1/f2 — queste costanti DEVONO restare uguali a quelle in
-# arduino/master/master.ino e arduino/slave2/slave2.ino: se cambiano da una
-# parte e non dall'altra, il rilevamento smette di riconoscere marcatori/slot.
+# arduino/master/master.ino (unico generatore di tutta la catena, vedi
+# arduino/restart.md): se cambiano da una parte e non dall'altra, il
+# rilevamento smette di riconoscere marcatori/slot.
 # ============================================================
-F1_HZ = 4600.0
+F1_HZ = 4400.0  # cambiata da 4600 il 13/10/2026 - su questa fibra 4600 era debole, vedi TEST ARMONICHE
 F2_HZ = 3200.0
 T0_MS = 200.0
 T1_MS = 50.0
@@ -82,10 +83,18 @@ TOLLERANZA_MS = 30.0
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 
-SOGLIA_ON_F1 = 0.000082
-SOGLIA_OFF_F1 = 0.000053
-SOGLIA_ON_F2 = 0.00056
-SOGLIA_OFF_F2 = 0.000364
+# Ricalcolate di nuovo il 13/10/2026: fibra sostituita (quella precedente
+# era probabilmente rotta) e F1 cambiata a 4400Hz (vedi sopra, 4600Hz era
+# debole su questa fibra). Rumore puro 0.000003, f1 vero 0.001896 (rapporto
+# 632x contro il rumore - il cross-talk di f2 su f1, 0.000142, non e' il
+# pavimento giusto per f1 per lo stesso motivo di sempre: f2 non suona mai
+# senza f1 nel protocollo reale). f2 vero 0.006030 (rapporto 754x contro il
+# cross-talk di f1 su f2, 0.000008 - questo invece e' un pavimento reale,
+# f1 suona anche senza f2). ON=20% del picco, OFF=65% dell'ON.
+SOGLIA_ON_F1 = 0.000379
+SOGLIA_OFF_F1 = 0.000246
+SOGLIA_ON_F2 = 0.001206
+SOGLIA_OFF_F2 = 0.000784
 
 # --- STA/LTA ---
 STA_FINESTRA_SEC_DEFAULT = 0.5
@@ -107,6 +116,16 @@ ATTESA_STABILIZZAZIONE_STALTA_S = 1.0
 # RISVEGLIO e si riprova a intervalli, invece di martellare l'host ogni 200ms
 # (tick di controlla_transizioni_temporali).
 RITARDO_RETRY_PLUG_S = 2.0
+
+# Se in ARMATO non si vede nemmeno un marcatore di zero o uno slot valido
+# (non solo "nessuna chiusura" - proprio NESSUN evento decodificato) per
+# più di questo tempo, qualcosa nella catena si è rotto (alimentazione,
+# cablaggio, Arduino bloccato) - va segnalato attivamente, non scoperto
+# per caso guardando che il counter non si muove più. Un ciclo completo
+# dura circa 1-1.3s (marcatore + N slot, anche con l'interrogazione
+# remota): questo timeout copre comodamente diversi cicli prima di
+# allarmare, per non scattare su un singolo giro sfortunato.
+TIMEOUT_TAPPETI_NON_SENTITI_S = 5.0
 
 
 # ============================================================
@@ -446,6 +465,11 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._inizio_risveglio_s = 0.0
         self._ultima_chiusura_s = 0.0
         self._inizio_armato_s = 0.0
+        # Watchdog "non sento più i tappeti" (vedi TIMEOUT_TAPPETI_NON_SENTITI_S):
+        # ultimo marcatore di zero o slot valido visto, azzerato all'ingresso
+        # in ARMATO - diverso da _ultima_chiusura_s, che si aggiorna solo
+        # sulle chiusure, non su ogni evento decodificato.
+        self._ultimo_evento_f1f2_s = 0.0
         # Vedi _tenta_accensione_plug: finché la smart plug non confirma
         # l'accensione, il boot della daisy chain non parte - si resta in
         # RISVEGLIO e si riprova.
@@ -1207,6 +1231,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
                     if evento["stato"] == "chiuso":
                         self._ultima_chiusura_s = time.monotonic()
                         self._aggiungi_log(f"ALLARME: interruttore {evento['counter']} chiuso")
+                if evento["tipo"] in ("zero", "slot"):
+                    # Watchdog "non sento più i tappeti" (vedi
+                    # TIMEOUT_TAPPETI_NON_SENTITI_S): qualunque evento
+                    # decodificato correttamente, non solo le chiusure,
+                    # prova che la daisy chain si sente ancora.
+                    self._ultimo_evento_f1f2_s = time.monotonic()
         if eventi_slot:
             self._aggiorna_ui_tappeti()
 
@@ -1267,6 +1297,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             elif ora - self._inizio_risveglio_s >= self.config.ATTESA_BOOT_DAISY_CHAIN_S:
                 self._ultima_chiusura_s = ora
                 self._inizio_armato_s = ora
+                self._ultimo_evento_f1f2_s = ora
                 self._aggiungi_log("Daisy chain considerata sincronizzata -> ARMATO")
                 self.stato = Stato.ARMATO
                 self._applica_stile_stato()
@@ -1280,6 +1311,18 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
                 self._torna_ad_ambiente(
                     f"timeout massimo raggiunto ({self.config.TIMEOUT_MASSIMO_MIN:.0f} min, "
                     "nonostante chiusure continue)"
+                )
+            else:
+                # Non blocca né riarma nulla da solo (potrebbe essere un
+                # guasto transitorio): solo un avviso attivo, perché prima
+                # di questo l'unico modo per notare "non sento più niente"
+                # era vedere che il counter non si muove più da sé.
+                self._imposta_avviso(
+                    "tappeti",
+                    "TAPPETI NON RILEVATI — nessun segnale dalla daisy chain da oltre "
+                    f"{TIMEOUT_TAPPETI_NON_SENTITI_S:.0f}s"
+                    if ora - self._ultimo_evento_f1f2_s >= TIMEOUT_TAPPETI_NON_SENTITI_S
+                    else None,
                 )
 
         # PannelloTimer.aggiorna() fa già tutto il lavoro che prima era qui
@@ -1306,6 +1349,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._plug_confermato = False
         self._prossimo_tentativo_plug_s = 0.0
         self._imposta_avviso("plug", None)
+        self._imposta_avviso("tappeti", None)
         self.protocollo_tappeti = None
         self._pulisci_indicatori_tappeti()
         self.rilevatore_stalta = RilevatoreStaLta(
