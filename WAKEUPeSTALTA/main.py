@@ -39,11 +39,11 @@ import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 
-import shelly_control
-from pannello_timer import PannelloTimer
-from tema import (COLORI, FONT_MONO, SPAZIO, STYLE_QSS, T_VALORE, Stepper, applica_palette,
-                  crea_card, etichetta, legenda_linea, rgba, separatore, stile_chip, stile_plot)
-from vista_impianto import VistaImpianto
+from others import shelly_control
+from others.widget_timer import WidgetTimer
+from others.tema import (COLORI, FONT_MONO, SPAZIO, STYLE_QSS, T_VALORE, Stepper, applica_palette,
+                         crea_card, etichetta, legenda_linea, rgba, separatore, stile_chip, stile_plot)
+from others.vista_impianto import VistaImpianto
 
 logging.basicConfig(
     level=logging.INFO,
@@ -363,7 +363,7 @@ class RilevatoreStaLta:
 
 
 # ============================================================
-# Design system: palette, QSS e componenti condivisi con pannello_timer.py
+# Design system: palette, QSS e componenti condivisi con others/widget_timer.py
 # e vista_impianto.py - tutto in tema.py, un posto solo.
 # ============================================================
 
@@ -412,7 +412,7 @@ class NetworkWorker(QtCore.QThread):
 
 class SmartPlug:
     """Presa Shelly che alimenta la daisy chain, pilotata via API RPC HTTP
-    locale (shelly_control.py — nessun cloud, nessun account)."""
+    locale (others/shelly_control.py — nessun cloud, nessun account)."""
 
     def __init__(self, host: str, channel: int = 0):
         self.host = host
@@ -896,7 +896,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
         # Pannello timer: la logica dei due timer resta tutta in
         # controlla_transizioni_temporali, qui si mostra/regola soltanto.
-        self.pannello_timer = PannelloTimer(
+        self.pannello_timer = WidgetTimer(
             self.config.TIMEOUT_INATTIVITA_MIN,
             self.config.TIMEOUT_MASSIMO_MIN if not math.isinf(self.config.TIMEOUT_MASSIMO_MIN) else 5.0,
             mai=math.isinf(self.config.TIMEOUT_MASSIMO_MIN),
@@ -952,7 +952,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(SPAZIO)
 
-        self.pannello_timer_vista = PannelloTimer(
+        self.pannello_timer_vista = WidgetTimer(
             self.config.TIMEOUT_INATTIVITA_MIN,
             self.config.TIMEOUT_MASSIMO_MIN if not math.isinf(self.config.TIMEOUT_MASSIMO_MIN) else 5.0,
             mai=math.isinf(self.config.TIMEOUT_MASSIMO_MIN),
@@ -1325,7 +1325,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
                     else None,
                 )
 
-        # PannelloTimer.aggiorna() fa già tutto il lavoro che prima era qui
+        # WidgetTimer.aggiorna() fa già tutto il lavoro che prima era qui
         # dentro (quale dei due timer comanda, countdown, caso "Mai", caso
         # "chiusure in corso") - due istanze (tab 2 e tab 3), stesso stato.
         for pannello in (self.pannello_timer, self.pannello_timer_vista):

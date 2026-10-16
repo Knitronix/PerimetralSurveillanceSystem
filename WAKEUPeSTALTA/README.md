@@ -23,7 +23,7 @@ fibra.
    attività continua — entrambi i timeout sono regolabili dall'interfaccia).
 
 Se la presa Shelly non risponde (rete, IP cambiato, presa scollegata), il
-sistema **non** prosegue come se la daisy chain fosse alimentata: resta in
+sistema **non** prosegue: resta in
 RISVEGLIO, mostra un avviso e riprova a intervalli regolari finché non si
 accende davvero.
 
@@ -31,21 +31,54 @@ accende davvero.
 
 ```
 WAKEUPeSTALTA/
-├── main.py              interrogatore + GUI + macchina a stati (avvio: python main.py)
-├── tema.py              design system condiviso (palette, QSS, componenti riusati)
-├── pannello_timer.py    widget dei due timer di riarmo (inattività / tetto massimo)
-├── vista_impianto.py    widget con il disegno dell'impianto (tab 3, vista cliente)
-├── shelly_control.py    controllo diretto della presa Shelly via RPC HTTP (anche da riga di comando)
-├── requirements.txt     dipendenze Python, versioni testate
+├── main.py                      interrogatore + GUI + macchina a stati (avvio: python main.py)
+├── analizza_armoniche_sweep.py  taratura: trova le frequenze migliori per questa fibra
+├── analizza_tempi_minimi.py     taratura: trova i tempi T1/GAP minimi affidabili
+├── requirements.txt             dipendenze Python, versioni testate
+├── others/                      moduli di supporto, non punti di ingresso (vedi sotto)
+│   ├── __init__.py
+│   ├── tema.py                  design system condiviso (palette, QSS, componenti riusati)
+│   ├── widget_timer.py          widget dei due timer di riarmo (inattività / tetto massimo)
+│   ├── vista_impianto.py        widget con il disegno dell'impianto (tab 3, vista cliente)
+│   ├── shelly_control.py        controllo diretto della presa Shelly via RPC HTTP (anche da riga di comando)
+│   └── shelly_mode_selector.py  sceglie la modalità del master ciclando la Shelly (vedi sotto)
 └── arduino/
-    ├── master/master.ino    sketch del nodo MASTER (NODE_ID=1) della daisy chain
+    ├── master/master.ino    sketch del nodo MASTER (NODE_ID=1) - UNO sketch, 3 modalità (vedi sotto)
     ├── slave2/slave2.ino    sketch del nodo SLAVE2 (NODE_ID=2)
     └── restart.md           architettura del bus, wiring, timing — leggerlo prima di toccare gli sketch
 ```
 
-`main.py` è l'unico punto di ingresso: GUI e logica di rilevamento vivono
-nello stesso processo, nessun altro script da avviare a parte gli Arduino
-(che girano per conto loro una volta flashati e alimentati).
+`main.py` è l'unico punto di ingresso per l'uso normale: GUI e logica di
+rilevamento vivono nello stesso processo, nessun altro script da avviare a
+parte gli Arduino (che girano per conto loro una volta flashati e
+alimentati). Gli altri due script Python (`analizza_*`) servono solo per
+la taratura occasionale, vedi sotto. I moduli in `others/` non si lanciano
+da soli nell'uso normale: sono importati da `main.py` e/o dagli script
+`analizza_*` (package Python vero e proprio, grazie a `others/__init__.py` —
+import con `from others.xxx import ...`).
+
+## Le 3 modalità del master (nessun USB necessario dopo l'installazione)
+
+`arduino/master/master.ino` non è solo il programma della daisy chain: è
+un unico sketch con **tre modalità** (0 = daisy chain produzione, 1 = sweep
+frequenze, 2 = sweep tempi), perché una volta installato il master non è
+quasi mai raggiungibile via USB per riflasharlo. La modalità si sceglie
+ciclando **solo l'accensione/spegnimento della Shelly** che lo alimenta —
+nessun filo o comando in più:
+
+- Un ciclo di accensione **breve** (meno di ~2.5s) fa avanzare un
+  contatore di modalità salvato in EEPROM.
+- Un'accensione **lasciata attiva** più a lungo la conferma: il master
+  parte in quella modalità e ci resta finché non viene spenta.
+- Al ciclo successivo (qualsiasi, anche normale) si torna da solo alla
+  modalità 0 — nessuna azione per "uscire" da una modalità di test.
+
+Questo è sicuro per l'uso reale: un'intrusione vera accende la Shelly per
+minuti, non secondi, quindi non può mai essere scambiata per una richiesta
+di cambio modalità. **Gli script `analizza_armoniche_sweep.py` e
+`analizza_tempi_minimi.py` pilotano la Shelly da soli** (tramite
+`others/shelly_mode_selector.py`) per scegliere la modalità giusta prima di
+partire — non serve farlo a mano, basta lanciare lo script.
 
 ## Requisiti e installazione
 
