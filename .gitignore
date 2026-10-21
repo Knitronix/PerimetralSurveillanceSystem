@@ -39,6 +39,12 @@ checkpoints/
 # --- Log eventi generati a runtime (crescono ad ogni test, non da versionare) ---
 FREQUENCY DETECTION/eventi_f1_f2_log.jsonl
 
+# --- Dataset e risultati di misura: restano sul PC, NON vanno online ---
+CONFRONTO FIBRE/dataset_sensori_24kHz*/
+CONFRONTO FIBRE/confronto_*.csv
+FREQUENCY DETECTION/TEST ARMONICHE/*.jsonl
+FREQUENCY DETECTION/TEST TEMPI/*.jsonl
+
 # --- WAKEUPeSTALTA: registrazioni audio e misure (file grossi, ~170 MB/ora) ---
 WAKEUPeSTALTA/archivio/
 WAKEUPeSTALTA/misure_frequenze/
