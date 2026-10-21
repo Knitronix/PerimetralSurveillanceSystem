@@ -1,5 +1,5 @@
 """
-main.py — WAKEUPeSTALTA
+3main.py — WAKEUPeSTALTA
 ------------------------
 Interrogatore + visualizzatore + orchestratore, in un unico file/processo:
 decide quando la fibra ascolta l'ambiente (STA/LTA, alla ricerca di un evento
@@ -84,12 +84,12 @@ TOLLERANZA_MS = 30.0
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 
-# Misurate il 19/10/2026 con tara_soglie.py sulla daisy chain vera
+# Misurate il 19/10/2026 con 1tarasoglie.py sulla daisy chain vera
 # (misure_soglie/soglie_20261019_162709): tono f1(4400)=0.000310,
 # f2(3200)=0.000291, rumore (picchi) ~1e-06 -> ON ~50-60x sopra il rumore.
 # In tre misure dello stesso giorno f1 e' stabile (0.00026-0.00031), f2
 # varia (0.00027-0.00041): questi valori sono vicini al piu' prudente per f2.
-# ON=20% del tono, OFF=65% dell'ON. Per ricalcolarle: tara_soglie.py, che
+# ON=20% del tono, OFF=65% dell'ON. Per ricalcolarle: 1tarasoglie.py, che
 # dice anche se le soglie in uso vanno ancora bene.
 # Storia: fino al 13/10 erano 4x troppo alte (calcolate su un tono a piena
 # ampiezza, in produzione e' a meta' ampiezza): con la fibra di oggi f1 e f2
@@ -108,7 +108,7 @@ STA_LTA_SOGLIA_OFF_DEFAULT = 1.2
 # Rete di sicurezza dopo ogni (ri)partenza dello STA/LTA: i trigger dei
 # primi secondi di DATI vengono ignorati. Contati in secondi di dati
 # ricevuti, non di orologio (21/10/2026): prima si contava dall'apertura di
-# main.py, e se l'interrogatore cominciava a trasmettere piu' tardi l'attesa
+# 3main.py, e se l'interrogatore cominciava a trasmettere piu' tardi l'attesa
 # era gia' scaduta -> falso risveglio sul primo pacchetto (trovato grazie
 # all'archivio). Il transitorio vero e proprio (STA che partiva da 0 e LTA
 # da un pavimento quasi zero: rapporto ~6 per diversi secondi) e' stato
@@ -554,7 +554,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             self._aggiungi_log(f"Archivio di sessione: {self.archivio.cartella}")
 
     def _fotografia_configurazione(self) -> dict:
-        """Tutti i parametri che decidono cosa main.py sente, com'erano
+        """Tutti i parametri che decidono cosa 3main.py sente, com'erano
         all'avvio: salvati in sessione.json per poter confrontare sessioni
         diverse sapendo con che impostazioni erano state registrate."""
         return {
@@ -1565,7 +1565,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.worker.running = False
         self.worker.wait(1000)
         self.plug.spegni()
-        self._chiudi_prova("chiusura di main.py con la prova ancora in corso")
+        self._chiudi_prova("chiusura di 3main.py con la prova ancora in corso")
         self.archivio.chiudi()
         event.accept()
 

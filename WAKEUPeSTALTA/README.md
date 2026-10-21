@@ -31,19 +31,19 @@ accende davvero.
 
 ```
 WAKEUPeSTALTA/
-├── main.py                   il sistema: ascolto, risveglio, tappeti (avvio: python main.py)
-├── trova_frequenze.py        taratura: sceglie f1/f2 per questa fibra/mezzo
-├── tara_soglie.py            taratura: soglie Goertzel misurate sulla daisy chain vera
-├── analizza_tempi_minimi.py  taratura: tempi T1/GAP minimi affidabili
+├── 0trovafrequenze.py        1° taratura: sceglie f1/f2 per questa fibra/mezzo
+├── 1tarasoglie.py            2° taratura: soglie Goertzel misurate sulla daisy chain vera
+├── 2analizzatempiminimi.py   3° taratura: tempi T1/GAP minimi affidabili (solo se servono)
+├── 3main.py                  il sistema: ascolto, risveglio, tappeti (avvio: python 3main.py)
 ├── requirements.txt          dipendenze Python, versioni testate
 ├── archivio/                 registrazioni (non in git, ~170 MB/ora), una cartella per giorno:
 │   └── AAAA-MM-GG/
-│       ├── main_HHMMSS/      una sessione di main.py: audio/*.wav (10 min l'uno),
+│       ├── main_HHMMSS/      una sessione di 3main.py: audio/*.wav (10 min l'uno),
 │       │                     eventi.jsonl (log di tutto, con le PROVE), sessione.json
-│       └── taratura/         misure e report di trova_frequenze e tara_soglie
+│       └── taratura/         misure e report di 0trovafrequenze e 1tarasoglie
 ├── others/                   moduli di supporto e documenti, non si lanciano da soli
 │   ├── archivio.py           scrittura dell'archivio (WAV + eventi)
-│   ├── tema.py, widget_timer.py, vista_impianto.py   grafica di main.py
+│   ├── tema.py, widget_timer.py, vista_impianto.py   grafica di 3main.py
 │   ├── shelly_control.py     controllo della presa Shelly via RPC HTTP
 │   ├── shelly_mode_selector.py  sceglie la modalità del master ciclando la Shelly
 │   ├── REVISIONE.md          revisione completa della catena (19/10/2026), punti aperti
@@ -59,14 +59,18 @@ WAKEUPeSTALTA/
 
 | Script | A cosa serve | Quando |
 |---|---|---|
-| `main.py` | il sistema; registra WAV e log di tutto in `archivio/` | sempre |
-| `trova_frequenze.py` | scegliere f1/f2 | quando cambiano fibra o mezzo |
-| `tara_soglie.py` | soglie Goertzel, e verifica che quelle in uso vadano ancora bene | dopo ogni cambio di frequenze/fibra, e come controllo in campo |
-| `analizza_tempi_minimi.py` | tempi minimi di slot e pause | solo per ritarare i tempi |
+| `0trovafrequenze.py` | scegliere f1/f2 | quando cambiano fibra o mezzo |
+| `1tarasoglie.py` | soglie Goertzel, e verifica che quelle in uso vadano ancora bene | dopo ogni cambio di frequenze/fibra, e come controllo in campo |
+| `2analizzatempiminimi.py` | tempi minimi di slot e pause | solo per ritarare i tempi |
+| `3main.py` | il sistema; registra WAV e log di tutto in `archivio/` | sempre |
 
-Ordine in campo: `trova_frequenze` → (se cambi frequenze: riflash del master
-e `F1_HZ/F2_HZ` in `main.py`) → `tara_soglie` → `main.py` con le prove
-etichettate (barra PROVE). Gli strumenti di taratura vogliono `main.py`
+Il numero davanti al nome è l'ordine in cui si usano. Nota tecnica: un nome
+che inizia con un numero non si può importare con `import`: chi ne ha
+bisogno usa `importlib.import_module("3main")` (vedi `1tarasoglie.py`).
+
+Ordine in campo: `0trovafrequenze` → (se cambi frequenze: riflash del master
+e `F1_HZ/F2_HZ` in `3main.py`) → `1tarasoglie` → `3main.py` con le prove
+etichettate (barra PROVE). Gli strumenti di taratura vogliono `3main.py`
 CHIUSO (usano la stessa porta UDP).
 
 Per riguardare una prova: apri `archivio/AAAA-MM-GG/main_HHMMSS/eventi.jsonl`
@@ -91,8 +95,8 @@ nessun filo o comando in più:
 
 Questo è sicuro per l'uso reale: un'intrusione vera accende la Shelly per
 minuti, non secondi, quindi non può mai essere scambiata per una richiesta
-di cambio modalità. **Gli script `trova_frequenze.py` e
-`analizza_tempi_minimi.py` pilotano la Shelly da soli** (tramite
+di cambio modalità. **Gli script `0trovafrequenze.py` e
+`2analizzatempiminimi.py` pilotano la Shelly da soli** (tramite
 `others/shelly_mode_selector.py`) per scegliere la modalità giusta prima di
 partire — non serve farlo a mano, basta lanciare lo script.
 
@@ -111,7 +115,7 @@ Shelly via RPC HTTP).
 ## Avvio
 
 ```
-python main.py
+python 3main.py
 ```
 
 Si apre un'unica finestra con tre tab.
@@ -163,16 +167,16 @@ torna subito in ascolto, senza aspettare i timeout.
 - **IP della presa Shelly**: modificabile a runtime dal campo "SMART PLUG"
   nella tab 2 (il DHCP può riassegnarlo di tanto in tanto) — non serve
   toccare il codice. Il valore di partenza è in `Config.SMART_PLUG_HOST`
-  dentro `main.py`.
+  dentro `3main.py`.
 - **Soglie e finestre STA/LTA**: regolabili a schermo nella tab 1 (vedi
   sopra); i valori di partenza sono le costanti `STA_LTA_SOGLIA_*` e
-  `*_FINESTRA_SEC_DEFAULT` in testa a `main.py`.
+  `*_FINESTRA_SEC_DEFAULT` in testa a `3main.py`.
 - **Timeout di riarmo** (inattività, tetto massimo, attesa di sincronizzazione
   della daisy chain): regolabili a schermo nelle tab 2/3; i valori di
-  partenza sono in `Config` dentro `main.py` e sono marcati `TODO` nel
+  partenza sono in `Config` dentro `3main.py` e sono marcati `TODO` nel
   codice — non ancora validati con un test lungo sul campo.
 - **Frequenze e timing del protocollo f1/f2** (`F1_HZ`, `F2_HZ`, `T0_MS`,
-  `T1_MS` in testa a `main.py`): **devono restare identiche** alle costanti
+  `T1_MS` in testa a `3main.py`): **devono restare identiche** alle costanti
   in `arduino/master/master.ino` — è l'unico sketch che genera audio (vedi
   sotto), `slave2.ino` non le usa più. Se si cambiano da una parte, vanno
   aggiornate anche dall'altra — non c'è nessuna sincronizzazione

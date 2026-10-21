@@ -27,15 +27,15 @@ Mega: fa da "cavo USB senza fili". Upload da questo PC con un comando
 Si leggono da remoto i messaggi del master ("Nodo 2: NON RISPONDE",
 "INT: chiuso"...), oggi invisibili in campo.
 
-## 3. Togliere la Shelly: Arduino sempre accesi ma SILENZIOSI, main.py li fa parlare
+## 3. Togliere la Shelly: Arduino sempre accesi ma SILENZIOSI, 3main.py li fa parlare
 
-**SI' — ma è la modifica più grossa: firmware di master e slave + main.py.**
+**SI' — ma è la modifica più grossa: firmware di master e slave + 3main.py.**
 Hardware: solo alimentazione fissa agli Arduino. Consiglio a costo zero:
 **lasciare la Shelly installata e sempre accesa** invece di toglierla
 fisicamente, come "interruttore di emergenza" per un riavvio completo da
 remoto se un Arduino si blocca.
 
-Come funziona: main.py apre una connessione TCP verso l'ESP e manda righe
+Come funziona: 3main.py apre una connessione TCP verso l'ESP e manda righe
 di testo al master (es. `PARLA`, `ZITTO`). Il master ha già oggi i comandi
 seriali `ON`/`OFF`, ma non bastano così come sono (vedi sotto).
 
@@ -54,9 +54,9 @@ Da progettare (firmware):
   riportata al risveglio come allarme. Proposta: si riportano solo le
   chiusure degli ultimi N secondi (es. 5 s) o ancora in corso.
 - **Scelta della modalità via comando** (`MODO 0/1/2`) al posto dei cicli
-  di accensione — gli script `trova_frequenze.py` e `analizza_tempi_minimi.py`
+  di accensione — gli script `0trovafrequenze.py` e `2analizzatempiminimi.py`
   vanno adattati.
-- **Watchdog**: main.py manda un `PING` periodico e mostra un avviso se
+- **Watchdog**: 3main.py manda un `PING` periodico e mostra un avviso se
   l'ESP non risponde (oggi la stessa cosa la fa per la Shelly). Il Mega
   attiva il proprio watchdog hardware per riavviarsi da solo se si blocca.
 - **Cosa fare se il WiFi cade mentre il master parla**: proposta, torna
@@ -64,7 +64,7 @@ Da progettare (firmware):
 
 Rischi:
 - il sistema di allarme dipende dal WiFi: oggi abbiamo già visto la Shelly
-  non rispondere per qualche secondo. main.py deve gestirlo (riprova +
+  non rispondere per qualche secondo. 3main.py deve gestirlo (riprova +
   avviso). Alternativa più robusta da valutare: ESP con **Ethernet via
   cavo** (es. scheda WT32-ETH01) — ma esp-link gira solo su ESP8266,
   andrebbe scelto un altro firmware per il punto 1.
@@ -85,23 +85,23 @@ abbasserebbe la portante (oggi 62,5 kHz) dentro la banda ascoltata: da non
 fare.
 
 Conseguenza importante: **cambiare volume cambia la potenza vista da
-Goertzel** (∝ volume²) → con soglie fisse in main.py ogni cambio di volume
+Goertzel** (∝ volume²) → con soglie fisse in 3main.py ogni cambio di volume
 richiederebbe di ricalibrarle. Da fare insieme: **soglie relative al
 marcatore** (vedi sezione "soglie" in fondo).
 
 ## 5. Rilevare il filo tagliato (resistenza di fine linea)
 
-**SI' — hardware minimo: 2 resistenze per tappeto + firmware + main.py.**
+**SI' — hardware minimo: 2 resistenze per tappeto + firmware + 3main.py.**
 Tecnica degli impianti d'allarme: resistenze sull'interruttore, A0 letto
 come ingresso analogico invece che digitale. Dalla tensione si distinguono
 4 stati: aperto, chiuso, **filo tagliato**, **cortocircuito**.
 Va aggiunto un terzo stato "guasto" al protocollo f1/f2 (es. slot di durata
-diversa) e in main.py (es. tappeto giallo).
+diversa) e in 3main.py (es. tappeto giallo).
 Indipendente dall'ESP: si può fare anche prima o dopo.
 
-## 6. Nodo remoto che non risponde visibile in main.py
+## 6. Nodo remoto che non risponde visibile in 3main.py
 
-**SI' — solo firmware del master + main.py, zero hardware.**
+**SI' — solo firmware del master + 3main.py, zero hardware.**
 Stesso terzo stato "guasto" del punto 5: se lo slave non risponde, il master
 lo segnala sulla fibra invece di trasmettere "aperto". Oggi un tappeto
 guasto sembra un tappeto tranquillo (REVISIONE.md B2).

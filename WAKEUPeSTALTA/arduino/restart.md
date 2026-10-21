@@ -11,7 +11,7 @@
 > Questa terza revisione cambia chi genera i toni — vedi "Generazione
 > centralizzata sul master" sotto — per eliminare un problema di fondo della
 > versione precedente: se un nodo intermedio non risponde, il contatore
-> ORDINALE del ricevitore (`main.py`, non legato al tempo assoluto) sfasava
+> ORDINALE del ricevitore (`3main.py`, non legato al tempo assoluto) sfasava
 > silenziosamente l'identità di tutti i nodi successivi nello stesso ciclo —
 > non "nessun dato", ma un **tappeto sbagliato riportato come premuto**. Non
 > ancora verificata dal vivo sull'hardware reale: i valori di timing
@@ -85,7 +85,7 @@ diagnosi "nodo X non risponde" si legge sul **Serial Monitor del master**
 (stampata solo sui cambi di stato, non ad ogni ciclo), non è distinguibile
 sulla fibra da "nodo X vivo ma aperto" — se in futuro serve anche quella
 distinzione sul segnale decodificato, va aggiunto un terzo stato esplicito
-sia qui che in `RilevatoreProtocolloF1F2` (`main.py`), non c'è ancora.
+sia qui che in `RilevatoreProtocolloF1F2` (`3main.py`), non c'è ancora.
 
 ## Interrogazione remota
 Come il master scopre se un nodo remoto è vivo e il suo interruttore è

@@ -1,5 +1,5 @@
 """
-analizza_tempi_minimi.py
+2analizzatempiminimi.py
 --------------------------
 Analisi automatica del delta t minimo affidabile, pensata per lavorare con
 la MODALITA' 2 (sweep tempi) di arduino/master/master.ino - selezionata in
@@ -26,9 +26,9 @@ script:
 Idea per l'analisi di ogni gradino: invece di ricostruire finestre
 temporali allineate a ogni singolo impulso (fragile, dipende da una
 sincronizzazione precisa che qui non abbiamo), si ricalcola la potenza
-Goertzel blocco per blocco (20ms, come BLOCCO_GOERTZEL_MS in main.py) su
+Goertzel blocco per blocco (20ms, come BLOCCO_GOERTZEL_MS in 3main.py) su
 tutto il gradino, e ci si fa passare sopra la STESSA macchina a stati a
-isteresi (ON/OFF) usata davvero in main.py (MacchinaStatoFrequenza). Si
+isteresi (ON/OFF) usata davvero in 3main.py (MacchinaStatoFrequenza). Si
 conta quante transizioni a ON vengono rilevate: se il canale riesce a
 seguire il pattern comandato, il conteggio deve combaciare con
 RIPETIZIONI_PER_GRADINO (una transizione per ogni impulso). Se le
@@ -41,7 +41,7 @@ transizioni rilevate sono meno:
 
 IMPORTANTE: FREQ_TEST_HZ, SOGLIA_ON, SOGLIA_OFF, e le durate ON/GAP qui
 sotto vanno tenute allineate a mano con TEMPI_FREQ_TEST_HZ/TEMPI_DURATE_*
-in arduino/master/master.ino (e le soglie con quelle attuali in main.py) -
+in arduino/master/master.ino (e le soglie con quelle attuali in 3main.py) -
 il risultato vale solo per la combinazione frequenza+soglie con cui è
 stato misurato.
 
@@ -80,14 +80,14 @@ SAMPLE_RATE = 24000
 # arduino/master/master.ino (di default = FREQ2 = 3200Hz, F2 - il canale
 # "stato interruttore"). Per testare F1 invece, cambiare entrambe insieme.
 FREQ_TEST_HZ = 3200
-# Ricalcolate il 19/10/2026 con trova_frequenze.py (fibra e mezzo cambiati):
+# Ricalcolate il 19/10/2026 con 0trovafrequenze.py (fibra e mezzo cambiati):
 # f2(3200Hz) a PIENA ampiezza = 0.00343 (media di due misure). ATTENZIONE:
-# NON sono le stesse soglie di main.py - in modalita' 2 il master suona un
+# NON sono le stesse soglie di 3main.py - in modalita' 2 il master suona un
 # tono singolo a piena ampiezza, in produzione (daisy chain) a meta'
 # ampiezza (potenza 1/4, vedi ISR in master.ino). Qui si tiene lo stesso
 # RAPPORTO tono/soglia della produzione (ON = 20% del tono, OFF = 65%
 # dell'ON), cosi' il test misura i tempi minimi nelle stesse condizioni di
-# rilevamento di main.py. Regola di conversione: soglia qui = soglia main.py x 4.
+# rilevamento di 3main.py. Regola di conversione: soglia qui = soglia 3main.py x 4.
 SOGLIA_ON = 0.000686
 SOGLIA_OFF = 0.000446
 
@@ -168,8 +168,8 @@ def rapporto_tono_presente(campioni) -> float:
 
 
 class GoertzelSingolo:
-    """Stesso identico calcolo di RilevatoreGoertzel in main.py, riscritto
-    qui per non dover importare main.py (che all'import avvia un'app Qt)."""
+    """Stesso identico calcolo di RilevatoreGoertzel in 3main.py, riscritto
+    qui per non dover importare 3main.py (che all'import avvia un'app Qt)."""
 
     def __init__(self, frequenza_hz, sample_rate, dimensione_blocco):
         self.dimensione_blocco = dimensione_blocco
@@ -201,7 +201,7 @@ def potenze_a_blocchi(campioni, goertzel):
 
 def conta_transizioni_on(potenze, soglia_on, soglia_off):
     """Stessa macchina a stati a isteresi di MacchinaStatoFrequenza in
-    main.py: conta quante volte si passa da OFF ad ON."""
+    3main.py: conta quante volte si passa da OFF ad ON."""
     attivo = False
     conteggio = 0
     for p in potenze:

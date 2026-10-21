@@ -3,7 +3,7 @@ others/widget_timer.py — WAKEUPeSTALTA
 ---------------------------------------
 Pannello dei timer di riarmo (tab 2 orizzontale, tab 3 compatto in colonna).
 
-Due timer riportano il sistema in ASCOLTO (la logica resta in main.py,
+Due timer riportano il sistema in ASCOLTO (la logica resta in 3main.py,
 controlla_transizioni_temporali - qui si mostra e si regola soltanto):
 
   INATTIVITÀ    prioritario. Si azzera ad ogni chiusura: scade quando i
@@ -38,7 +38,7 @@ from .tema import (ACCENTO, AMBRA, BG_ELEVATO, BLU, BORDO, BORDO_FORTE, FONT_NOM
                    RAGGIO_CARD, ROSSO, T_ETICHETTA, T_GRANDE, TESTO, TESTO_TENUE, VERDE,
                    Stepper, rgba, separatore, stile_chip)
 
-SOGLIA_ATTIVITA_IN_CORSO_S = 1.5  # come in main.py: chiusura più recente di così = attività continua
+SOGLIA_ATTIVITA_IN_CORSO_S = 1.5  # come in 3main.py: chiusura più recente di così = attività continua
 
 
 def _mmss(secondi: float) -> str:
@@ -461,7 +461,7 @@ class WidgetTimer(QtWidgets.QWidget):
                  inizio_risveglio_s: float, attesa_boot_s: float) -> None:
         """Da chiamare ad ogni tick di controlla_transizioni_temporali.
         `stato` è Stato.name (AMBIENTE / RISVEGLIO / ARMATO), i tempi sono
-        time.monotonic() come in main.py."""
+        time.monotonic() come in 3main.py."""
         self._aggiorna_allarme_relativo()
         t_in = self.timeout_inattivita_min * 60
         t_max = self.timeout_massimo_min * 60

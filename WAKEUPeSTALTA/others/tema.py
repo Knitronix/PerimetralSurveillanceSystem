@@ -1,7 +1,7 @@
 """
 others/tema.py — WAKEUPeSTALTA
 --------------------------------
-Un solo design system per main.py, others/widget_timer.py e others/vista_impianto.py:
+Un solo design system per 3main.py, others/widget_timer.py e others/vista_impianto.py:
 palette, scala tipografica, spaziature, QSS globale e i pochi componenti
 riusati ovunque (card con titolo, stepper −/+, stile dei grafici).
 

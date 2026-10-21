@@ -34,7 +34,7 @@
 // grandezza), quindi un'intrusione vera non puo' mai essere scambiata per
 // una richiesta di cambio modalita'.
 // Pilotato in automatico (nessuna azione manuale) dagli script Python
-// analizza_armoniche_sweep.py/analizza_tempi_minimi.py tramite
+// analizza_armoniche_sweep.py/2analizzatempiminimi.py tramite
 // FREQUENCY DETECTION/shelly_mode_selector.py, PRIMA di aprire la seriale.
 //
 // --- Modalita' 0, DAISY CHAIN (come documentato da sempre) ---

@@ -1,12 +1,12 @@
 """
 others/archivio.py — WAKEUPeSTALTA
 -----------------------------------
-Archivio di sessione: tutto quello che main.py sente e fa, salvato per poterlo
+Archivio di sessione: tutto quello che 3main.py sente e fa, salvato per poterlo
 ricontrollare a posteriori ("quando e' passata una persona avevo questa forma
 d'onda, quando ne sono passate 5 quest'altra").
 
 Una cartella per giornata, archivio/AAAA-MM-GG/:
-  main_HHMMSS/      una sessione = un avvio di main.py
+  main_HHMMSS/      una sessione = un avvio di 3main.py
     sessione.json   fotografia della configurazione all'avvio + "note"
                     (luogo, fibra, mezzo... modificabili dalla barra PROVE)
     audio/          segnale continuo della fibra, un WAV ogni DURATA_FILE_S
@@ -14,14 +14,14 @@ Una cartella per giornata, archivio/AAAA-MM-GG/:
     eventi.jsonl    una riga per evento: ora, file audio e secondo dentro
                     quel file in cui ritrovarlo, piu' i dati dell'evento
                     (comprese le prove etichettate: prova_inizio/prova_fine)
-  taratura/         report e registrazioni di trova_frequenze.py e
-                    tara_soglie.py della stessa giornata (cartella_taratura())
+  taratura/         report e registrazioni di 0trovafrequenze.py e
+                    1tarasoglie.py della stessa giornata (cartella_taratura())
 
 Per riguardare e confrontare: rivedi_archivio.py.
 
 Regola fissa: l'archivio non deve MAI fermare la rilevazione. Qualunque
 errore di disco (pieno, cartella non scrivibile) lo disattiva e viene
-segnalato tramite on_errore - main.py continua a funzionare.
+segnalato tramite on_errore - 3main.py continua a funzionare.
 """
 
 from __future__ import annotations
@@ -44,8 +44,8 @@ def cartella_giornata(base: Path = CARTELLA_ARCHIVIO) -> Path:
 
 
 def cartella_taratura(base: Path = CARTELLA_ARCHIVIO) -> Path:
-    """Dove trova_frequenze.py e tara_soglie.py salvano le loro misure:
-    accanto alle sessioni di main.py della stessa giornata."""
+    """Dove 0trovafrequenze.py e 1tarasoglie.py salvano le loro misure:
+    accanto alle sessioni di 3main.py della stessa giornata."""
     cartella = cartella_giornata(base) / "taratura"
     cartella.mkdir(parents=True, exist_ok=True)
     return cartella
@@ -76,7 +76,7 @@ class ArchivioSessione:
         self.cartella = cartella_giornata(cartella_base) / time.strftime("main_%H%M%S")
         self._sessione = {
             "inizio": datetime.now().isoformat(timespec="seconds"),
-            "note": "",  # luogo, fibra, mezzo, meteo... (barra PROVE di main.py)
+            "note": "",  # luogo, fibra, mezzo, meteo... (barra PROVE di 3main.py)
             "sample_rate": sample_rate,
             "durata_file_audio_s": DURATA_FILE_S,
             "configurazione": configurazione,
@@ -116,7 +116,7 @@ class ArchivioSessione:
                     self._apri_nuovo_wav()
                 n = min(len(campioni) - inizio, self._campioni_per_file - self._campioni_file)
                 # writeframes aggiorna anche l'intestazione del WAV ad ogni
-                # scrittura: il file resta leggibile anche se main.py si chiude
+                # scrittura: il file resta leggibile anche se 3main.py si chiude
                 # male (crash, task manager).
                 self._wav.writeframes(campioni[inizio:inizio + n].astype("<i2").tobytes())
                 self._campioni_file += n

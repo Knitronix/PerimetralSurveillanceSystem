@@ -11,11 +11,11 @@ problemi sotto sono da decidere insieme (vedi "Domande aperte" e "Piano").
 
 ## 1. Come funziona oggi, in 6 passi
 
-1. **Ascolto (AMBIENTE)** — `main.py` riceve la fibra via UDP (24 kHz) e
+1. **Ascolto (AMBIENTE)** — `3main.py` riceve la fibra via UDP (24 kHz) e
    calcola lo STA/LTA a banda larga. La daisy chain è **spenta** (Shelly OFF).
-2. **Risveglio** — STA/LTA supera la soglia ON → `main.py` accende la Shelly
+2. **Risveglio** — STA/LTA supera la soglia ON → `3main.py` accende la Shelly
    (riprova ogni 2 s se non risponde) e aspetta `ATTESA_BOOT_DAISY_CHAIN_S`
-   (2 s). **In questi 2 s `main.py` non decodifica nulla.**
+   (2 s). **In questi 2 s `3main.py` non decodifica nulla.**
 3. **Boot del master** — all'accensione il master sceglie la modalità
    leggendo l'EEPROM (0 = produzione se la sessione precedente è durata più
    di 2,5 s). Legge l'interruttore **solo da quel momento**: una pressione
@@ -28,7 +28,7 @@ problemi sotto sono da decidere insieme (vedi "Domande aperte" e "Piano").
    ```
    Le due onde sono **sommate e divise per 2** (una sola uscita PWM 0-255):
    ogni tono suona sempre a metà ampiezza, anche da solo.
-5. **Decodifica (ARMATO)** — `main.py` misura la potenza a f1 e f2 in blocchi
+5. **Decodifica (ARMATO)** — `3main.py` misura la potenza a f1 e f2 in blocchi
    da 20 ms (Goertzel), accende/spegne con due soglie fisse (isteresi),
    classifica la durata di f1: 9-11 blocchi = marcatore (azzera il
    contatore), 2-4 blocchi = slot (contatore +1). Se f2 era ON durante lo
@@ -45,15 +45,15 @@ mano **tutte** le copie.
 
 | Cosa | Dove vive | Stato oggi |
 |---|---|---|
-| f1 / f2 | `master.ino` FREQ1/FREQ2 · `main.py` F1_HZ/F2_HZ | ✅ 4400 / 3200 ovunque |
-| f usata dal test tempi | `master.ino` (= FREQ2, automatico) · `analizza_tempi_minimi.py` FREQ_TEST_HZ (**scritto a mano: 3200**) | ⚠ se cambia f2 va aggiornato a mano |
-| T0 / T1 | `master.ino` · `main.py` | ✅ 200 / 50 ms |
-| Soglie Goertzel f1/f2 | `main.py` · `analizza_tempi_minimi.py` (copia propria) | ⚠ tarate il 13/10 su fibra e mezzo che oggi non ci sono più |
-| Rampa sweep (200-6000, passo 200, 4 s) | `master.ino` · `trova_frequenze.py` · `analizza_armoniche_sweep.py` | ✅ |
+| f1 / f2 | `master.ino` FREQ1/FREQ2 · `3main.py` F1_HZ/F2_HZ | ✅ 4400 / 3200 ovunque |
+| f usata dal test tempi | `master.ino` (= FREQ2, automatico) · `2analizzatempiminimi.py` FREQ_TEST_HZ (**scritto a mano: 3200**) | ⚠ se cambia f2 va aggiornato a mano |
+| T0 / T1 | `master.ino` · `3main.py` | ✅ 200 / 50 ms |
+| Soglie Goertzel f1/f2 | `3main.py` · `2analizzatempiminimi.py` (copia propria) | ⚠ tarate il 13/10 su fibra e mezzo che oggi non ci sono più |
+| Rampa sweep (200-6000, passo 200, 4 s) | `master.ino` · `0trovafrequenze.py` · `analizza_armoniche_sweep.py` | ✅ |
 | Tempi interrogazione (15/6/18 ms) | `master.ino` · `slave2.ino` | ✅ |
-| Numero di nodi | solo `master.ino` (NUMERO_NODI=2) | ⚠ `main.py` non lo conosce: non può scartare un "tappeto 3" impossibile |
+| Numero di nodi | solo `master.ino` (NUMERO_NODI=2) | ⚠ `3main.py` non lo conosce: non può scartare un "tappeto 3" impossibile |
 | Soglia sessione 2,5 s | `master.ino` · `others/shelly_mode_selector.py` | ✅ |
-| IP Shelly | `main.py` Config · `trova_frequenze.py` · `analizza_tempi_minimi.py` · `analizza_armoniche_sweep.py` | ⚠ 4 copie, il DHCP lo cambia |
+| IP Shelly | `3main.py` Config · `0trovafrequenze.py` · `2analizzatempiminimi.py` · `analizza_armoniche_sweep.py` | ⚠ 4 copie, il DHCP lo cambia |
 
 ---
 
@@ -66,7 +66,7 @@ La daisy chain è spenta mentre si ascolta. Tra il passo e il momento in cui
 il master inizia a leggere l'interruttore passano: ritardo STA/LTA +
 chiamata Shelly + relè + boot dell'Arduino (da misurare, ordine 1-2 s).
 Se il piede si è già alzato, la pressione non viene mai vista (il latch
-parte solo dopo il boot). In più `main.py` scarta tutto quello che arriva
+parte solo dopo il boot). In più `3main.py` scarta tutto quello che arriva
 nei primi 2 s dopo l'accensione (`ATTESA_BOOT_DAISY_CHAIN_S`), ma il latch
 del master si **consuma** al primo ciclo trasmesso: se il master è già
 partito e ha trasmesso "chiuso" in quei 2 s, quella chiusura è persa.
@@ -87,14 +87,14 @@ visto, e scartare contatori > numero di nodi.
 trovata): le soglie del 13/10 erano calcolate su un tono a piena ampiezza,
 senza il fattore 1/4 della produzione - erano 4x troppo alte da sempre; con
 la fibra nuova f2 finiva sotto soglia (nessun tappeto sarebbe mai risultato
-chiuso). Ricalcolate con `trova_frequenze.py` in `main.py` e in
-`analizza_tempi_minimi.py` (lì x4, piena ampiezza). Frequenze 4400/3200
+chiuso). Ricalcolate con `0trovafrequenze.py` in `3main.py` e in
+`2analizzatempiminimi.py` (lì x4, piena ampiezza). Frequenze 4400/3200
 confermate: margine 23-24 dB, OTTIMA. Da verificare dal vivo premendo un
 tappeto.* Testo originale:
-Le soglie in `main.py` sono valori assoluti tarati il 13/10. Oggi sono
+Le soglie in `3main.py` sono valori assoluti tarati il 13/10. Oggi sono
 cambiati fibra e mezzo, e le misure di sweep mostrano che la risposta
 della fibra a una stessa frequenza può cambiare di 10 volte tra un giorno e
-l'altro. Vanno ricalcolate con `trova_frequenze.py` (che le propone già).
+l'altro. Vanno ricalcolate con `0trovafrequenze.py` (che le propone già).
 A medio termine: soglie **relative** al marcatore (che è sempre f1 per
 200 ms, quindi una misura di riferimento gratuita ad ogni ciclo), così si
 adattano da sole a fibra, mezzo e temperatura.
@@ -104,7 +104,7 @@ sfasati.** `analizza_armoniche_sweep.py` etichetta i gradini con un errore
 di un gradino (+200 Hz): il master inizia la rampa al boot, lo script fa
 partire il suo orologio ~3 s dopo. Lo sweep di oggi lo dimostra. 4400 è
 risultata debole nella misura corretta. → rifare la scelta con
-`trova_frequenze.py`.
+`0trovafrequenze.py`.
 
 ### B — Importanti
 
@@ -114,7 +114,7 @@ un risveglio, app chiusa durante il RISVEGLIO, blackout, rimbalzo del relè),
 il master la interpreta come "ciclo di selezione" e **al risveglio successivo
 parte in modalità SWEEP**: per tutto quel risveglio nessun tappeto viene
 sentito (resta solo l'avviso "TAPPETI NON RILEVATI"). Si ripara da solo al
-giro dopo, ma quel giro è cieco. Mitigazione semplice lato `main.py`: non
+giro dopo, ma quel giro è cieco. Mitigazione semplice lato `3main.py`: non
 spegnere mai la Shelly prima di 3 s dall'accensione.
 
 **B2. Un nodo remoto morto è indistinguibile da "tappeto aperto".**
@@ -122,7 +122,7 @@ Se slave2 non risponde, il master genera comunque lo slot (senza f2): sulla
 fibra si legge "tappeto 2 aperto", per sempre. La diagnosi esiste solo sul
 Serial Monitor del master, che in campo non è raggiungibile. Un tappeto
 guasto non darà mai allarme e nessuno lo saprà. Proposta: codificare "nodo
-muto" con una durata di slot diversa (es. 100 ms) e mostrarlo in `main.py`.
+muto" con una durata di slot diversa (es. 100 ms) e mostrarlo in `3main.py`.
 
 **B3. Margine del reset dello slave: 14 ms.**
 Lo slave si azzera se non vede impulsi per 300 ms. Tra l'impulso del
@@ -143,7 +143,7 @@ ON/OFF invece restano). Correzione di una riga.
   arrotondamento in virgola mobile (|0,02−0,05| = 0,030000000000000002 >
   0,03). Funziona, ma per caso: meglio una tolleranza esplicita (25 ms) o
   contare i blocchi interi.
-- **C2.** `analizza_tempi_minimi.py` ha f e soglie scritte a mano (3200 Hz,
+- **C2.** `2analizzatempiminimi.py` ha f e soglie scritte a mano (3200 Hz,
   soglie vecchie): se cambia f2 va riallineato.
 - **C3.** README e commenti in `master.ino` indicano ancora
   `analizza_armoniche_sweep.py` come strumento per scegliere le frequenze.
@@ -162,7 +162,7 @@ ON/OFF invece restano). Correzione di una riga.
 - Interrogazione dello slave misurata con `micros()` invece di `pulseIn()`.
 - Gestione della Shelly che non risponde (resta in RISVEGLIO, riprova).
 - Attesa di stabilizzazione dello STA/LTA dopo ogni ripartenza.
-- La decodifica in `main.py` (Goertzel + isteresi + durata) è semplice e
+- La decodifica in `3main.py` (Goertzel + isteresi + durata) è semplice e
   corretta nella sostanza: i problemi A2/C1 sono ai bordi, non nel cuore.
 
 ---
@@ -182,15 +182,15 @@ ON/OFF invece restano). Correzione di una riga.
    insieme — cambio frequenze, comando "parla/zitto", scelta della modalità
    — al posto dei cicli della Shelly.
 3. **B2** — vuoi vedere sul PC quando un tappeto/nodo è guasto? (serve
-   toccare master + `main.py`).
+   toccare master + `3main.py`).
 4. **Timeout reali** (C4): quanto deve restare armato il sistema dopo
    l'ultima chiusura, in campo?
 
 ## 6. Piano proposto, in ordine
 
-1. Misura `trova_frequenze.py` sulla configurazione attuale → nuove f1/f2 e
+1. Misura `0trovafrequenze.py` sulla configurazione attuale → nuove f1/f2 e
    soglie (A3, A4).
-2. Correzioni piccole e sicure in `main.py`: slot solo dopo marcatore e
+2. Correzioni piccole e sicure in `3main.py`: slot solo dopo marcatore e
    tetto al contatore (A2), finestre STA/LTA conservate (B4), Shelly mai
    spenta prima di 3 s (B1), tolleranza esplicita (C1), decodifica attiva
    subito dopo l'accensione invece che dopo 2 s (metà di A1).

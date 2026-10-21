@@ -1,11 +1,11 @@
 """
-tara_soglie.py — WAKEUPeSTALTA
+1tarasoglie.py — WAKEUPeSTALTA
 -------------------------------
-Misura le soglie Goertzel di main.py (SOGLIA_ON/OFF_F1/F2) sulla daisy chain
-VERA, in produzione - non piu' stimate da uno sweep (trova_frequenze.py
+Misura le soglie Goertzel di 3main.py (SOGLIA_ON/OFF_F1/F2) sulla daisy chain
+VERA, in produzione - non piu' stimate da uno sweep (0trovafrequenze.py
 serve solo a scegliere le frequenze).
 
-Cosa fa, premendo AVVIA (main.py deve essere CHIUSO: stessa porta UDP):
+Cosa fa, premendo AVVIA (3main.py deve essere CHIUSO: stessa porta UDP):
   1. registra ~1s di fibra muta (rumore di riferimento)
   2. accende la Shelly: la daisy chain parte in produzione (modalita' 0)
   3. registra DURATA_S secondi - in questo tempo PREMI i tappeti, uno alla
@@ -14,17 +14,18 @@ Cosa fa, premendo AVVIA (main.py deve essere CHIUSO: stessa porta UDP):
      - livello tipico del tono f1 e f2, rumore, quanto f1 "sporca" su f2
      - soglie giuste con la stessa regola di sempre (ON = 20% del tono,
        OFF = 65% dell'ON)
-     - fa girare la decodifica di main.py sulla registrazione due volte, con
+     - fa girare la decodifica di 3main.py sulla registrazione due volte, con
        le soglie ATTUALI e con quelle PROPOSTE, e dice se vanno cambiate
   5. salva registrazione + report in misure_soglie/
 
-Frequenze, soglie attuali e decodificatore sono letti da main.py stesso (non
+Frequenze, soglie attuali e decodificatore sono letti da 3main.py stesso (non
 copiati): lo strumento prova esattamente quello che gira in produzione.
 """
 
 from __future__ import annotations
 
 import socket
+import importlib
 import sys
 import threading
 import time
@@ -34,7 +35,9 @@ import numpy as np
 from PySide6 import QtCore, QtWidgets
 import pyqtgraph as pg
 
-import main as M
+# 3main.py inizia con un numero (ordine d'uso degli script): "import 3main"
+# non e' sintassi valida, si importa per nome.
+M = importlib.import_module("3main")
 from others import shelly_control
 from others.archivio import CARTELLA_ARCHIVIO, cartella_taratura
 from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card, etichetta, stile_plot
@@ -76,7 +79,7 @@ class TaraturaErrore(Exception):
 
 
 def potenze(campioni: np.ndarray, freq: float) -> np.ndarray:
-    """Potenza per blocco da 20ms, stessa scala del Goertzel di main.py."""
+    """Potenza per blocco da 20ms, stessa scala del Goertzel di 3main.py."""
     n = len(campioni) // B
     blocchi = campioni[: n * B].astype(np.float64).reshape(n, B)
     k = int(round(B * freq / FS))
@@ -124,7 +127,7 @@ def intervalli(maschera: np.ndarray, n_on: int) -> list[tuple[float, float]]:
 
 
 def decodifica(x: np.ndarray, n_on: int, soglie: tuple, vib_intervalli: list) -> dict:
-    """La decodifica di main.py, identica, su tutta la registrazione. Gli
+    """La decodifica di 3main.py, identica, su tutta la registrazione. Gli
     errori sono separati tra tratti tranquilli e tratti con vibrazioni."""
     p = M.RilevatoreProtocolloF1F2(FS, B, M.F1_HZ, M.F2_HZ, M.T0_MS, M.T1_MS, M.TOLLERANZA_MS, *soglie)
     eventi = []
@@ -247,7 +250,7 @@ def _righe_decodifica(nome: str, d: dict) -> list[str]:
     righe = [f"  {nome}: {esito} nei tratti tranquilli - marcatori {d['marcatori']}, slot {d['slot']}, "
              f"tappeti {d['n_tappeti']}, chiusure riconosciute: {chiusure}"]
     for titolo, errori in (("errori nei tratti TRANQUILLI (dipendono dalle soglie)", d["errori_tranquilli"]),
-                           ("errori DURANTE le vibrazioni (limite di main.py, non delle soglie)", d["errori_vibrazione"])):
+                           ("errori DURANTE le vibrazioni (limite di 3main.py, non delle soglie)", d["errori_vibrazione"])):
         if errori:
             dettaglio = ", ".join(f"{descr} a {t0:.1f}s" for t0, _, descr in errori[:6])
             altri = f" (+{len(errori) - 6})" if len(errori) > 6 else ""
@@ -258,7 +261,7 @@ def _righe_decodifica(nome: str, d: dict) -> list[str]:
 def componi_report(r: dict) -> str:
     a, p = r["attuali"], r["proposte"]
     righe = ["=== 1. MISURA ==="]
-    righe.append(f"Registrati {r['durata_s']:.0f}s di daisy chain accesa (f1={M.F1_HZ:.0f}Hz, f2={M.F2_HZ:.0f}Hz, lette da main.py).")
+    righe.append(f"Registrati {r['durata_s']:.0f}s di daisy chain accesa (f1={M.F1_HZ:.0f}Hz, f2={M.F2_HZ:.0f}Hz, lette da 3main.py).")
     primo = r["dec_proposte"]["primo_marcatore_s"]
     if primo is not None:
         righe.append(f"Avvio della daisy chain: primo marcatore {primo:.2f}s dopo l'accensione della Shelly.")
@@ -276,7 +279,7 @@ def componi_report(r: dict) -> str:
         righe.append("ATTENZIONE: nessuna pressione vista (f2 mai suonata) - soglie f2 NON tarate, "
                      "rifai la misura premendo i tappeti.")
 
-    righe.append("\n=== 2. LIVELLI MISURATI nei tratti tranquilli (scala Goertzel di main.py) ===")
+    righe.append("\n=== 2. LIVELLI MISURATI nei tratti tranquilli (scala Goertzel di 3main.py) ===")
     righe.append(f"Tono f1: {r['tono_f1']:.6f}    rumore a f1 (picchi): {r['rumore_f1']:.1e}")
     if r["f2_tarata"]:
         righe.append(f"Tono f2: {r['tono_f2']:.6f}    rumore a f2 (picchi): {r['rumore_f2']:.1e}    "
@@ -289,9 +292,9 @@ def componi_report(r: dict) -> str:
     for nome, m in (("f1", r["margine_f1"]), ("f2", r["margine_f2"])):
         if m is not None and m < MARGINE_MINIMO:
             righe.append(f"ATTENZIONE: margine {nome} basso ({m:.0f}x, serve >= {MARGINE_MINIMO:.0f}x): "
-                         "tono debole o rumore alto, valuta altre frequenze con trova_frequenze.py")
+                         "tono debole o rumore alto, valuta altre frequenze con 0trovafrequenze.py")
 
-    righe.append("\n=== 4. CONFRONTO CON MAIN.PY (stessa registrazione, decodifica di main.py) ===")
+    righe.append("\n=== 4. CONFRONTO CON MAIN.PY (stessa registrazione, decodifica di 3main.py) ===")
     righe.append(f"Soglie attuali:  f1 ON {a[0]:.6f} OFF {a[1]:.6f}   f2 ON {a[2]:.6f} OFF {a[3]:.6f}")
     righe += _righe_decodifica("con soglie ATTUALI ", r["dec_attuali"])
     righe += _righe_decodifica("con soglie PROPOSTE", r["dec_proposte"])
@@ -301,15 +304,15 @@ def componi_report(r: dict) -> str:
         motivo = ("decodifica con le soglie attuali CON ERRORI nei tratti tranquilli" if not decodifica_ok(r["dec_attuali"])
                   else f"soglie attuali oltre {FATTORE_TOLLERANZA:.0f}x dal giusto: oggi funzionano, ma con meno "
                        "margine del previsto")
-        righe.append(f"ESITO: CAMBIARE le soglie in main.py - {motivo}.")
+        righe.append(f"ESITO: CAMBIARE le soglie in 3main.py - {motivo}.")
     else:
         righe.append("ESITO: le soglie attuali VANNO BENE (entro 2x dal giusto e decodifica perfetta nei tratti "
                      "tranquilli): non serve cambiarle.")
     if r["dec_attuali"]["errori_vibrazione"]:
         righe.append("Nota: gli errori durante le vibrazioni NON si correggono con le soglie - servono le difese "
-                     "di main.py (controllo 'tono stretto', contatore limitato ai tappeti esistenti).")
+                     "di 3main.py (controllo 'tono stretto', contatore limitato ai tappeti esistenti).")
 
-    righe.append("\n=== 5. DA COPIARE in main.py (solo se l'esito dice CAMBIARE) ===")
+    righe.append("\n=== 5. DA COPIARE in 3main.py (solo se l'esito dice CAMBIARE) ===")
     righe.append(f"SOGLIA_ON_F1 = {p[0]:.6f}\nSOGLIA_OFF_F1 = {p[1]:.6f}")
     if r["f2_tarata"]:
         righe.append(f"SOGLIA_ON_F2 = {p[2]:.6f}\nSOGLIA_OFF_F2 = {p[3]:.6f}")
@@ -381,7 +384,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         bottoni.addWidget(self.btn_apri)
         lay.addLayout(bottoni)
         self.label_fase = QtWidgets.QLabel(
-            f"Chiudi main.py prima di avviare. Durante i {DURATA_S:.0f}s di misura PREMI i tappeti "
+            f"Chiudi 3main.py prima di avviare. Durante i {DURATA_S:.0f}s di misura PREMI i tappeti "
             "(uno alla volta e insieme).")
         self.label_fase.setWordWrap(True)
         lay.addWidget(self.label_fase)
@@ -391,7 +394,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         lay.addWidget(self.barra)
         sinistra.addWidget(card)
 
-        card, lay, _ = crea_card("Potenza f1 / f2 dal vivo · linee tratteggiate = soglie ON attuali di main.py",
+        card, lay, _ = crea_card("Potenza f1 / f2 dal vivo · linee tratteggiate = soglie ON attuali di 3main.py",
                                  colore_titolo=COLORI["blu"])
         self.plot = pg.PlotWidget()
         stile_plot(self.plot, "Potenza Goertzel", "Tempo (s)")
@@ -427,7 +430,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
             self.sock.setblocking(False)
         except OSError as e:
             self.sock = None
-            self._errore(f"Porta UDP {M.UDP_PORT} occupata - main.py o un altro strumento e' aperto? ({e})")
+            self._errore(f"Porta UDP {M.UDP_PORT} occupata - 3main.py o un altro strumento e' aperto? ({e})")
             return
         self.buf = []
         self.n_on = 0

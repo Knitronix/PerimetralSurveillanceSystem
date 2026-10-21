@@ -10,7 +10,7 @@ grigi, BASE al centro e pulsante RESET in alto a destra.
                                   o rosso (chiuso) secondo stato_tappeti;
                                   grigi finché il sensore non è ancora visto
 
-Widget autonomo, nessun import da main.py (niente import circolari): riceve
+Widget autonomo, nessun import da 3main.py (niente import circolari): riceve
 il nome dello stato come stringa e il dict stato_tappeti così com'è.
 
 API:
@@ -82,7 +82,7 @@ class _PulsanteReset(QtWidgets.QPushButton):
         self.setFixedSize(156, 48)
         self.setToolTip("Spegne la smart plug e torna in ASCOLTO")
         # Stylesheet sul widget stesso: vince sulle regole QPushButton
-        # generiche di STYLE_QSS in main.py.
+        # generiche di STYLE_QSS in 3main.py.
         self.setStyleSheet(f"""
             QPushButton#Reset {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -137,7 +137,7 @@ class VistaImpianto(QtWidgets.QWidget):
     reset_richiesto = QtCore.Signal()
 
     def __init__(self, con_reset: bool = True, con_didascalia: bool = True, parent=None):
-        """con_reset=False: nessun pulsante RESET sulla figura (in main.py
+        """con_reset=False: nessun pulsante RESET sulla figura (in 3main.py
         il RESET è nell'header, uguale per tutte le tab). In quel caso
         `pulsante_reset` è None e `reset_richiesto` non viene mai emesso."""
         super().__init__(parent)

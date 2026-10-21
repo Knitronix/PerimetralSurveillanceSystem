@@ -1,5 +1,5 @@
 """
-trova_frequenze.py — WAKEUPeSTALTA
+0trovafrequenze.py — WAKEUPeSTALTA
 -----------------------------------
 Risponde a una sola domanda: "con QUESTA fibra, in QUESTO mezzo, quali
 frequenze devo usare per f1/f2?". Sostituisce analizza_armoniche_sweep.py
@@ -27,13 +27,13 @@ frequenza morta non possono spostarlo. Il risultato e' poi verificato
 +/-200Hz, il sintomo esatto del vecchio errore) e se non torna il report
 lo dice esplicitamente invece di proporre frequenze.
 
-Le potenze sono calcolate come le calcola main.py (blocchi da 20ms, stessa
+Le potenze sono calcolate come le calcola 3main.py (blocchi da 20ms, stessa
 normalizzazione del Goertzel) e riscalate a una STIMA della produzione
 (FATTORE_PRODUZIONE): in modalita' sweep il master suona un tono a piena
 ampiezza, in daisy chain a meta' ampiezza. La misura reale del 19/10/2026
 ha mostrato che la stima e' ottimista di ~2x (~3dB): va bene per
 CONFRONTARE le frequenze tra loro, non per le soglie. Questo script quindi
-NON propone soglie: si misurano sulla daisy chain vera con tara_soglie.py.
+NON propone soglie: si misurano sulla daisy chain vera con 1tarasoglie.py.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ FREQUENZE = np.arange(SWEEP_FREQ_MIN, SWEEP_FREQ_MAX + 1, SWEEP_FREQ_STEP)
 N_GRADINI = len(FREQUENZE)
 DURATA_CICLO_S = N_GRADINI * SWEEP_STEP_S
 
-# Come main.py: blocco Goertzel da 20ms e regola delle soglie (ON = 20% del
+# Come 3main.py: blocco Goertzel da 20ms e regola delle soglie (ON = 20% del
 # picco, OFF = 65% dell'ON).
 BLOCCO = 480
 FRAZIONE_SOGLIA_ON = 0.20
@@ -107,7 +107,7 @@ class AnalisiErrore(Exception):
 
 def potenze_blocchi(campioni: np.ndarray, freqs: np.ndarray) -> np.ndarray:
     """Potenza a ciascuna frequenza in blocchi da 20ms, stessa scala del
-    Goertzel di main.py (1.0 = tono a piena scala int16). Righe = blocchi."""
+    Goertzel di 3main.py (1.0 = tono a piena scala int16). Righe = blocchi."""
     n = len(campioni) // BLOCCO
     if n == 0:
         return np.zeros((0, len(freqs)))
@@ -247,7 +247,7 @@ def analizza(sweep: np.ndarray, valido: np.ndarray, silenzio: np.ndarray) -> dic
         superati += int(all(med[k] > v for v in vicini))
     verifica = superati / controllati if controllati else 0.0
 
-    # Tutto riscalato a come lo vedra' main.py in produzione.
+    # Tutto riscalato a come lo vedra' 3main.py in produzione.
     segnale_prod = segnale_med * FATTORE_PRODUZIONE
     segnale_p5_prod = segnale_p5 * FATTORE_PRODUZIONE
     perdita_prod = perdita * FATTORE_PRODUZIONE
@@ -345,7 +345,7 @@ def componi_report(r: dict) -> str:
     snr = r["snr_db"]
     valide = [i for i in range(N_GRADINI) if r["viste"][i] > 0]
     righe.append("\n=== 2. COSA SUCCEDE IN QUESTA CONFIGURAZIONE ===")
-    righe.append("(SNR = tono come lo vedra' main.py in produzione / picchi del rumore ambientale misurato")
+    righe.append("(SNR = tono come lo vedra' 3main.py in produzione / picchi del rumore ambientale misurato")
     righe.append(" nei secondi di silenzio. 20dB = tono 100 volte sopra il rumore, 10dB = 10 volte.")
     righe.append(" Armoniche: una 3a armonica a -20dB vale 1/100 del tono; vicina a 0dB = forte quanto il tono.)")
     righe.append(f"Banda forte (SNR >= 20dB): {_intervalli([int(FREQUENZE[i]) for i in valide if snr[i] >= 20])}")
@@ -381,11 +381,11 @@ def componi_report(r: dict) -> str:
         righe.append(" pochi dB non valgono un riflash.)")
         righe.append("Frequenze che il master deve suonare (righe FREQ1/FREQ2 in testa allo sketch, poi riflash):")
         righe.append(f"  arduino/master/master.ino:  FREQ1 = {c['f1']};  FREQ2 = {c['f2']};")
-        righe.append("Le stesse, lato PC - DEVONO coincidere con il master, altrimenti main.py non sente nulla:")
-        righe.append(f"  main.py:  F1_HZ = {c['f1']:.1f}   F2_HZ = {c['f2']:.1f}")
-        righe.append("Se cambi f2, aggiorna anche FREQ_TEST_HZ in analizza_tempi_minimi.py.")
+        righe.append("Le stesse, lato PC - DEVONO coincidere con il master, altrimenti 3main.py non sente nulla:")
+        righe.append(f"  3main.py:  F1_HZ = {c['f1']:.1f}   F2_HZ = {c['f2']:.1f}")
+        righe.append("Se cambi f2, aggiorna anche FREQ_TEST_HZ in 2analizzatempiminimi.py.")
         righe.append("SOGLIE: questo script NON le propone (misura uno sweep, non la produzione).")
-        righe.append("Dopo aver cambiato frequenze, misurale sulla daisy chain vera con tara_soglie.py.")
+        righe.append("Dopo aver cambiato frequenze, misurale sulla daisy chain vera con 1tarasoglie.py.")
     return "\n".join(righe)
 
 
@@ -485,7 +485,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         layout.addLayout(sinistra, 4)
 
         destra = QtWidgets.QVBoxLayout()
-        card, lay, testata = crea_card("Risultato · come lo vedrà main.py", colore_titolo=COLORI["verde"])
+        card, lay, testata = crea_card("Risultato · come lo vedrà 3main.py", colore_titolo=COLORI["verde"])
         self.plot_ris = pg.PlotWidget()
         stile_plot(self.plot_ris, "Potenza (scala Goertzel)", "Frequenza (Hz)")
         self.plot_ris.setLogMode(y=True)
@@ -546,7 +546,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         try:
             self._apri_socket()
         except OSError as e:
-            self._errore(f"Porta UDP {UDP_PORT} occupata (main.py o un altro script è aperto?): {e}")
+            self._errore(f"Porta UDP {UDP_PORT} occupata (3main.py o un altro script è aperto?): {e}")
             return
         self._reset_buffer()
         self._annulla.clear()
