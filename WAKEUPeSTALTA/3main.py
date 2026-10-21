@@ -931,10 +931,11 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         return tab
 
     def _crea_barra_prove(self) -> QtWidgets.QWidget:
-        """Etichette delle prove + note di sessione, scritte nell'archivio
-        (others/archivio.py). Visibile in tutte le tab: le prove di passi si
-        fanno anche in Taratura, non solo ad impianto armato. Un solo
-        pulsante che alterna INIZIO/FINE: due prove non si sovrappongono mai."""
+        """Prove etichettate, scritte nell'archivio (others/archivio.py): un
+        segnalibro in eventi.jsonl + un WAV con solo la prova in audio_prove/.
+        Visibile in tutte le tab: le prove di passi si fanno anche in
+        Taratura, non solo ad impianto armato. Un solo pulsante che alterna
+        INIZIO/FINE: due prove non si sovrappongono mai."""
         barra = QtWidgets.QFrame()
         barra.setObjectName("Card")
         riga = QtWidgets.QHBoxLayout(barra)
@@ -954,22 +955,10 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.label_prova = QtWidgets.QLabel("nessuna prova in corso")
         self.label_prova.setObjectName("Mono")
         self.label_prova.setMinimumWidth(170)
-        riga.addWidget(self.label_prova)
-        riga.addSpacing(6)
-        riga.addWidget(separatore(verticale=True))
-        riga.addSpacing(6)
-
-        riga.addWidget(etichetta("NOTE SESSIONE", "Eyebrow"))
-        self.campo_note = QtWidgets.QLineEdit()
-        self.campo_note.setPlaceholderText("luogo, fibra, mezzo, meteo… (Invio per salvare)")
-        self.campo_note.returnPressed.connect(self._salva_note_sessione)
-        riga.addWidget(self.campo_note, stretch=2)
-        btn_note = QtWidgets.QPushButton("Salva")
-        btn_note.setCursor(QtCore.Qt.PointingHandCursor)
-        btn_note.clicked.connect(self._salva_note_sessione)
-        riga.addWidget(btn_note)
+        riga.addWidget(self.label_prova, stretch=2)
 
         self._prova_in_corso: str | None = None
+        self._ultimo_file_prova: str | None = None
         self._inizio_prova_s = 0.0
         self.timer_prova = QtCore.QTimer(self)
         self.timer_prova.setInterval(500)
@@ -981,7 +970,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             etichetta_prova = self.campo_prova.text().strip() or "prova senza nome"
             self._prova_in_corso = etichetta_prova
             self._inizio_prova_s = time.monotonic()
-            self.archivio.evento("prova_inizio", etichetta=etichetta_prova)
+            self.archivio.inizia_prova(etichetta_prova)
             self._aggiungi_log(f"INIZIO PROVA: {etichetta_prova}")
             self.btn_prova.setText("■  FINE PROVA")
             self.btn_prova.setObjectName("Primario")
@@ -997,8 +986,8 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         if self._prova_in_corso is None:
             return
         durata = time.monotonic() - self._inizio_prova_s
-        self.archivio.evento("prova_fine", etichetta=self._prova_in_corso, durata_s=round(durata, 2),
-                             **({"motivo": motivo} if motivo else {}))
+        self._ultimo_file_prova = self.archivio.fine_prova(durata_s=round(durata, 2),
+                                                           **({"motivo": motivo} if motivo else {}))
         self._aggiungi_log(f"FINE PROVA: {self._prova_in_corso} ({durata:.1f} s){' - ' + motivo if motivo else ''}")
         self._prova_in_corso = None
         self.timer_prova.stop()
@@ -1008,17 +997,13 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
     def _aggiorna_label_prova(self) -> None:
         if self._prova_in_corso is None:
-            self.label_prova.setText("nessuna prova in corso")
+            self.label_prova.setText(f"salvata: {self._ultimo_file_prova}" if self._ultimo_file_prova
+                                     else "nessuna prova in corso")
             self.label_prova.setStyleSheet("")
         else:
             secondi = int(time.monotonic() - self._inizio_prova_s)
             self.label_prova.setText(f"● REC {secondi // 60:02d}:{secondi % 60:02d}")
             self.label_prova.setStyleSheet(f"color: {COLORI['pericolo']}; font-weight: 700;")
-
-    def _salva_note_sessione(self) -> None:
-        note = self.campo_note.text().strip()
-        self.archivio.aggiorna_note(note)
-        self._aggiungi_log(f"Note sessione salvate: {note or '(vuote)'}")
 
     def _crea_tab_ascolto(self) -> QtWidgets.QWidget:
         """Fase 2: onda + pannello timer + una riga impianto (tappeti e

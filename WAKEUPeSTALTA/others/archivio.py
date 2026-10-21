@@ -7,17 +7,16 @@ d'onda, quando ne sono passate 5 quest'altra").
 
 Una cartella per giornata, archivio/AAAA-MM-GG/:
   main_HHMMSS/      una sessione = un avvio di 3main.py
-    sessione.json   fotografia della configurazione all'avvio + "note"
-                    (luogo, fibra, mezzo... modificabili dalla barra PROVE)
+    sessione.json   fotografia della configurazione all'avvio
     audio/          segnale continuo della fibra, un WAV ogni DURATA_FILE_S
                     (24kHz, 16 bit, mono - si apre con Audacity)
     eventi.jsonl    una riga per evento: ora, file audio e secondo dentro
                     quel file in cui ritrovarlo, piu' i dati dell'evento
                     (comprese le prove etichettate: prova_inizio/prova_fine)
+    audio_prove/    un WAV per ogni prova della barra PROVE, solo quella prova
+                    (+1s prima e dopo): HHMMSS_<titolo>.wav
   taratura/         report e registrazioni di 0trovafrequenze.py e
                     1tarasoglie.py della stessa giornata (cartella_taratura())
-
-Per riguardare e confrontare: rivedi_archivio.py.
 
 Regola fissa: l'archivio non deve MAI fermare la rilevazione. Qualunque
 errore di disco (pieno, cartella non scrivibile) lo disattiva e viene
@@ -27,6 +26,7 @@ segnalato tramite on_errore - 3main.py continua a funzionare.
 from __future__ import annotations
 
 import json
+import re
 import time
 import wave
 from datetime import datetime
@@ -36,6 +36,7 @@ from typing import Callable
 import numpy as np
 
 DURATA_FILE_S = 600  # 10 minuti per file WAV
+MARGINE_PROVA_S = 1.0  # secondi tenuti prima e dopo ogni prova nel suo WAV
 CARTELLA_ARCHIVIO = Path(__file__).resolve().parent.parent / "archivio"
 
 
@@ -49,6 +50,11 @@ def cartella_taratura(base: Path = CARTELLA_ARCHIVIO) -> Path:
     cartella = cartella_giornata(base) / "taratura"
     cartella.mkdir(parents=True, exist_ok=True)
     return cartella
+
+
+def _nome_file(testo: str) -> str:
+    """Titolo della prova -> nome di file valido su Windows."""
+    return re.sub(r'[\\/:*?"<>|]+', "_", testo).strip(" .")[:60] or "prova"
 
 
 def _json_default(valore):
@@ -76,7 +82,6 @@ class ArchivioSessione:
         self.cartella = cartella_giornata(cartella_base) / time.strftime("main_%H%M%S")
         self._sessione = {
             "inizio": datetime.now().isoformat(timespec="seconds"),
-            "note": "",  # luogo, fibra, mezzo, meteo... (barra PROVE di 3main.py)
             "sample_rate": sample_rate,
             "durata_file_audio_s": DURATA_FILE_S,
             "configurazione": configurazione,
@@ -88,18 +93,58 @@ class ArchivioSessione:
         except OSError as e:
             self._disattiva(e)
 
-    def aggiorna_note(self, note: str) -> None:
-        """Note della sessione (luogo, fibra, mezzo...): riscrive
-        sessione.json e lascia traccia nel log di quando sono cambiate."""
+        # Prove: l'ultimo MARGINE_PROVA_S di audio tenuto in memoria (per il
+        # secondo "prima"), e la prova in corso - o in attesa del secondo
+        # "dopo" - con i suoi pezzi di audio.
+        self._pre: list[np.ndarray] = []
+        self._prova: dict | None = None
+
+    # ------------------------------------------------------------------
+    # Prove (barra PROVE di 3main.py)
+    # ------------------------------------------------------------------
+    def inizia_prova(self, etichetta: str) -> None:
         if not self.attivo:
             return
-        self._sessione["note"] = note
+        if self._prova is not None:  # la precedente aspettava ancora il secondo "dopo"
+            self._salva_prova()
+        nome = f"audio_prove/{time.strftime('%H%M%S')}_{_nome_file(etichetta)}.wav"
+        self._prova = {"etichetta": etichetta, "nome": nome, "pezzi": list(self._pre), "fine": None}
+        self.evento("prova_inizio", etichetta=etichetta)
+
+    def fine_prova(self, **dati) -> str | None:
+        """Chiude la prova: il suo WAV viene scritto appena arriva anche il
+        secondo "dopo". Ritorna il nome del file (relativo alla sessione)."""
+        if not self.attivo or self._prova is None:
+            return None
+        self._prova["fine"] = self.campioni_totali + int(MARGINE_PROVA_S * self.sample_rate)
+        self.evento("prova_fine", etichetta=self._prova["etichetta"], file_prova=self._prova["nome"], **dati)
+        return self._prova["nome"]
+
+    def _salva_prova(self) -> None:
+        prova, self._prova = self._prova, None
         try:
-            self._scrivi_sessione()
-        except OSError as e:
-            self._disattiva(e)
-            return
-        self.evento("note_sessione", note=note)
+            percorso = self.cartella / prova["nome"]
+            percorso.parent.mkdir(exist_ok=True)
+            with wave.open(str(percorso), "wb") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(self.sample_rate)
+                if prova["pezzi"]:
+                    w.writeframes(np.concatenate(prova["pezzi"]).astype("<i2").tobytes())
+            self.evento("prova_wav_salvato", etichetta=prova["etichetta"], file_prova=prova["nome"])
+        except (OSError, wave.Error) as e:
+            # un WAV di prova non riuscito non deve spegnere l'archivio
+            self.evento("prova_wav_errore", etichetta=prova["etichetta"], errore=str(e))
+
+    def _aggiorna_prova(self, pezzo: np.ndarray) -> None:
+        self._pre.append(pezzo)
+        margine = int(MARGINE_PROVA_S * self.sample_rate)
+        while sum(len(p) for p in self._pre[1:]) >= margine:
+            self._pre.pop(0)
+        if self._prova is not None:
+            self._prova["pezzi"].append(pezzo)
+            if self._prova["fine"] is not None and self.campioni_totali >= self._prova["fine"]:
+                self._salva_prova()
 
     def _scrivi_sessione(self) -> None:
         (self.cartella / "sessione.json").write_text(
@@ -124,6 +169,8 @@ class ArchivioSessione:
                 inizio += n
         except (OSError, wave.Error) as e:
             self._disattiva(e)
+            return
+        self._aggiorna_prova(campioni)
 
     def evento(self, tipo: str, **dati) -> None:
         """Un evento, posizionato alla fine dell'audio scritto finora (cioe'
@@ -145,6 +192,8 @@ class ArchivioSessione:
             self._disattiva(e)
 
     def chiudi(self) -> None:
+        if self._prova is not None:  # prova appena chiusa: salva senza aspettare il secondo "dopo"
+            self._salva_prova()
         self.evento("chiusura", campioni_totali=self.campioni_totali,
                     durata_s=round(self.campioni_totali / self.sample_rate, 1))
         for chiudibile in (self._wav, self._eventi):

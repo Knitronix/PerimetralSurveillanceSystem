@@ -1,25 +1,26 @@
 """
 1tarasoglie.py — WAKEUPeSTALTA
 -------------------------------
-Misura le soglie Goertzel di 3main.py (SOGLIA_ON/OFF_F1/F2) sulla daisy chain
-VERA, in produzione - non piu' stimate da uno sweep (0trovafrequenze.py
-serve solo a scegliere le frequenze).
+Calcola le soglie Goertzel che 3main.py usa in ARMATO (SOGLIA_ON/OFF_F1/F2),
+in base alla potenza con cui sente davvero f1 e f2 sulla daisy chain.
 
-Cosa fa, premendo AVVIA (3main.py deve essere CHIUSO: stessa porta UDP):
-  1. registra ~1s di fibra muta (rumore di riferimento)
-  2. accende la Shelly: la daisy chain parte in produzione (modalita' 0)
-  3. registra DURATA_S secondi - in questo tempo PREMI i tappeti, uno alla
-     volta e anche insieme: senza pressioni f2 non suona e non si puo' tarare
-  4. spegne la Shelly e analizza:
-     - livello tipico del tono f1 e f2, rumore, quanto f1 "sporca" su f2
-     - soglie giuste con la stessa regola di sempre (ON = 20% del tono,
-       OFF = 65% dell'ON)
-     - fa girare la decodifica di 3main.py sulla registrazione due volte, con
-       le soglie ATTUALI e con quelle PROPOSTE, e dice se vanno cambiate
-  5. salva registrazione + report in misure_soglie/
+Uso (3main.py deve essere CHIUSO: stessa porta UDP):
+  1. AVVIA: ~1s di fibra muta (non toccare niente) = il RUMORE
+  2. la Shelly si accende, la daisy chain suona: per 30s PREMI i tappeti,
+     ognuno almeno 5 volte (senza pressioni f2 non suona)
+  3. report: le soglie vanno bene / da cambiare (con i valori da copiare)
 
-Frequenze, soglie attuali e decodificatore sono letti da 3main.py stesso (non
-copiati): lo strumento prova esattamente quello che gira in produzione.
+Regola, volutamente semplice:
+  - rumore = picchi del segnale a f1/f2 con la fibra muta
+  - tono   = la parte BASSA dei blocchi in cui il tono c'e' (cosi' le
+             soglie reggono anche quando il tono si indebolisce)
+  - soglia ON a meta' strada, in proporzione, tra rumore e tono; OFF = 65%
+  - verifica: la decodifica di 3main.py sulla registrazione, con le soglie
+    attuali e con quelle calcolate - le nuove si consigliano solo se non
+    perdono niente
+
+Frequenze, soglie attuali e decodificatore sono letti da 3main.py stesso.
+Registrazione + report in archivio/AAAA-MM-GG/taratura/.
 """
 
 from __future__ import annotations
@@ -44,31 +45,15 @@ from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card
 
 DURATA_S = 30.0
 PRIMA_ACCENSIONE_S = 1.0  # fibra muta registrata prima di accendere la Shelly
-FRAZIONE_SOGLIA_ON = 0.20
 FRAZIONE_SOGLIA_OFF = 0.65
-# Margine minimo richiesto tra soglia ON e il peggior rumore/cross-talk.
-MARGINE_MINIMO = 10.0
-# Le soglie attuali si considerano ancora buone se distano meno di questo
-# fattore da quelle proposte (il tono sta 5x sopra la ON: uno scarto 2x e'
-# assorbito) E la decodifica con le soglie attuali e' perfetta.
-FATTORE_TOLLERANZA = 2.0
+TONO_SU_RUMORE = 30.0     # un blocco conta come "tono" se supera di tanto il rumore
+PERCENTILE_TONO = 10      # "tono" = 10° percentile dei picchi dei singoli toni (la parte bassa)
+MARGINE_OK = 5.0          # soglia ok se almeno 5x sopra il rumore e 5x sotto il tono
+MIN_TONI_F2 = 5           # sotto: troppe poche pressioni per misurare f2
 SECONDI_GRAFICO = 10.0
-
-# --- Vibrazioni (passi, botte): il mondo fa rumore anche mentre il master
-# suona. Un blocco e' "vibrazione" se l'energia alle frequenze di confronto
-# (dove il master non suona mai: f1/f2 +/-400Hz) supera di FATTORE_VIBRAZIONE
-# volte il loro livello tipico. Misurato il 19/10/2026: fibra tranquilla
-# ~3e-7, botta 5e-5..2e-3 (100-1000x) - 20x separa bene i due casi.
-FREQ_CONFRONTO = (M.F1_HZ - 400, M.F1_HZ + 400, M.F2_HZ - 400, M.F2_HZ + 400)
-FATTORE_VIBRAZIONE = 20.0
-ALLARGA_BLOCCHI = 2  # +/-40ms attorno a ogni blocco di vibrazione (le code)
-MARGINE_VIBRAZIONE_S = 0.2  # un errore cosi' vicino a una vibrazione e' attribuito a lei
-QUOTA_MAX_VIBRAZIONE = 0.5  # oltre meta' misura con vibrazioni: da rifare
 
 B = M.BLOCCO_GOERTZEL_CAMPIONI
 FS = M.SAMPLE_RATE
-# Le misure si salvano nell'archivio della giornata: archivio/AAAA-MM-GG/taratura/
-# (others/archivio.py). Le vecchie misure_soglie/ restano dove sono.
 
 
 # ======================================================================
@@ -86,236 +71,112 @@ def potenze(campioni: np.ndarray, freq: float) -> np.ndarray:
     return np.abs(np.fft.rfft(blocchi, axis=1)[:, k]) ** 2 / (B / 2.0) ** 2 / 32768.0 ** 2
 
 
-def livello_tono(p: np.ndarray, rumore: float) -> float | None:
-    """Potenza tipica dei blocchi in cui il tono suona: mediana dei blocchi
-    ben sopra il rumore e vicini al massimo (esclude i blocchi a cavallo
-    dell'inizio/fine del tono). None se il tono non c'e'. p va passato GIA'
-    senza i blocchi di vibrazione."""
-    if len(p) == 0 or p.max() < 30 * rumore:
-        return None
-    pieni = p[p > 0.3 * np.percentile(p, 99.5)]
-    return float(np.median(pieni))
-
-
-def blocchi_vibrazione(x: np.ndarray) -> np.ndarray:
-    """True per i blocchi in cui la fibra riceve una vibrazione a banda larga
-    (passo, botta, oggetto che cade): energia alta anche alle frequenze di
-    confronto, dove il master non suona mai. Un tono vero e' stretto e lascia
-    le frequenze di confronto al livello del rumore; una botta le alza tutte.
-    Il riferimento e' la mediana su tutta la registrazione (le botte sono la
-    minoranza), quindi si adatta da solo al rumore del giorno."""
-    rif = np.median(np.vstack([potenze(x, f) for f in FREQ_CONFRONTO]), axis=0)
-    vib = rif > FATTORE_VIBRAZIONE * max(float(np.median(rif)), 1e-12)
-    # code della vibrazione: allarga di qualche blocco per lato
-    allargato = vib.copy()
-    for s in range(1, ALLARGA_BLOCCHI + 1):
-        allargato[s:] |= vib[:-s]
-        allargato[:-s] |= vib[s:]
-    return allargato
-
-
-def intervalli(maschera: np.ndarray, n_on: int) -> list[tuple[float, float]]:
-    """Tratti contigui True della maschera, in secondi dall'accensione."""
-    out, inizio = [], None
-    for i, v in enumerate(np.append(maschera, False)):
+def picchi_dei_toni(p: np.ndarray, sopra: float) -> list[float]:
+    """Per ogni tono suonato (tratto continuo sopra 'sopra'), il suo blocco
+    piu' forte: e' un blocco pieno, non un bordo in cui il tono c'e' solo
+    per meta' (uno slot da 50ms e' fatto quasi solo di bordi)."""
+    picchi, inizio = [], None
+    for i, v in enumerate(np.append(p > sopra, False)):
         if v and inizio is None:
             inizio = i
         elif not v and inizio is not None:
-            out.append(((inizio * B - n_on) / FS, (i * B - n_on) / FS))
+            picchi.append(float(p[inizio:i].max()))
             inizio = None
-    return out
+    return picchi
 
 
-def decodifica(x: np.ndarray, n_on: int, soglie: tuple, vib_intervalli: list) -> dict:
-    """La decodifica di 3main.py, identica, su tutta la registrazione. Gli
-    errori sono separati tra tratti tranquilli e tratti con vibrazioni."""
+def decodifica(x: np.ndarray, soglie: tuple) -> dict:
+    """La decodifica di 3main.py, identica: quanti marcatori, quante
+    pressioni per tappeto, quanti tappeti inesistenti (errori)."""
     p = M.RilevatoreProtocolloF1F2(FS, B, M.F1_HZ, M.F2_HZ, M.T0_MS, M.T1_MS, M.TOLLERANZA_MS, *soglie)
-    eventi = []
+    marcatori, slot = 0, []
     for i in range(len(x) // B):
         for e in p.elabora_blocco(x[i * B:(i + 1) * B]):
-            e["t1"] = ((i + 1) * B - n_on) / FS
-            e["t0"] = e["t1"] - e["durata_s"]
-            eventi.append(e)
-    zeri = [e for e in eventi if e["tipo"] == "zero"]
-    slot = [e for e in eventi if e["tipo"] == "slot"]
-
-    # Numero di tappeti: quanti slot ci sono di solito tra due marcatori.
-    per_ciclo = [sum(1 for s in slot if a["t1"] < s["t1"] < b["t1"]) for a, b in zip(zeri, zeri[1:])]
-    n_tappeti = int(np.bincount(per_ciclo).argmax()) if per_ciclo else 0
-
-    errori = []  # (t0, t1, descrizione)
-    for e in eventi:
-        if e["tipo"] == "rumore":
-            errori.append((e["t0"], e["t1"], "impulso scartato"))
-        elif e["tipo"] == "slot" and e["counter"] > n_tappeti:
-            errori.append((e["t0"], e["t1"], f"tappeto inesistente {e['counter']}"))
-    if len(zeri) > 2:
-        tipico = float(np.median(np.diff([e["t1"] for e in zeri])))
-        for a, b in zip(zeri, zeri[1:]):
-            if b["t1"] - a["t1"] > 1.5 * tipico:
-                errori.append((a["t1"], b["t1"], "marcatore perso"))
-
-    def in_vibrazione(t0, t1):
-        return any(t0 < v1 + MARGINE_VIBRAZIONE_S and t1 > v0 - MARGINE_VIBRAZIONE_S for v0, v1 in vib_intervalli)
-
-    tranquilli = [err for err in errori if not in_vibrazione(err[0], err[1])]
-    con_vibrazione = [err for err in errori if in_vibrazione(err[0], err[1])]
-    chiusure = {}
-    for e in slot:
-        if e["stato"] == "chiuso" and e["counter"] <= n_tappeti and not in_vibrazione(e["t0"], e["t1"]):
-            chiusure[e["counter"]] = chiusure.get(e["counter"], 0) + 1
-    return {
-        "marcatori": len(zeri), "slot": len(slot), "n_tappeti": n_tappeti,
-        "errori_tranquilli": tranquilli, "errori_vibrazione": con_vibrazione,
-        "chiusure": chiusure,
-        "primo_marcatore_s": zeri[0]["t0"] if zeri else None,
-    }
-
-
-def decodifica_ok(d: dict) -> bool:
-    """Giudica le SOGLIE: contano solo gli errori nei tratti tranquilli."""
-    return d["marcatori"] > 0 and not d["errori_tranquilli"]
+            if e["tipo"] == "zero":
+                marcatori += 1
+            elif e["tipo"] == "slot":
+                slot.append(e)
+    # numero di tappeti = il contatore piu' alto presente in almeno meta' dei cicli
+    contatori = [e["counter"] for e in slot]
+    n_tappeti = max((k for k in set(contatori) if contatori.count(k) >= marcatori / 2), default=0)
+    pressioni = {k: sum(1 for e in slot if e["counter"] == k and e["stato"] == "chiuso") for k in range(1, n_tappeti + 1)}
+    inesistenti = sum(1 for e in slot if e["counter"] > n_tappeti)
+    return {"marcatori": marcatori, "pressioni": pressioni, "inesistenti": inesistenti}
 
 
 def analizza(x: np.ndarray, n_on: int) -> dict:
     if n_on < B * 10:
         raise TaraturaErrore("Manca la registrazione della fibra muta prima dell'accensione.")
-    p1 = potenze(x, M.F1_HZ)
-    p2 = potenze(x, M.F2_HZ)
-    blocco_on = n_on // B
-    vib = blocchi_vibrazione(x)
-    vib_intervalli = intervalli(vib, n_on)
-    quota_vibrazione = float(vib[blocco_on:].mean())
-    tranquillo = ~vib
+    p1, p2 = potenze(x, M.F1_HZ), potenze(x, M.F2_HZ)
+    muta = slice(0, max(1, n_on // B - 1))
+    dopo = slice(n_on // B, None)
+    rumore = [max(float(np.percentile(p[muta], 99)), 1e-12) for p in (p1, p2)]
 
-    # Rumore: fibra muta prima dell'accensione + pause tra i toni (lontano
-    # >= 60ms da qualunque blocco con energia), solo blocchi tranquilli.
-    muta = np.zeros(len(p1), bool)
-    muta[: max(1, blocco_on - 1)] = True
-    muta &= tranquillo
-    if not muta.any():
-        raise TaraturaErrore("Vibrazioni anche durante la fibra muta iniziale: rifai la misura senza toccare la fibra all'inizio.")
-    rif = max(np.percentile(p1[muta], 99), np.percentile(p2[muta], 99), 1e-12)
-    attivo = (p1 > 20 * rif) | (p2 > 20 * rif)
-    lontano = tranquillo.copy()
-    for i in np.where(attivo)[0]:
-        lontano[max(0, i - 3): i + 4] = False
-    lontano[: blocco_on + 5] = False
-    rumore_f1 = max(np.percentile(p1[muta], 99), np.percentile(p1[lontano], 99) if lontano.any() else 0)
-    rumore_f2 = max(np.percentile(p2[muta], 99), np.percentile(p2[lontano], 99) if lontano.any() else 0)
-
-    acceso = tranquillo.copy()
-    acceso[:blocco_on] = False
-    tono_f1 = livello_tono(p1[acceso], rumore_f1)
-    if tono_f1 is None:
+    toni, n_toni = [], []
+    for p, r in zip((p1, p2), rumore):
+        picchi = picchi_dei_toni(p[dopo], TONO_SU_RUMORE * r)
+        toni.append(float(np.percentile(picchi, PERCENTILE_TONO)) if picchi else None)
+        n_toni.append(len(picchi))
+    if toni[0] is None:
         raise TaraturaErrore(f"Nessun tono a {M.F1_HZ:.0f}Hz: la daisy chain non e' partita? "
                              "(Shelly, alimentazione, master non in modalita' produzione)")
-    tono_f2 = livello_tono(p2[acceso], rumore_f2)
 
-    on1 = FRAZIONE_SOGLIA_ON * tono_f1
-    proposte = [on1, on1 * FRAZIONE_SOGLIA_OFF, M.SOGLIA_ON_F2, M.SOGLIA_OFF_F2]
-    perdita = None
-    if tono_f2 is not None:
-        on2 = FRAZIONE_SOGLIA_ON * tono_f2
-        proposte[2:] = [on2, on2 * FRAZIONE_SOGLIA_OFF]
-        # f1 che suona senza f2: quanto si vede su f2 (darebbe chiusure false)
-        solo_f1 = acceso & (p1 > on1) & (p2 < 0.05 * tono_f2)
-        perdita = float(np.percentile(p2[solo_f1], 99)) if solo_f1.any() else 0.0
+    on1 = float(np.sqrt(rumore[0] * toni[0]))
+    calcolate = [on1, on1 * FRAZIONE_SOGLIA_OFF, M.SOGLIA_ON_F2, M.SOGLIA_OFF_F2]
+    f2_ok = toni[1] is not None and n_toni[1] >= MIN_TONI_F2
+    if f2_ok:
+        on2 = float(np.sqrt(rumore[1] * toni[1]))
+        calcolate[2:] = [on2, on2 * FRAZIONE_SOGLIA_OFF]
 
     attuali = (M.SOGLIA_ON_F1, M.SOGLIA_OFF_F1, M.SOGLIA_ON_F2, M.SOGLIA_OFF_F2)
-    dec_attuali = decodifica(x, n_on, attuali, vib_intervalli)
-    dec_proposte = decodifica(x, n_on, tuple(proposte), vib_intervalli)
+    dec_att, dec_calc = decodifica(x, attuali), decodifica(x, tuple(calcolate))
 
-    rapporti = [attuali[0] / proposte[0]] + ([attuali[2] / proposte[2]] if tono_f2 is not None else [])
-    vicine = all(1 / FATTORE_TOLLERANZA <= r <= FATTORE_TOLLERANZA for r in rapporti)
-    margine_f1 = proposte[0] / rumore_f1
-    margine_f2 = proposte[2] / max(rumore_f2, perdita or 0.0) if tono_f2 is not None else None
-
-    return {
-        "durata_s": (len(x) - n_on) / FS, "tono_f1": tono_f1, "tono_f2": tono_f2,
-        "rumore_f1": rumore_f1, "rumore_f2": rumore_f2, "perdita": perdita,
-        "attuali": attuali, "proposte": tuple(proposte), "f2_tarata": tono_f2 is not None,
-        "margine_f1": margine_f1, "margine_f2": margine_f2,
-        "dec_attuali": dec_attuali, "dec_proposte": dec_proposte,
-        "vib_intervalli": [v for v in vib_intervalli if v[1] > 0], "quota_vibrazione": quota_vibrazione,
-        "da_rifare": quota_vibrazione > QUOTA_MAX_VIBRAZIONE,
-        "cambiare": not (vicine and decodifica_ok(dec_attuali)),
-        "rapporti": rapporti,
-    }
+    def soglia_ok(on, i):  # almeno MARGINE_OK volte sopra il rumore e sotto il tono
+        return on >= MARGINE_OK * rumore[i] and toni[i] >= MARGINE_OK * on
+    attuali_ok = soglia_ok(attuali[0], 0) and (not f2_ok or soglia_ok(attuali[2], 1))
+    peggiori = (dec_calc["marcatori"] < dec_att["marcatori"]
+                or sum(dec_calc["pressioni"].values()) < sum(dec_att["pressioni"].values()))
+    return {"rumore": rumore, "toni": toni, "f2_ok": f2_ok, "attuali": attuali, "proposte": tuple(calcolate),
+            "dec_attuali": dec_att, "dec_calcolate": dec_calc, "attuali_ok": attuali_ok, "peggiori": peggiori}
 
 
-def _righe_decodifica(nome: str, d: dict) -> list[str]:
-    chiusure = ", ".join(f"tappeto {k}: {v}" for k, v in sorted(d["chiusure"].items())) or "nessuna"
-    esito = "PERFETTA" if decodifica_ok(d) else "CON ERRORI"
-    righe = [f"  {nome}: {esito} nei tratti tranquilli - marcatori {d['marcatori']}, slot {d['slot']}, "
-             f"tappeti {d['n_tappeti']}, chiusure riconosciute: {chiusure}"]
-    for titolo, errori in (("errori nei tratti TRANQUILLI (dipendono dalle soglie)", d["errori_tranquilli"]),
-                           ("errori DURANTE le vibrazioni (limite di 3main.py, non delle soglie)", d["errori_vibrazione"])):
-        if errori:
-            dettaglio = ", ".join(f"{descr} a {t0:.1f}s" for t0, _, descr in errori[:6])
-            altri = f" (+{len(errori) - 6})" if len(errori) > 6 else ""
-            righe.append(f"      {len(errori)} {titolo}: {dettaglio}{altri}")
-    return righe
+def esito(r: dict) -> str:
+    if not r["f2_ok"]:
+        return "✗ RIFAI LA MISURA: premi i tappeti più volte (almeno 5 volte ciascuno)"
+    if r["attuali_ok"]:
+        return "✓ SOGLIE OK: NON CAMBIARE NIENTE"
+    if r["peggiori"]:
+        return "⚠ TIENI LE SOGLIE ATTUALI: quelle calcolate funzionerebbero peggio. Rifai la misura"
+    return "⚠ CAMBIA LE SOGLIE: copia i valori qui sotto in 3main.py"
+
+
+def _giudizio(on: float, rumore: float, tono: float) -> str:
+    if on < MARGINE_OK * rumore:
+        return "TROPPO BASSA (vicina al rumore: rischio di impulsi falsi)"
+    if tono < MARGINE_OK * on:
+        return "TROPPO ALTA (vicina al tono: rischio di non sentire)"
+    return "ok"
 
 
 def componi_report(r: dict) -> str:
-    a, p = r["attuali"], r["proposte"]
-    righe = ["=== 1. MISURA ==="]
-    righe.append(f"Registrati {r['durata_s']:.0f}s di daisy chain accesa (f1={M.F1_HZ:.0f}Hz, f2={M.F2_HZ:.0f}Hz, lette da 3main.py).")
-    primo = r["dec_proposte"]["primo_marcatore_s"]
-    if primo is not None:
-        righe.append(f"Avvio della daisy chain: primo marcatore {primo:.2f}s dopo l'accensione della Shelly.")
-    if r["vib_intervalli"]:
-        tratti = ", ".join(f"{max(v0, 0):.1f}-{v1:.1f}s" for v0, v1 in r["vib_intervalli"][:8])
-        righe.append(f"Vibrazioni forti (passi, botte): {r['quota_vibrazione']*100:.0f}% del tempo, a {tratti} "
-                     "- escluse dal calcolo delle soglie.")
-    else:
-        righe.append("Nessuna vibrazione forte durante la misura.")
-    if r["da_rifare"]:
-        righe.append(f"MISURA DA RIFARE: vibrazioni oltre il {QUOTA_MAX_VIBRAZIONE*100:.0f}% del tempo, "
-                     "troppo pochi tratti tranquilli per tarare. Premi i tappeti senza colpire la fibra.")
-        return "\n".join(righe)
-    if not r["f2_tarata"]:
-        righe.append("ATTENZIONE: nessuna pressione vista (f2 mai suonata) - soglie f2 NON tarate, "
-                     "rifai la misura premendo i tappeti.")
-
-    righe.append("\n=== 2. LIVELLI MISURATI nei tratti tranquilli (scala Goertzel di 3main.py) ===")
-    righe.append(f"Tono f1: {r['tono_f1']:.6f}    rumore a f1 (picchi): {r['rumore_f1']:.1e}")
-    if r["f2_tarata"]:
-        righe.append(f"Tono f2: {r['tono_f2']:.6f}    rumore a f2 (picchi): {r['rumore_f2']:.1e}    "
-                     f"f1 che sporca su f2: {r['perdita']:.1e}")
-
-    righe.append("\n=== 3. SOGLIE GIUSTE (ON = 20% del tono, OFF = 65% dell'ON) ===")
-    righe.append(f"f1: ON {p[0]:.6f}  OFF {p[1]:.6f}   - ON sta {r['margine_f1']:.0f}x sopra il rumore")
-    if r["f2_tarata"]:
-        righe.append(f"f2: ON {p[2]:.6f}  OFF {p[3]:.6f}   - ON sta {r['margine_f2']:.0f}x sopra rumore/sporco di f1")
-    for nome, m in (("f1", r["margine_f1"]), ("f2", r["margine_f2"])):
-        if m is not None and m < MARGINE_MINIMO:
-            righe.append(f"ATTENZIONE: margine {nome} basso ({m:.0f}x, serve >= {MARGINE_MINIMO:.0f}x): "
-                         "tono debole o rumore alto, valuta altre frequenze con 0trovafrequenze.py")
-
-    righe.append("\n=== 4. CONFRONTO CON MAIN.PY (stessa registrazione, decodifica di 3main.py) ===")
-    righe.append(f"Soglie attuali:  f1 ON {a[0]:.6f} OFF {a[1]:.6f}   f2 ON {a[2]:.6f} OFF {a[3]:.6f}")
-    righe += _righe_decodifica("con soglie ATTUALI ", r["dec_attuali"])
-    righe += _righe_decodifica("con soglie PROPOSTE", r["dec_proposte"])
-    distanze = ", ".join(f"{nome} attuale = {v:.2f}x il giusto" for nome, v in zip(("ON f1", "ON f2"), r["rapporti"]))
-    righe.append(f"Distanza dal giusto: {distanze} (tollerato fino a {FATTORE_TOLLERANZA:.0f}x in su o in giu').")
-    if r["cambiare"]:
-        motivo = ("decodifica con le soglie attuali CON ERRORI nei tratti tranquilli" if not decodifica_ok(r["dec_attuali"])
-                  else f"soglie attuali oltre {FATTORE_TOLLERANZA:.0f}x dal giusto: oggi funzionano, ma con meno "
-                       "margine del previsto")
-        righe.append(f"ESITO: CAMBIARE le soglie in 3main.py - {motivo}.")
-    else:
-        righe.append("ESITO: le soglie attuali VANNO BENE (entro 2x dal giusto e decodifica perfetta nei tratti "
-                     "tranquilli): non serve cambiarle.")
-    if r["dec_attuali"]["errori_vibrazione"]:
-        righe.append("Nota: gli errori durante le vibrazioni NON si correggono con le soglie - servono le difese "
-                     "di 3main.py (controllo 'tono stretto', contatore limitato ai tappeti esistenti).")
-
-    righe.append("\n=== 5. DA COPIARE in 3main.py (solo se l'esito dice CAMBIARE) ===")
-    righe.append(f"SOGLIA_ON_F1 = {p[0]:.6f}\nSOGLIA_OFF_F1 = {p[1]:.6f}")
-    if r["f2_tarata"]:
-        righe.append(f"SOGLIA_ON_F2 = {p[2]:.6f}\nSOGLIA_OFF_F2 = {p[3]:.6f}")
+    a, c = r["attuali"], r["proposte"]
+    righe = [esito(r), ""]
+    for i, nome in ((0, "f1"), (1, "f2")):
+        tono = r["toni"][i]
+        if tono is None or (i == 1 and not r["f2_ok"]):
+            righe.append(f"{nome}: tono non misurabile (pochi tappeti premuti)")
+            continue
+        righe.append(f"{nome}: tono {tono:.6f} · rumore {r['rumore'][i]:.7f} · "
+                     f"soglia attuale {a[2 * i]:.6f} → {_giudizio(a[2 * i], r['rumore'][i], tono)}")
+    d = r["dec_attuali"]
+    pressioni = " · ".join(f"tappeto {k}: {n}" for k, n in d["pressioni"].items()) or "nessuna"
+    righe.append(f"Pressioni sentite: {pressioni}")
+    if d["inesistenti"]:
+        righe.append(f"Durante passi/botte 3main.py ha visto {d['inesistenti']} volte un tappeto inesistente "
+                     "(problema noto, non dipende dalle soglie)")
+    if esito(r).startswith("⚠ CAMBIA"):
+        righe += ["", f"SOGLIA_ON_F1 = {c[0]:.6f}", f"SOGLIA_OFF_F1 = {c[1]:.6f}",
+                  f"SOGLIA_ON_F2 = {c[2]:.6f}", f"SOGLIA_OFF_F2 = {c[3]:.6f}"]
     return "\n".join(righe)
 
 
@@ -551,8 +412,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
             linea = pg.InfiniteLine(np.log10(valore), angle=0, pen=pg.mkPen(colore, width=2))
             self.plot.addItem(linea)
             self.linee_proposte.append(linea)
-        esito = "CAMBIARE le soglie" if r["cambiare"] else "soglie attuali OK"
-        self._fine(f"Fatto: {esito}. Linee piene = soglie ON proposte. Report: {r['file']}")
+        self._fine(f"{esito(r)}  ·  report: {r['file']}")
 
     def _errore(self, messaggio: str):
         if self.fase in ("muta", "misura"):

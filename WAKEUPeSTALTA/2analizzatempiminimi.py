@@ -45,7 +45,7 @@ in arduino/master/master.ino (e le soglie con quelle attuali in 3main.py) -
 il risultato vale solo per la combinazione frequenza+soglie con cui è
 stato misurato.
 
-Uso: imposta SMART_PLUG_HOST qui sotto e lancia lo script. Ctrl+C per
+Uso: lancia lo script (l'IP della Shelly lo legge da 3main.py). Ctrl+C per
 fermare in anticipo (stampa comunque il riepilogo di quanto raccolto finora
 e spegne la Shelly); normalmente si ferma da solo a fine sweep.
 """
@@ -57,6 +57,7 @@ try:
 except AttributeError:
     pass
 
+import importlib
 import time
 import socket
 import json
@@ -65,10 +66,13 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from others.archivio import cartella_taratura
 from others.shelly_mode_selector import seleziona_modalita, spegni_master
 
-# --- Configurazione: modifica qui l'IP della Shelly che alimenta il master ---
-SMART_PLUG_HOST = "192.168.1.9"  # <-- CAMBIA QUI se la Shelly ha un altro IP
+# IP della Shelly: letto da 3main.py (Config.SMART_PLUG_HOST), cosi' quando il
+# DHCP lo cambia si corregge in un posto solo. "import 3main" non e' sintassi
+# valida (nome che inizia con un numero): si importa per nome.
+SMART_PLUG_HOST = importlib.import_module("3main").Config().SMART_PLUG_HOST
 MODALITA_SWEEP_TEMPI = 2  # vedi arduino/master/master.ino
 
 UDP_IP = "0.0.0.0"
@@ -144,7 +148,12 @@ RAPPORTO_MINIMO_TONO = 50.0
 CONFERME_CONSECUTIVE_RICHIESTE = 2
 TIMEOUT_PRIMO_SEGNALE_S = 20.0
 
-FILE_LOG = Path(__file__).resolve().parent / "tempi_minimi_log.jsonl"
+# Ogni prova salva i suoi file nell'archivio della giornata, come
+# 0trovafrequenze.py e 1tarasoglie.py: archivio/AAAA-MM-GG/taratura/
+#   tempi_HHMMSS.jsonl  un risultato per gradino (impostato in main())
+#   tempi_HHMMSS.txt    nota + riepilogo finale
+#   tempi_HHMMSS.npz    tutto il segnale ricevuto, per rianalizzarlo
+FILE_LOG: Path | None = None
 
 
 def potenza_normalizzata(spettro_ampiezza, n):
@@ -256,10 +265,15 @@ def scrivi_log(r):
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
-def riepilogo_finale(risultati):
-    print("\n" + "=" * 70)
-    print("RIEPILOGO FINALE")
-    print("=" * 70)
+def riga_risultato(r) -> str:
+    ok = r.transizioni_rilevate >= r.transizioni_attese
+    return (f"[fase {r.fase}] ON={r.on_ms:5.0f}ms GAP={r.gap_ms:5.0f}ms  "
+            f"transizioni {r.transizioni_rilevate:2d}/{r.transizioni_attese:2d}  {'OK ' if ok else 'PERSE'}")
+
+
+def riepilogo_finale(risultati) -> str:
+    """Stampa il riepilogo e lo ritorna come testo (va anche nel .txt)."""
+    righe = ["=" * 70, "RIEPILOGO FINALE", "=" * 70]
 
     for fase, etichetta, variabile in (("A", "durata ON minima (gap largo fisso)", "on_ms"),
                                         ("B", "durata GAP minima (ON sicuro fisso)", "gap_ms")):
@@ -268,35 +282,38 @@ def riepilogo_finale(risultati):
             continue
         gradini_fase.sort(key=lambda r: getattr(r, variabile))
         buoni = [r for r in gradini_fase if r.transizioni_rilevate >= r.transizioni_attese]
-        print(f"\n[Fase {fase}] {etichetta}:")
-        for r in gradini_fase:
-            stampa_risultato(r)
+        righe.append(f"\n[Fase {fase}] {etichetta}:")
+        righe += [riga_risultato(r) for r in gradini_fase]
         if buoni:
             minimo = min(getattr(r, variabile) for r in buoni)
-            print(f"  --> minimo affidabile trovato in questo sweep: {minimo:.0f}ms")
-            print(f"      (consiglio: usa almeno {minimo * 1.5:.0f}ms in produzione, margine di sicurezza)")
+            righe.append(f"  --> minimo affidabile trovato in questo sweep: {minimo:.0f}ms")
+            righe.append(f"      (consiglio: usa almeno {minimo * 1.5:.0f}ms in produzione, margine di sicurezza)")
         else:
-            print("  --> nessun gradino testato ha funzionato pienamente: prova valori anche più larghi")
+            righe.append("  --> nessun gradino testato ha funzionato pienamente: prova valori anche più larghi")
 
-    print(f"\nDettaglio completo salvato in: {FILE_LOG}")
-
-
-def archivia_log_precedente():
-    if not FILE_LOG.exists():
-        return
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    destinazione = FILE_LOG.with_name(f"{FILE_LOG.stem}_{timestamp}{FILE_LOG.suffix}")
-    FILE_LOG.rename(destinazione)
-    print(f"Log precedente archiviato in: {destinazione}")
+    testo = "\n".join(righe)
+    print("\n" + testo)
+    print(f"\nDettaglio per gradino salvato in: {FILE_LOG}")
+    return testo
 
 
 def main():
+    global FILE_LOG
+    # Nota facoltativa, mai chiesta: python 2analizzatempiminimi.py "fibra 2, giardino"
+    nota = " ".join(sys.argv[1:]).strip()
+    base = cartella_taratura() / time.strftime("tempi_%H%M%S")
+    FILE_LOG = base.with_suffix(".jsonl")
+    print(f"I file di questa prova andranno in: {base.parent}\n")
+
     # Porta il master in modalita' sweep tempi ciclando la Shelly
     # (arduino/master/master.ino intestazione, shelly_mode_selector.py).
     seleziona_modalita(SMART_PLUG_HOST, MODALITA_SWEEP_TEMPI)
 
-    archivia_log_precedente()
     goertzel = GoertzelSingolo(FREQ_TEST_HZ, SAMPLE_RATE, BLOCCO_CAMPIONI)
+    # Tutto il segnale ricevuto, dall'inizio dell'ascolto: salvato a fine
+    # prova in base.npz. campione_t0 = dove e' stato rilevato il tempo zero.
+    registrazione: list[np.ndarray] = []
+    campione_t0 = None
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -326,7 +343,8 @@ def main():
             continue
         if len(data) != bytes_attesi:
             continue
-        buffer_rilevamento.append(np.frombuffer(data, dtype=np.int16))
+        registrazione.append(np.frombuffer(data, dtype=np.int16))
+        buffer_rilevamento.append(registrazione[-1])
         campioni_accumulati += CAMPIONI_PER_PACCHETTO
         if campioni_accumulati < CAMPIONI_PER_FINESTRA_RILEVAMENTO:
             continue
@@ -342,6 +360,7 @@ def main():
             conferme = 1 if presente else 0
         if presente and conferme >= CONFERME_CONSECUTIVE_RICHIESTE:
             t0 = time.time()
+            campione_t0 = len(registrazione) * CAMPIONI_PER_PACCHETTO
             print(f"Tono rilevato (rapporto={rapporto:.0f}x) - tempo zero impostato, inizio analisi.\n")
 
     # --- Fase 2: segui lo schedule deterministico, accumula e analizza ogni gradino ---
@@ -385,7 +404,8 @@ def main():
                 chiudi_gradino_corrente()
                 step_corrente = step
 
-            buffer_gradino.append(np.frombuffer(data, dtype=np.int16))
+            registrazione.append(np.frombuffer(data, dtype=np.int16))
+            buffer_gradino.append(registrazione[-1])
 
         chiudi_gradino_corrente()
 
@@ -395,8 +415,16 @@ def main():
     finally:
         spegni_master(SMART_PLUG_HOST)
         sock.close()
+        if registrazione:
+            np.savez_compressed(base.with_suffix(".npz"), x=np.concatenate(registrazione),
+                                campione_t0=-1 if campione_t0 is None else campione_t0,
+                                sample_rate=SAMPLE_RATE, freq_test_hz=FREQ_TEST_HZ,
+                                soglia_on=SOGLIA_ON, soglia_off=SOGLIA_OFF, nota=nota)
+            print(f"Registrazione salvata in: {base.with_suffix('.npz')}")
 
-    riepilogo_finale(risultati)
+    testo = riepilogo_finale(risultati)
+    base.with_suffix(".txt").write_text(f"Nota: {nota or '(nessuna)'}\n\n{testo}\n", encoding="utf-8")
+    print(f"Riepilogo salvato in: {base.with_suffix('.txt')}")
 
 
 if __name__ == "__main__":

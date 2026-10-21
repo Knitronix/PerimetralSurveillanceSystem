@@ -38,6 +38,7 @@ NON propone soglie: si misurano sulla daisy chain vera con 1tarasoglie.py.
 
 from __future__ import annotations
 
+import importlib
 import socket
 import sys
 import threading
@@ -326,9 +327,75 @@ def _intervalli(freqs: list[int]) -> str:
     return ", ".join(f"{a}" if a == b else f"{a}-{b}" for a, b in gruppi) + " Hz"
 
 
+# Sotto questo guadagno (6dB = potenza 4 volte meglio) cambiare frequenze non
+# vale un riflash del master, se quelle in uso sono gia' OTTIMA/BUONA.
+GUADAGNO_MINIMO_DB = 6.0
+
+
+def frequenze_in_uso() -> tuple[float, float] | None:
+    """F1_HZ/F2_HZ lette da 3main.py (non copiate qui: sono quelle che
+    3main.py ascolta davvero). None se non si riesce a leggerle."""
+    try:
+        m = importlib.import_module("3main")
+        return float(m.F1_HZ), float(m.F2_HZ)
+    except Exception:
+        return None
+
+
+def esito(r: dict, in_uso: tuple[float, float] | None) -> tuple[str, list[str]]:
+    """(titolo, righe del perche') - la sola cosa da leggere del report."""
+    if not r["affidabile"]:
+        return "✗ MISURA NON AFFIDABILE: RIFARLA", [f"Motivo: {p}" for p in r["problemi"]]
+    if not r["coppie"]:
+        return "✗ NESSUNA COPPIA DI FREQUENZE UTILIZZABILE", ["La fibra non sente bene nessuna frequenza sopra "
+                                                              f"{FREQ_MIN_UTILE} Hz: controlla trasduttore e fibra."]
+    migliore = r["coppie"][0]
+    testo_migliore = f"f1 {migliore['f1']} / f2 {migliore['f2']} Hz → margine {migliore['margine_db']:.0f} dB, {migliore['verdetto']}"
+    attuale = None
+    if in_uso is not None:
+        attuale = next((c for c in r["coppie"] if c["f1"] == round(in_uso[0]) and c["f2"] == round(in_uso[1])), None)
+    if attuale is None:
+        dove = (f"f1 {in_uso[0]:.0f} / f2 {in_uso[1]:.0f} Hz" if in_uso else "non leggibili da 3main.py")
+        return "? FREQUENZE IN USO NON VALUTABILI", [
+            f"In uso (3main.py): {dove} - non sono tra quelle provate dallo sweep "
+            f"(multipli di {SWEEP_FREQ_STEP} Hz da {FREQ_MIN_UTILE} a {SWEEP_FREQ_MAX} Hz).",
+            f"Coppia migliore misurata: {testo_migliore}."]
+    testo_attuale = f"In uso (3main.py): f1 {attuale['f1']} / f2 {attuale['f2']} Hz → margine {attuale['margine_db']:.0f} dB, {attuale['verdetto']}."
+    guadagno = migliore["margine_db"] - attuale["margine_db"]
+    if attuale["verdetto"] in ("OTTIMA", "BUONA") and guadagno < GUADAGNO_MINIMO_DB:
+        righe = [testo_attuale]
+        if guadagno > 0.5:
+            righe.append(f"La coppia migliore ({testo_migliore}) guadagnerebbe solo {guadagno:.0f} dB: "
+                         "non vale un riflash.")
+        else:
+            righe.append("E' gia' la coppia migliore, o quasi.")
+        return "✓ LE FREQUENZE IN USO VANNO BENE: NON CAMBIARE NIENTE", righe
+    motivo = (f"le frequenze in uso sono {attuale['verdetto']}" if attuale["verdetto"] not in ("OTTIMA", "BUONA")
+              else f"la coppia migliore guadagna {guadagno:.0f} dB")
+    return "⚠ CONVIENE CAMBIARE FREQUENZE", [
+        testo_attuale, f"Migliore: {testo_migliore} - {motivo}.",
+        "Per cambiarle:",
+        f"  1. arduino/master/master.ino: FREQ1 = {migliore['f1']};  FREQ2 = {migliore['f2']};  poi riflash del master",
+        f"  2. 3main.py: F1_HZ = {migliore['f1']:.1f}   F2_HZ = {migliore['f2']:.1f}   (DEVONO coincidere con il master)",
+        f"  3. 2analizzatempiminimi.py: FREQ_TEST_HZ = {migliore['f2']}",
+        "  4. rilancia 1tarasoglie.py: con frequenze nuove le soglie vanno rimisurate"]
+
+
 def componi_report(r: dict) -> str:
     al = r["allineamento"]
-    righe = ["=== 1. QUALITA' DELLA MISURA ===",
+
+    # --- RIASSUNTO: l'unica parte da leggere ---
+    titolo, perche = esito(r, frequenze_in_uso())
+    righe = [titolo] + [f"  {riga}" for riga in perche]
+    controlli = [f"misura {'affidabile ✓' if r['affidabile'] else 'NON affidabile ✗'}",
+                 f"{r['cicli_completi']} cicli {'✓' if r['cicli_completi'] >= 2 else '(meglio 3) ⚠'}",
+                 f"dati persi {r['mancante']*100:.1f}% {'✓' if r['mancante'] <= 0.02 else '⚠'}"]
+    righe.append("Controlli: " + " · ".join(controlli))
+    righe.append("\nHai cambiato fibra o posizione? Rilancia anche 1tarasoglie.py: le soglie cambiano "
+                 "anche se le frequenze restano le stesse.")
+
+    righe.append("\n\n--- DETTAGLI (per capire i numeri, non serve leggerli) ---\n")
+    righe += ["=== 1. QUALITA' DELLA MISURA ===",
              "(Leggere SEMPRE per prima: se l'esito e' NON AFFIDABILE il resto del report non va usato.",
              " Confidenza = quanto l'allineamento trovato batte quello sfasato di un gradino: >= 2 ok, ~1 = a caso.",
              " Verifica = % di gradini in cui il tono comandato e' piu' forte dei gradini vicini: >= 80% ok.)"]
@@ -373,19 +440,6 @@ def componi_report(r: dict) -> str:
     for c in r["coppie"][:8]:
         nota = f"  [f2 = {c['armonica']} x f1, penalizzata]" if c["armonica"] else ""
         righe.append(f"  f1={c['f1']:5d}  f2={c['f2']:5d}   margine {c['margine_db']:5.1f} dB  {c['verdetto']}{nota}")
-
-    if r["coppie"] and r["affidabile"]:
-        c = r["coppie"][0]
-        righe.append("\n=== 4. SE DECIDI DI CAMBIARE FREQUENZE ===")
-        righe.append("(Cambiare conviene solo se la coppia migliore stacca di parecchi dB quella in uso:")
-        righe.append(" pochi dB non valgono un riflash.)")
-        righe.append("Frequenze che il master deve suonare (righe FREQ1/FREQ2 in testa allo sketch, poi riflash):")
-        righe.append(f"  arduino/master/master.ino:  FREQ1 = {c['f1']};  FREQ2 = {c['f2']};")
-        righe.append("Le stesse, lato PC - DEVONO coincidere con il master, altrimenti 3main.py non sente nulla:")
-        righe.append(f"  3main.py:  F1_HZ = {c['f1']:.1f}   F2_HZ = {c['f2']:.1f}")
-        righe.append("Se cambi f2, aggiorna anche FREQ_TEST_HZ in 2analizzatempiminimi.py.")
-        righe.append("SOGLIE: questo script NON le propone (misura uno sweep, non la produzione).")
-        righe.append("Dopo aver cambiato frequenze, misurale sulla daisy chain vera con 1tarasoglie.py.")
     return "\n".join(righe)
 
 
@@ -718,8 +772,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
                 self.tabella.setItem(riga, col, QtWidgets.QTableWidgetItem(v))
         if coppie:
             self.tabella.selectRow(0)
-        stato = "AFFIDABILE" if r["affidabile"] else "NON AFFIDABILE — vedi report"
-        self._fine(f"Analisi completata: misura {stato}. Report salvato in {r['file']}")
+        self._fine(f"{esito(r, frequenze_in_uso())[0]}  ·  report: {r['file']}")
 
     def _evidenzia_coppia(self):
         righe = self.tabella.selectionModel().selectedRows()
