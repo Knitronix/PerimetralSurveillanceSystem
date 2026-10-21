@@ -31,31 +31,47 @@ accende davvero.
 
 ```
 WAKEUPeSTALTA/
-├── main.py                      interrogatore + GUI + macchina a stati (avvio: python main.py)
-├── analizza_armoniche_sweep.py  taratura: trova le frequenze migliori per questa fibra
-├── analizza_tempi_minimi.py     taratura: trova i tempi T1/GAP minimi affidabili
-├── requirements.txt             dipendenze Python, versioni testate
-├── others/                      moduli di supporto, non punti di ingresso (vedi sotto)
-│   ├── __init__.py
-│   ├── tema.py                  design system condiviso (palette, QSS, componenti riusati)
-│   ├── widget_timer.py          widget dei due timer di riarmo (inattività / tetto massimo)
-│   ├── vista_impianto.py        widget con il disegno dell'impianto (tab 3, vista cliente)
-│   ├── shelly_control.py        controllo diretto della presa Shelly via RPC HTTP (anche da riga di comando)
-│   └── shelly_mode_selector.py  sceglie la modalità del master ciclando la Shelly (vedi sotto)
+├── main.py                   il sistema: ascolto, risveglio, tappeti (avvio: python main.py)
+├── trova_frequenze.py        taratura: sceglie f1/f2 per questa fibra/mezzo
+├── tara_soglie.py            taratura: soglie Goertzel misurate sulla daisy chain vera
+├── analizza_tempi_minimi.py  taratura: tempi T1/GAP minimi affidabili
+├── requirements.txt          dipendenze Python, versioni testate
+├── archivio/                 registrazioni (non in git, ~170 MB/ora), una cartella per giorno:
+│   └── AAAA-MM-GG/
+│       ├── main_HHMMSS/      una sessione di main.py: audio/*.wav (10 min l'uno),
+│       │                     eventi.jsonl (log di tutto, con le PROVE), sessione.json
+│       └── taratura/         misure e report di trova_frequenze e tara_soglie
+├── others/                   moduli di supporto e documenti, non si lanciano da soli
+│   ├── archivio.py           scrittura dell'archivio (WAV + eventi)
+│   ├── tema.py, widget_timer.py, vista_impianto.py   grafica di main.py
+│   ├── shelly_control.py     controllo della presa Shelly via RPC HTTP
+│   ├── shelly_mode_selector.py  sceglie la modalità del master ciclando la Shelly
+│   ├── REVISIONE.md          revisione completa della catena (19/10/2026), punti aperti
+│   └── TODO_ESP.md           cosa fare dopo l'acquisto del modulo ESP, con fattibilità
+├── superati/                 script non più usati, tenuti solo come riferimento - NON usarli
 └── arduino/
     ├── master/master.ino    sketch del nodo MASTER (NODE_ID=1) - UNO sketch, 3 modalità (vedi sotto)
     ├── slave2/slave2.ino    sketch del nodo SLAVE2 (NODE_ID=2)
     └── restart.md           architettura del bus, wiring, timing — leggerlo prima di toccare gli sketch
 ```
 
-`main.py` è l'unico punto di ingresso per l'uso normale: GUI e logica di
-rilevamento vivono nello stesso processo, nessun altro script da avviare a
-parte gli Arduino (che girano per conto loro una volta flashati e
-alimentati). Gli altri due script Python (`analizza_*`) servono solo per
-la taratura occasionale, vedi sotto. I moduli in `others/` non si lanciano
-da soli nell'uso normale: sono importati da `main.py` e/o dagli script
-`analizza_*` (package Python vero e proprio, grazie a `others/__init__.py` —
-import con `from others.xxx import ...`).
+### Cosa usare, e quando
+
+| Script | A cosa serve | Quando |
+|---|---|---|
+| `main.py` | il sistema; registra WAV e log di tutto in `archivio/` | sempre |
+| `trova_frequenze.py` | scegliere f1/f2 | quando cambiano fibra o mezzo |
+| `tara_soglie.py` | soglie Goertzel, e verifica che quelle in uso vadano ancora bene | dopo ogni cambio di frequenze/fibra, e come controllo in campo |
+| `analizza_tempi_minimi.py` | tempi minimi di slot e pause | solo per ritarare i tempi |
+
+Ordine in campo: `trova_frequenze` → (se cambi frequenze: riflash del master
+e `F1_HZ/F2_HZ` in `main.py`) → `tara_soglie` → `main.py` con le prove
+etichettate (barra PROVE). Gli strumenti di taratura vogliono `main.py`
+CHIUSO (usano la stessa porta UDP).
+
+Per riguardare una prova: apri `archivio/AAAA-MM-GG/main_HHMMSS/eventi.jsonl`
+(cerca `prova_inizio`: ogni riga dice in quale file WAV e a che secondo) e
+apri quel WAV con Audacity.
 
 ## Le 3 modalità del master (nessun USB necessario dopo l'installazione)
 
@@ -75,7 +91,7 @@ nessun filo o comando in più:
 
 Questo è sicuro per l'uso reale: un'intrusione vera accende la Shelly per
 minuti, non secondi, quindi non può mai essere scambiata per una richiesta
-di cambio modalità. **Gli script `analizza_armoniche_sweep.py` e
+di cambio modalità. **Gli script `trova_frequenze.py` e
 `analizza_tempi_minimi.py` pilotano la Shelly da soli** (tramite
 `others/shelly_mode_selector.py`) per scegliere la modalità giusta prima di
 partire — non serve farlo a mano, basta lanciare lo script.
