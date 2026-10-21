@@ -39,6 +39,11 @@ checkpoints/
 # --- Log eventi generati a runtime (crescono ad ogni test, non da versionare) ---
 FREQUENCY DETECTION/eventi_f1_f2_log.jsonl
 
+# --- WAKEUPeSTALTA: registrazioni audio e misure (file grossi, ~170 MB/ora) ---
+WAKEUPeSTALTA/archivio/
+WAKEUPeSTALTA/misure_frequenze/
+WAKEUPeSTALTA/misure_soglie/
+
 # --- OS / editor ---
 .DS_Store
 Thumbs.db

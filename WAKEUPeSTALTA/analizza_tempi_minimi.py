@@ -80,14 +80,16 @@ SAMPLE_RATE = 24000
 # arduino/master/master.ino (di default = FREQ2 = 3200Hz, F2 - il canale
 # "stato interruttore"). Per testare F1 invece, cambiare entrambe insieme.
 FREQ_TEST_HZ = 3200
-# Ricalcolate il 13/10/2026 sul picco misurato dal vivo con TEST ARMONICHE
-# sulla fibra attuale (master unico generatore, F1=4400Hz): f2(3200Hz)
-# picco=0.006030, rumore puro=0.000003, cross-talk da f1=0.000008 (SPECS.MD
-# §5.1 - vedi conversazione per il dettaglio completo). Stessa regola di
-# sempre: ON ~= 20% del picco, OFF ~= 65% dell'ON. Da riallineare a mano
-# con le soglie in main.py ad ogni nuova taratura.
-SOGLIA_ON = 0.001206
-SOGLIA_OFF = 0.000784
+# Ricalcolate il 19/10/2026 con trova_frequenze.py (fibra e mezzo cambiati):
+# f2(3200Hz) a PIENA ampiezza = 0.00343 (media di due misure). ATTENZIONE:
+# NON sono le stesse soglie di main.py - in modalita' 2 il master suona un
+# tono singolo a piena ampiezza, in produzione (daisy chain) a meta'
+# ampiezza (potenza 1/4, vedi ISR in master.ino). Qui si tiene lo stesso
+# RAPPORTO tono/soglia della produzione (ON = 20% del tono, OFF = 65%
+# dell'ON), cosi' il test misura i tempi minimi nelle stesse condizioni di
+# rilevamento di main.py. Regola di conversione: soglia qui = soglia main.py x 4.
+SOGLIA_ON = 0.000686
+SOGLIA_OFF = 0.000446
 
 BLOCCO_MS = 20.0
 BLOCCO_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_MS / 1000.0))

@@ -111,7 +111,7 @@ import numpy as np
 from others.shelly_mode_selector import seleziona_modalita, spegni_master
 
 # --- Configurazione: modifica qui l'IP della Shelly che alimenta il master ---
-SMART_PLUG_HOST = "192.168.1.9"  # <-- CAMBIA QUI se la Shelly ha un altro IP (il DHCP lo cambia di tanto in tanto)
+SMART_PLUG_HOST = "10.27.239.193"  # <-- CAMBIA QUI se la Shelly ha un altro IP (il DHCP lo cambia di tanto in tanto)
 MODALITA_SWEEP_FREQUENZE = 1  # vedi arduino/master/master.ino
 
 UDP_IP = "0.0.0.0"

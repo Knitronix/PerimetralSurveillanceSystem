@@ -32,7 +32,7 @@ import logging
 import math
 import socket
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum, auto
 
 import numpy as np
@@ -40,6 +40,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 
 from others import shelly_control
+from others.archivio import CARTELLA_ARCHIVIO, ArchivioSessione
 from others.widget_timer import WidgetTimer
 from others.tema import (COLORI, FONT_MONO, SPAZIO, STYLE_QSS, T_VALORE, Stepper, applica_palette,
                          crea_card, etichetta, legenda_linea, rgba, separatore, stile_chip, stile_plot)
@@ -83,18 +84,20 @@ TOLLERANZA_MS = 30.0
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
 
-# Ricalcolate di nuovo il 13/10/2026: fibra sostituita (quella precedente
-# era probabilmente rotta) e F1 cambiata a 4400Hz (vedi sopra, 4600Hz era
-# debole su questa fibra). Rumore puro 0.000003, f1 vero 0.001896 (rapporto
-# 632x contro il rumore - il cross-talk di f2 su f1, 0.000142, non e' il
-# pavimento giusto per f1 per lo stesso motivo di sempre: f2 non suona mai
-# senza f1 nel protocollo reale). f2 vero 0.006030 (rapporto 754x contro il
-# cross-talk di f1 su f2, 0.000008 - questo invece e' un pavimento reale,
-# f1 suona anche senza f2). ON=20% del picco, OFF=65% dell'ON.
-SOGLIA_ON_F1 = 0.000379
-SOGLIA_OFF_F1 = 0.000246
-SOGLIA_ON_F2 = 0.001206
-SOGLIA_OFF_F2 = 0.000784
+# Misurate il 19/10/2026 con tara_soglie.py sulla daisy chain vera
+# (misure_soglie/soglie_20261019_162709): tono f1(4400)=0.000310,
+# f2(3200)=0.000291, rumore (picchi) ~1e-06 -> ON ~50-60x sopra il rumore.
+# In tre misure dello stesso giorno f1 e' stabile (0.00026-0.00031), f2
+# varia (0.00027-0.00041): questi valori sono vicini al piu' prudente per f2.
+# ON=20% del tono, OFF=65% dell'ON. Per ricalcolarle: tara_soglie.py, che
+# dice anche se le soglie in uso vanno ancora bene.
+# Storia: fino al 13/10 erano 4x troppo alte (calcolate su un tono a piena
+# ampiezza, in produzione e' a meta' ampiezza): con la fibra di oggi f1 e f2
+# sarebbero rimasti sotto soglia, nessun tappeto sentito.
+SOGLIA_ON_F1 = 0.000062
+SOGLIA_OFF_F1 = 0.000040
+SOGLIA_ON_F2 = 0.000058
+SOGLIA_OFF_F2 = 0.000038
 
 # --- STA/LTA ---
 STA_FINESTRA_SEC_DEFAULT = 0.5
@@ -102,13 +105,15 @@ LTA_FINESTRA_SEC_DEFAULT = 3.0
 STA_LTA_SOGLIA_ON_DEFAULT = 1.5
 STA_LTA_SOGLIA_OFF_DEFAULT = 1.2
 
-# L'LTA parte da un pavimento quasi zero: finché la EMA non ha "visto"
-# abbastanza campioni reali il rapporto STA/LTA è artificialmente gonfiato
-# (misurato dal vivo: valori 8-30 nei primi 1-2s, poi assestamento vero non
-# prima di ~10-15s con lta_sec=3.0). Senza questa attesa, ogni avvio/rientro
-# in AMBIENTE scatterebbe un risveglio falso sul solo transitorio - inutile
-# per tarare (il pannello smetterebbe di aggiornarsi subito) e sbagliato in
-# produzione (sveglierebbe i tappeti senza nessun evento vero).
+# Rete di sicurezza dopo ogni (ri)partenza dello STA/LTA: i trigger dei
+# primi secondi di DATI vengono ignorati. Contati in secondi di dati
+# ricevuti, non di orologio (21/10/2026): prima si contava dall'apertura di
+# main.py, e se l'interrogatore cominciava a trasmettere piu' tardi l'attesa
+# era gia' scaduta -> falso risveglio sul primo pacchetto (trovato grazie
+# all'archivio). Il transitorio vero e proprio (STA che partiva da 0 e LTA
+# da un pavimento quasi zero: rapporto ~6 per diversi secondi) e' stato
+# eliminato alla radice in RilevatoreStaLta, che ora parte dal livello del
+# primo pacchetto.
 ATTESA_STABILIZZAZIONE_STALTA_S = 1.0
 
 # Se la smart plug non risponde (RPC falso/timeout, IP cambiato da DHCP...)
@@ -147,7 +152,7 @@ class Config:
     # esplicita per un cliente che preferisce non avere un limite di tempo
     # prevedibile su quanto resta armato, vedi cambia_timeout_massimo.
     TIMEOUT_MASSIMO_MIN: float = 5.0  # TODO decidere il valore reale insieme
-    SMART_PLUG_HOST: str = "192.168.1.9"
+    SMART_PLUG_HOST: str = "10.27.239.193"
     SMART_PLUG_CHANNEL: int = 0
 
 
@@ -333,10 +338,15 @@ class RilevatoreStaLta:
         self.soglia_on = soglia_on
         self.soglia_off = soglia_off
         self._floor_potenza = 1e-6
+        self._durata_pacchetto = durata_pacchetto
         self.sta = 0.0
         self.lta = self._floor_potenza
+        self._inizializzato = False
         self.in_evento = False
         self.ultimo_rapporto = 0.0
+        # Secondi di dati elaborati da questo rilevatore (non di orologio):
+        # e' su questi che si misura l'attesa di stabilizzazione.
+        self.secondi_di_dati = 0.0
 
     def imposta_soglie(self, soglia_on, soglia_off):
         self.soglia_on = soglia_on
@@ -346,6 +356,13 @@ class RilevatoreStaLta:
         """Ritorna True nell'istante in cui il rapporto supera soglia_on
         (fronte di salita, non lo stato continuativo)."""
         potenza = float(np.mean(pacchetto_campioni.astype(np.float64) ** 2))
+        self.secondi_di_dati += self._durata_pacchetto
+        if not self._inizializzato:
+            # Entrambe le medie partono dal livello reale del primo pacchetto
+            # (non da 0 / pavimento): rapporto ~1 da subito, nessun
+            # transitorio finto da far passare.
+            self.sta = self.lta = max(potenza, self._floor_potenza)
+            self._inizializzato = True
         self.sta += self.alpha_sta * (potenza - self.sta)
         self.lta += self.alpha_lta * (potenza - self.lta)
         self.lta = max(self.lta, self._floor_potenza)
@@ -500,12 +517,23 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         )
         self._tempo_ultimo_ingresso_ambiente = time.monotonic()
 
+        # Archivio di sessione (others/archivio.py): audio continuo + log
+        # eventi su disco, per ricontrollare a posteriori. Creato prima della
+        # UI perché _imposta_avviso (chiamata già durante la costruzione) ci
+        # scrive; i suoi errori di disco non fermano mai la rilevazione.
+        self.archivio = ArchivioSessione(
+            CARTELLA_ARCHIVIO, SAMPLE_RATE, self._fotografia_configurazione()
+        )
+
         self.setStyleSheet(STYLE_QSS)
         self.setWindowTitle("FIBRA&TAPPETI")
         self.resize(1300, 850)
 
         self._costruisci_ui()
         self.cambia_soglie_stalta()  # inizializza label_soglia_attiva col valore di partenza
+        self.archivio.on_errore = lambda messaggio: self._imposta_avviso("archivio", messaggio)
+        if self.archivio.errore:
+            self._imposta_avviso("archivio", self.archivio.errore)
 
         self.worker = NetworkWorker(UDP_IP, UDP_PORT, CAMPIONI_PER_PACCHETTO)
         self.worker.nuovi_dati_signal.connect(self.gestisci_dati)
@@ -522,6 +550,25 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.timer_stato.start()
 
         self._aggiungi_log("Avviato in AMBIENTE, in ascolto su UDP %s:%s" % (UDP_IP, UDP_PORT))
+        if self.archivio.attivo:
+            self._aggiungi_log(f"Archivio di sessione: {self.archivio.cartella}")
+
+    def _fotografia_configurazione(self) -> dict:
+        """Tutti i parametri che decidono cosa main.py sente, com'erano
+        all'avvio: salvati in sessione.json per poter confrontare sessioni
+        diverse sapendo con che impostazioni erano state registrate."""
+        return {
+            "protocollo": {"F1_HZ": F1_HZ, "F2_HZ": F2_HZ, "T0_MS": T0_MS, "T1_MS": T1_MS,
+                           "TOLLERANZA_MS": TOLLERANZA_MS, "BLOCCO_GOERTZEL_MS": BLOCCO_GOERTZEL_MS},
+            "soglie_goertzel": {"SOGLIA_ON_F1": SOGLIA_ON_F1, "SOGLIA_OFF_F1": SOGLIA_OFF_F1,
+                                "SOGLIA_ON_F2": SOGLIA_ON_F2, "SOGLIA_OFF_F2": SOGLIA_OFF_F2},
+            "sta_lta_di_partenza": {"STA_S": STA_FINESTRA_SEC_DEFAULT, "LTA_S": LTA_FINESTRA_SEC_DEFAULT,
+                                    "SOGLIA_ON": STA_LTA_SOGLIA_ON_DEFAULT, "SOGLIA_OFF": STA_LTA_SOGLIA_OFF_DEFAULT,
+                                    "ATTESA_STABILIZZAZIONE_S": ATTESA_STABILIZZAZIONE_STALTA_S},
+            "config": asdict(self.config),
+            "rete": {"UDP_PORT": UDP_PORT, "SAMPLE_RATE": SAMPLE_RATE,
+                     "CAMPIONI_PER_PACCHETTO": CAMPIONI_PER_PACCHETTO},
+        }
 
     # ------------------------------------------------------------------
     # UI
@@ -535,6 +582,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         layout_esterno.setSpacing(10)
 
         layout_esterno.addWidget(self._crea_barra_stato())
+        layout_esterno.addWidget(self._crea_barra_prove())
 
         # GUI a fasi: fase 1 tara lo STA/LTA (onda + STA/LTA + soglie + log),
         # fase 2 è l'ascolto vero e proprio (onda + timer + tappeti), fase 3
@@ -654,6 +702,10 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         """Mostra (testo) o toglie (None) un avviso rosso nella riga sotto
         l'header. Una chiave per tipo di problema ("rumore", "plug", ...):
         richiamarla col nuovo testo aggiorna l'avviso invece di duplicarlo."""
+        # Nell'archivio solo i cambi: alcuni avvisi vengono richiamati ogni
+        # 200ms con lo stesso testo (controlla_transizioni_temporali).
+        if self._avvisi.get(chiave) != testo:
+            self.archivio.evento("avviso", chiave=chiave, testo=testo)
         if testo is None:
             chip = self._chip_avvisi.pop(chiave, None)
             if chip is not None:
@@ -878,6 +930,96 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
         return tab
 
+    def _crea_barra_prove(self) -> QtWidgets.QWidget:
+        """Etichette delle prove + note di sessione, scritte nell'archivio
+        (others/archivio.py). Visibile in tutte le tab: le prove di passi si
+        fanno anche in Taratura, non solo ad impianto armato. Un solo
+        pulsante che alterna INIZIO/FINE: due prove non si sovrappongono mai."""
+        barra = QtWidgets.QFrame()
+        barra.setObjectName("Card")
+        riga = QtWidgets.QHBoxLayout(barra)
+        riga.setContentsMargins(14, 6, 12, 6)
+        riga.setSpacing(10)
+
+        riga.addWidget(etichetta("PROVA", "Eyebrow"))
+        self.campo_prova = QtWidgets.QLineEdit()
+        self.campo_prova.setPlaceholderText("es. 1 persona, passo lento, a 2 m dalla fibra")
+        self.campo_prova.returnPressed.connect(self._alterna_prova)
+        riga.addWidget(self.campo_prova, stretch=3)
+        self.btn_prova = QtWidgets.QPushButton("▶  INIZIO PROVA")
+        self.btn_prova.setObjectName("Accento")
+        self.btn_prova.setCursor(QtCore.Qt.PointingHandCursor)
+        self.btn_prova.clicked.connect(self._alterna_prova)
+        riga.addWidget(self.btn_prova)
+        self.label_prova = QtWidgets.QLabel("nessuna prova in corso")
+        self.label_prova.setObjectName("Mono")
+        self.label_prova.setMinimumWidth(170)
+        riga.addWidget(self.label_prova)
+        riga.addSpacing(6)
+        riga.addWidget(separatore(verticale=True))
+        riga.addSpacing(6)
+
+        riga.addWidget(etichetta("NOTE SESSIONE", "Eyebrow"))
+        self.campo_note = QtWidgets.QLineEdit()
+        self.campo_note.setPlaceholderText("luogo, fibra, mezzo, meteo… (Invio per salvare)")
+        self.campo_note.returnPressed.connect(self._salva_note_sessione)
+        riga.addWidget(self.campo_note, stretch=2)
+        btn_note = QtWidgets.QPushButton("Salva")
+        btn_note.setCursor(QtCore.Qt.PointingHandCursor)
+        btn_note.clicked.connect(self._salva_note_sessione)
+        riga.addWidget(btn_note)
+
+        self._prova_in_corso: str | None = None
+        self._inizio_prova_s = 0.0
+        self.timer_prova = QtCore.QTimer(self)
+        self.timer_prova.setInterval(500)
+        self.timer_prova.timeout.connect(self._aggiorna_label_prova)
+        return barra
+
+    def _alterna_prova(self) -> None:
+        if self._prova_in_corso is None:
+            etichetta_prova = self.campo_prova.text().strip() or "prova senza nome"
+            self._prova_in_corso = etichetta_prova
+            self._inizio_prova_s = time.monotonic()
+            self.archivio.evento("prova_inizio", etichetta=etichetta_prova)
+            self._aggiungi_log(f"INIZIO PROVA: {etichetta_prova}")
+            self.btn_prova.setText("■  FINE PROVA")
+            self.btn_prova.setObjectName("Primario")
+            self.campo_prova.setEnabled(False)
+            self.timer_prova.start()
+        else:
+            self._chiudi_prova()
+        self.btn_prova.style().unpolish(self.btn_prova)
+        self.btn_prova.style().polish(self.btn_prova)
+        self._aggiorna_label_prova()
+
+    def _chiudi_prova(self, motivo: str = "") -> None:
+        if self._prova_in_corso is None:
+            return
+        durata = time.monotonic() - self._inizio_prova_s
+        self.archivio.evento("prova_fine", etichetta=self._prova_in_corso, durata_s=round(durata, 2),
+                             **({"motivo": motivo} if motivo else {}))
+        self._aggiungi_log(f"FINE PROVA: {self._prova_in_corso} ({durata:.1f} s){' - ' + motivo if motivo else ''}")
+        self._prova_in_corso = None
+        self.timer_prova.stop()
+        self.btn_prova.setText("▶  INIZIO PROVA")
+        self.btn_prova.setObjectName("Accento")
+        self.campo_prova.setEnabled(True)
+
+    def _aggiorna_label_prova(self) -> None:
+        if self._prova_in_corso is None:
+            self.label_prova.setText("nessuna prova in corso")
+            self.label_prova.setStyleSheet("")
+        else:
+            secondi = int(time.monotonic() - self._inizio_prova_s)
+            self.label_prova.setText(f"● REC {secondi // 60:02d}:{secondi % 60:02d}")
+            self.label_prova.setStyleSheet(f"color: {COLORI['pericolo']}; font-weight: 700;")
+
+    def _salva_note_sessione(self) -> None:
+        note = self.campo_note.text().strip()
+        self.archivio.aggiorna_note(note)
+        self._aggiungi_log(f"Note sessione salvate: {note or '(vuote)'}")
+
     def _crea_tab_ascolto(self) -> QtWidgets.QWidget:
         """Fase 2: onda + pannello timer + una riga impianto (tappeti e
         smart plug). Lo stato resta nella barra in alto, condivisa."""
@@ -1066,6 +1208,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
     def _aggiungi_log(self, testo: str):
         log.info(testo)
+        self.archivio.evento("log", testo=testo)
         self.lista_log.insertItem(0, f"[{time.strftime('%H:%M:%S')}] {testo}")
         while self.lista_log.count() > 200:
             self.lista_log.takeItem(self.lista_log.count() - 1)
@@ -1107,6 +1250,9 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     # ------------------------------------------------------------------
     @QtCore.Slot(np.ndarray)
     def gestisci_dati(self, nuovi_campioni: np.ndarray) -> None:
+        # Prima di tutto su disco: gli eventi generati sotto da questo stesso
+        # pacchetto vengono posizionati alla fine dell'audio appena scritto.
+        self.archivio.scrivi_audio(nuovi_campioni)
         n = len(nuovi_campioni)
         fine = self.write_pos + n
         if fine <= STORICO_CAMPIONI:
@@ -1130,7 +1276,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     def _elabora_ambiente(self, campioni: np.ndarray) -> None:
         evento_iniziato = self.rilevatore_stalta.aggiorna(campioni)
         rapporto = self.rilevatore_stalta.ultimo_rapporto
-        secondi_rimanenti = ATTESA_STABILIZZAZIONE_STALTA_S - (time.monotonic() - self._tempo_ultimo_ingresso_ambiente)
+        secondi_rimanenti = ATTESA_STABILIZZAZIONE_STALTA_S - self.rilevatore_stalta.secondi_di_dati
         self.label_stalta.setText(f"{rapporto:.2f}")
         in_stab = secondi_rimanenti > 0
         if in_stab:
@@ -1149,7 +1295,14 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             f"min {self.stalta_min_osservato:.2f} · max {self.stalta_max_osservato:.2f}"
         )
 
-        in_stabilizzazione = (time.monotonic() - self._tempo_ultimo_ingresso_ambiente) < ATTESA_STABILIZZAZIONE_STALTA_S
+        in_stabilizzazione = self.rilevatore_stalta.secondi_di_dati < ATTESA_STABILIZZAZIONE_STALTA_S
+        if evento_iniziato:
+            esito = ("ignorato_stabilizzazione" if in_stabilizzazione
+                     else "taratura_a_secco" if self._modalita_dry_run else "risveglio")
+            self.archivio.evento(
+                "stalta_trigger", rapporto=rapporto, soglia_on=self.rilevatore_stalta.soglia_on,
+                soglia_off=self.rilevatore_stalta.soglia_off, esito=esito,
+            )
         if evento_iniziato and in_stabilizzazione:
             log.info("STA/LTA: trigger ignorato, ancora in stabilizzazione (transitorio EMA)")
         elif evento_iniziato and self._modalita_dry_run:
@@ -1210,6 +1363,8 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             blocco = self._accumulo_tappeti[:BLOCCO_GOERTZEL_CAMPIONI]
             self._accumulo_tappeti = self._accumulo_tappeti[BLOCCO_GOERTZEL_CAMPIONI:]
             for evento in self.protocollo_tappeti.elabora_blocco(blocco):
+                # f1f2_zero / f1f2_slot (counter, aperto/chiuso) / f1f2_rumore, con durata
+                self.archivio.evento("f1f2_" + evento["tipo"], **{k: v for k, v in evento.items() if k != "tipo"})
                 if evento["tipo"] == "zero":
                     # Fine del ciclo appena concluso: un sensore che era
                     # visualizzato ma non si è ripresentato in QUESTO ciclo
@@ -1410,6 +1565,8 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.worker.running = False
         self.worker.wait(1000)
         self.plug.spegni()
+        self._chiudi_prova("chiusura di main.py con la prova ancora in corso")
+        self.archivio.chiudi()
         event.accept()
 
 
