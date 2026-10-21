@@ -122,6 +122,16 @@ ATTESA_STABILIZZAZIONE_STALTA_S = 1.0
 # (tick di controlla_transizioni_temporali).
 RITARDO_RETRY_PLUG_S = 2.0
 
+# RESET disattivato per questo tempo dopo l'accensione della Shelly: se il
+# master resta acceso meno di 2.5s (SOGLIA_SESSIONE_LUNGA_MS in master.ino)
+# lo interpreta come un ciclo di selezione modalita' e al risveglio
+# successivo partirebbe in SWEEP invece che in produzione (REVISIONE.md B1).
+# Il master conta i 2.5s dal SUO avvio, che arriva ~1.2-1.4s dopo
+# l'accensione della Shelly (misurato: primo marcatore a 1.24-1.39s): 5s =
+# 1.4s di avvio + 2.5s + 1s di margine. Con 3s (prima versione) un RESET a
+# 3.2s mandava comunque il master in sweep (visto dal vivo il 21/10/2026).
+RESET_BLOCCATO_DOPO_ACCENSIONE_S = 5.0
+
 # Se in ARMATO non si vede nemmeno un marcatore di zero o uno slot valido
 # (non solo "nessuna chiusura" - proprio NESSUN evento decodificato) per
 # più di questo tempo, qualcosa nella catena si è rotto (alimentazione,
@@ -312,6 +322,12 @@ class RilevatoreProtocolloF1F2:
                     "durata_s": durata_f1,
                     "conteggio_ciclo_precedente": conteggio_ciclo_precedente,
                 })
+            elif tipo == "slot" and not self._marcatore_zero_visto:
+                # Si e' cominciato ad ascoltare a meta' ciclo: senza aver
+                # visto il marcatore non si sa di QUALE tappeto sia questo
+                # slot (contarlo come "1" darebbe il tappeto sbagliato). Si
+                # ignora fino al primo marcatore (al massimo ~1 ciclo).
+                eventi.append({"tipo": "slot_prima_del_marcatore", "durata_s": durata_f1})
             elif tipo == "slot":
                 self.counter += 1
                 stato = "chiuso" if self.f2_attivo_durante_slot else "aperto"
@@ -510,6 +526,8 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.stalta_min_osservato = float("inf")
         self.stalta_max_osservato = float("-inf")
 
+        # Finestre STA/LTA in uso: cambiano solo con "Applica finestre" in tab 1.
+        self._finestre_stalta = (STA_FINESTRA_SEC_DEFAULT, LTA_FINESTRA_SEC_DEFAULT)
         self.rilevatore_stalta = RilevatoreStaLta(
             SAMPLE_RATE, CAMPIONI_PER_PACCHETTO,
             STA_FINESTRA_SEC_DEFAULT, LTA_FINESTRA_SEC_DEFAULT,
@@ -1221,6 +1239,9 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         finestre diverse."""
         sta_sec = self.spin_finestra_sta.value()
         lta_sec = self.spin_finestra_lta.value()
+        # Ricordate: anche dopo RESET o timeout (_torna_ad_ambiente) si
+        # riparte con QUESTE finestre, non con quelle di default del codice.
+        self._finestre_stalta = (sta_sec, lta_sec)
         self.rilevatore_stalta = RilevatoreStaLta(
             SAMPLE_RATE, CAMPIONI_PER_PACCHETTO,
             sta_sec, lta_sec,
@@ -1332,12 +1353,24 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             self._inizio_risveglio_s = time.monotonic()
             self._imposta_avviso("plug", None)
             self._aggiungi_log("Smart plug accesa -> attendo sincronizzazione daisy chain")
+            self._blocca_reset_per(RESET_BLOCCATO_DOPO_ACCENSIONE_S)
         else:
             self._prossimo_tentativo_plug_s = time.monotonic() + RITARDO_RETRY_PLUG_S
             self._imposta_avviso("plug", f"SMART PLUG NON RISPONDE ({self.plug.host}) — nuovo tentativo in corso…")
             self._aggiungi_log(
                 f"Smart plug: accensione non riuscita, resto in RISVEGLIO e riprovo tra {RITARDO_RETRY_PLUG_S:.0f}s"
             )
+
+    def _blocca_reset_per(self, secondi: float) -> None:
+        """RESET non cliccabile per qualche secondo dopo l'accensione della
+        Shelly - vedi RESET_BLOCCATO_DOPO_ACCENSIONE_S."""
+        self.btn_riarma.setEnabled(False)
+        self.btn_riarma.setText("⟲  RESET (attendi)")
+        QtCore.QTimer.singleShot(int(secondi * 1000), self._sblocca_reset)
+
+    def _sblocca_reset(self) -> None:
+        self.btn_riarma.setEnabled(True)
+        self.btn_riarma.setText("⟲  RESET")
 
     def _elabora_tappeti(self, campioni: np.ndarray) -> None:
         if self.protocollo_tappeti is None:
@@ -1494,7 +1527,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._pulisci_indicatori_tappeti()
         self.rilevatore_stalta = RilevatoreStaLta(
             SAMPLE_RATE, CAMPIONI_PER_PACCHETTO,
-            STA_FINESTRA_SEC_DEFAULT, LTA_FINESTRA_SEC_DEFAULT,
+            *self._finestre_stalta,  # quelle applicate in tab 1, non i default
             self.spin_soglia_on.value(), self.spin_soglia_off.value(),
         )
         self._tempo_ultimo_ingresso_ambiente = time.monotonic()
