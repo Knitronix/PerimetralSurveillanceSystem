@@ -39,7 +39,7 @@ import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 
-from others import shelly_control
+from others.comandi_daisy import ComandiDaisy
 from others.archivio import CARTELLA_ARCHIVIO, ArchivioSessione
 from others.widget_timer import WidgetTimer
 from others.tema import (COLORI, FONT_MONO, SPAZIO, STYLE_QSS, T_VALORE, Stepper, applica_palette,
@@ -116,21 +116,17 @@ STA_LTA_SOGLIA_OFF_DEFAULT = 1.2
 # primo pacchetto.
 ATTESA_STABILIZZAZIONE_STALTA_S = 1.0
 
-# Se la smart plug non risponde (RPC falso/timeout, IP cambiato da DHCP...)
-# non si deve procedere come se la daisy chain fosse alimentata: si resta in
-# RISVEGLIO e si riprova a intervalli, invece di martellare l'host ogni 200ms
-# (tick di controlla_transizioni_temporali).
-RITARDO_RETRY_PLUG_S = 2.0
-
-# RESET disattivato per questo tempo dopo l'accensione della Shelly: se il
-# master resta acceso meno di 2.5s (SOGLIA_SESSIONE_LUNGA_MS in master.ino)
-# lo interpreta come un ciclo di selezione modalita' e al risveglio
-# successivo partirebbe in SWEEP invece che in produzione (REVISIONE.md B1).
-# Il master conta i 2.5s dal SUO avvio, che arriva ~1.2-1.4s dopo
-# l'accensione della Shelly (misurato: primo marcatore a 1.24-1.39s): 5s =
-# 1.4s di avvio + 2.5s + 1s di margine. Con 3s (prima versione) un RESET a
-# 3.2s mandava comunque il master in sweep (visto dal vivo il 21/10/2026).
-RESET_BLOCCATO_DOPO_ACCENSIONE_S = 5.0
+# Daisy chain comandata via WiFi (22/10/2026): gli Arduino sono sempre
+# accesi e ZITTI; per farli parlare 3main.py manda PARLA al master
+# attraverso il modulo ESP (others/comandi_daisy.py, comandi in master.ino).
+# Se l'ESP non risponde non si procede come se la daisy chain parlasse: si
+# resta in RISVEGLIO, si mostra un avviso e si riprova ogni RITARDO_RETRY_DAISY_S.
+RITARDO_RETRY_DAISY_S = 2.0
+# In RISVEGLIO/ARMATO si rinnova il PARLA ogni INTERVALLO_PARLA_S: se non ne
+# arriva uno per 10s il master si zittisce da solo (sicurezza: se 3main.py
+# si blocca o il WiFi cade, il master non resta a suonare per sempre e la
+# fibra non diventa sorda per lo STA/LTA).
+INTERVALLO_PARLA_S = 2.0
 
 # Se in ARMATO non si vede nemmeno un marcatore di zero o uno slot valido
 # (non solo "nessuna chiusura" - proprio NESSUN evento decodificato) per
@@ -149,7 +145,10 @@ TIMEOUT_TAPPETI_NON_SENTITI_S = 5.0
 # ============================================================
 @dataclass
 class Config:
-    ATTESA_BOOT_DAISY_CHAIN_S: float = 2.0  # abbassato per ora, TODO misurare davvero (boot Arduino + primo ciclo)
+    # Da PARLA ad ARMATO. Il master e' gia' acceso: suona il primo marcatore
+    # dopo 250ms (accensione dell'amplificatore). Gli slot sentiti prima del
+    # primo marcatore vengono comunque ignorati (RilevatoreProtocolloF1F2).
+    ATTESA_BOOT_DAISY_CHAIN_S: float = 0.2
     # Timeout inattività: si resetta ad ogni chiusura. Ottimizza il caso
     # normale (evento reale breve, poi silenzio) - si torna ad AMBIENTE
     # appena finisce l'attività, non dopo un tempo fisso.
@@ -162,8 +161,12 @@ class Config:
     # esplicita per un cliente che preferisce non avere un limite di tempo
     # prevedibile su quanto resta armato, vedi cambia_timeout_massimo.
     TIMEOUT_MASSIMO_MIN: float = 5.0  # TODO decidere il valore reale insieme
+    # Modulo ESP (esp-link) sulla seriale del master: modificabile anche dalla
+    # tab 2. L'IP puo' cambiare se cambia la rete WiFi (DHCP).
+    ESP_HOST: str = "10.27.239.225"
+    # Shelly: non piu' usata da 3main.py. Resta solo per 1tarasoglie.py e
+    # 2analizzatempiminimi.py finche' non vengono aggiornati (passo D).
     SMART_PLUG_HOST: str = "10.27.239.193"
-    SMART_PLUG_CHANNEL: int = 0
 
 
 class Stato(Enum):
@@ -443,56 +446,17 @@ class NetworkWorker(QtCore.QThread):
         sock.close()
 
 
-class SmartPlug:
-    """Presa Shelly che alimenta la daisy chain, pilotata via API RPC HTTP
-    locale (others/shelly_control.py — nessun cloud, nessun account)."""
-
-    def __init__(self, host: str, channel: int = 0):
-        self.host = host
-        self.channel = channel
-
-    def imposta_host(self, host: str) -> None:
-        self.host = host.strip()
-
-    def _host_configurato(self) -> bool:
-        return not self.host.startswith("TODO")
-
-    def accendi(self) -> bool:
-        """Ritorna True solo se la chiamata RPC è andata a buon fine: il
-        chiamante (_tenta_accensione_plug) deve saperlo, per non far partire
-        il boot della daisy chain su una presa che non si è mai accesa."""
-        if not self._host_configurato():
-            log.info("SMART PLUG: host non ancora configurato (Config.SMART_PLUG_HOST), salto la chiamata")
-            return False
-        try:
-            shelly_control.turn_on(self.host, self.channel)
-            log.info("SMART PLUG: ON (host=%s)", self.host)
-            return True
-        except Exception as e:
-            log.error("SMART PLUG: accensione fallita (host=%s): %s", self.host, e)
-            return False
-
-    def spegni(self) -> None:
-        if not self._host_configurato():
-            return
-        try:
-            shelly_control.turn_off(self.host, self.channel)
-            log.info("SMART PLUG: OFF (host=%s)", self.host)
-        except Exception as e:
-            log.error("SMART PLUG: spegnimento fallito (host=%s): %s", self.host, e)
-
-
 class FinestraWakeupStalta(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         pg.setConfigOptions(antialias=False)
 
         self.config = Config()
-        self.plug = SmartPlug(self.config.SMART_PLUG_HOST, self.config.SMART_PLUG_CHANNEL)
+        self.daisy = ComandiDaisy(self.config.ESP_HOST)
         self.stato = Stato.AMBIENTE
         # Finché non si preme "OK STALTA TARATO": un evento rilevato viene
         # solo LOGGATO ("avrei attivato RISVEGLIO"), non cambia mai stato né
-        # tocca la smart plug - la tab 1 serve a guardare la soglia scattare
+        # fa parlare la daisy chain - la tab 1 serve a guardare la soglia scattare
         # sui suoni di prova, non a pilotare davvero l'impianto.
         self._modalita_dry_run = True
         self._inizio_risveglio_s = 0.0
@@ -503,11 +467,11 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         # in ARMATO - diverso da _ultima_chiusura_s, che si aggiorna solo
         # sulle chiusure, non su ogni evento decodificato.
         self._ultimo_evento_f1f2_s = 0.0
-        # Vedi _tenta_accensione_plug: finché la smart plug non confirma
-        # l'accensione, il boot della daisy chain non parte - si resta in
-        # RISVEGLIO e si riprova.
-        self._plug_confermato = False
-        self._prossimo_tentativo_plug_s = 0.0
+        # Vedi _tenta_parla: finché il PARLA non è partito davvero verso
+        # l'ESP non si va in ARMATO - si resta in RISVEGLIO e si riprova.
+        self._parla_confermato = False
+        self._prossimo_tentativo_daisy_s = 0.0
+        self._ultimo_parla_s = 0.0
         self.protocollo_tappeti: RilevatoreProtocolloF1F2 | None = None
         self._accumulo_tappeti = np.empty(0, dtype=np.int16)
         self.stato_tappeti: dict[int, bool] = {}  # counter -> chiuso?
@@ -631,7 +595,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             mentre è in corso, a sinistra di tutto, arancione e pulsante; in
             quel momento anche la freccia tra le due fasi diventa arancione.
         Riga 2 (solo se c'è qualcosa da dire): avvisi ed errori in rosso -
-        rumore rilevato, smart plug che non risponde. Vedi _imposta_avviso.
+        rumore rilevato, daisy chain (ESP) che non risponde. Vedi _imposta_avviso.
         """
         barra = QtWidgets.QFrame()
         # objectName + selettore in tema.STYLE_QSS: uno stile senza
@@ -681,7 +645,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.btn_riarma.setObjectName("Accento")
         self.btn_riarma.setCursor(QtCore.Qt.PointingHandCursor)
         self.btn_riarma.setToolTip(
-            "Spegne la smart plug e torna subito a fibra in ascolto ambiente,"
+            "Zittisce la daisy chain e torna subito a fibra in ascolto ambiente,"
             " senza aspettare il timeout."
         )
         self.btn_riarma.clicked.connect(lambda: self._torna_ad_ambiente("RESET premuto"))
@@ -718,7 +682,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
     def _imposta_avviso(self, chiave: str, testo: str | None) -> None:
         """Mostra (testo) o toglie (None) un avviso rosso nella riga sotto
-        l'header. Una chiave per tipo di problema ("rumore", "plug", ...):
+        l'header. Una chiave per tipo di problema ("rumore", "daisy", ...):
         richiamarla col nuovo testo aggiorna l'avviso invece di duplicarlo."""
         # Nell'archivio solo i cambi: alcuni avvisi vengono richiamati ogni
         # 200ms con lo stesso testo (controlla_transizioni_temporali).
@@ -1025,7 +989,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
     def _crea_tab_ascolto(self) -> QtWidgets.QWidget:
         """Fase 2: onda + pannello timer + una riga impianto (tappeti e
-        smart plug). Lo stato resta nella barra in alto, condivisa."""
+        IP del modulo ESP). Lo stato resta nella barra in alto, condivisa."""
         tab = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1050,7 +1014,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.pannello_timer.timeout_massimo_cambiato.connect(self._su_timeout_massimo_cambiato)
         layout.addWidget(self.pannello_timer)
 
-        # Riga impianto: counter tappeti + IP della smart plug, una sola
+        # Riga impianto: counter tappeti + IP del modulo ESP, una sola
         # card bassa invece di un QGroupBox enorme per una riga di testo.
         card_impianto = QtWidgets.QFrame()
         card_impianto.setObjectName("Card")
@@ -1071,17 +1035,17 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         riga.addWidget(separatore(verticale=True))
         riga.addSpacing(8)
 
-        # IP della smart plug, modificabile qui invece che nel codice: l'IP
-        # della Shelly cambia da solo ogni tanto (riassegnazione DHCP).
-        riga.addWidget(etichetta("SMART PLUG", "Eyebrow"))
-        self.campo_smart_plug_ip = QtWidgets.QLineEdit(self.config.SMART_PLUG_HOST)
-        self.campo_smart_plug_ip.setPlaceholderText("es. 192.168.1.2")
-        self.campo_smart_plug_ip.setFixedWidth(170)
-        self.campo_smart_plug_ip.returnPressed.connect(self.cambia_smart_plug_ip)
-        riga.addWidget(self.campo_smart_plug_ip)
+        # IP del modulo ESP, modificabile qui invece che nel codice: cambia se
+        # cambia la rete WiFi (riassegnazione DHCP).
+        riga.addWidget(etichetta("ESP DAISY CHAIN", "Eyebrow"))
+        self.campo_ip_esp = QtWidgets.QLineEdit(self.config.ESP_HOST)
+        self.campo_ip_esp.setPlaceholderText("es. 10.27.239.225")
+        self.campo_ip_esp.setFixedWidth(170)
+        self.campo_ip_esp.returnPressed.connect(self.cambia_ip_esp)
+        riga.addWidget(self.campo_ip_esp)
         btn_applica_ip = QtWidgets.QPushButton("Applica")
         btn_applica_ip.setCursor(QtCore.Qt.PointingHandCursor)
-        btn_applica_ip.clicked.connect(self.cambia_smart_plug_ip)
+        btn_applica_ip.clicked.connect(self.cambia_ip_esp)
         riga.addWidget(btn_applica_ip)
         riga.addStretch(1)
         layout.addWidget(card_impianto)
@@ -1147,13 +1111,13 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             if not mai:
                 pannello.stepper_massimo.spin.setValue(valore)
 
-    def cambia_smart_plug_ip(self) -> None:
-        nuovo_host = self.campo_smart_plug_ip.text().strip()
+    def cambia_ip_esp(self) -> None:
+        nuovo_host = self.campo_ip_esp.text().strip()
         if not nuovo_host:
             return
-        self.config.SMART_PLUG_HOST = nuovo_host
-        self.plug.imposta_host(nuovo_host)
-        self._aggiungi_log(f"Smart plug IP aggiornato: {nuovo_host}")
+        self.config.ESP_HOST = nuovo_host
+        self.daisy.imposta_host(nuovo_host)
+        self._aggiungi_log(f"IP del modulo ESP aggiornato: {nuovo_host}")
 
     def _conferma_stalta_tarato(self) -> None:
         self._modalita_dry_run = False
@@ -1314,7 +1278,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         elif evento_iniziato and self._modalita_dry_run:
             self._aggiungi_log(
                 f"Avrei attivato RISVEGLIO (STA/LTA={rapporto:.2f} > ON={self.rilevatore_stalta.soglia_on:.2f}) "
-                "- solo lettura, in Taratura non cambio stato ne' tocco la smart plug"
+                "- solo lettura, in Taratura non cambio stato ne' faccio parlare la daisy chain"
             )
         elif evento_iniziato:
             self._vai_a_risveglio()
@@ -1323,7 +1287,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         rapporto = self.rilevatore_stalta.ultimo_rapporto
         soglia_on = self.rilevatore_stalta.soglia_on
         self._aggiungi_log(
-            f"Evento rilevato (STA/LTA={rapporto:.2f} > ON={soglia_on:.2f}) => accensione smart plug"
+            f"Evento rilevato (STA/LTA={rapporto:.2f} > ON={soglia_on:.2f}) => PARLA alla daisy chain"
         )
         self.pannello_timer.segna_allarme()
         self.pannello_timer_vista.segna_allarme()
@@ -1334,43 +1298,49 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             F1_HZ, F2_HZ, T0_MS, T1_MS, TOLLERANZA_MS,
             SOGLIA_ON_F1, SOGLIA_OFF_F1, SOGLIA_ON_F2, SOGLIA_OFF_F2,
         )
-        # Il boot della daisy chain (_inizio_risveglio_s) parte solo quando
-        # _tenta_accensione_plug conferma l'accensione, non qui - vedi la
-        # guardia su _plug_confermato in controlla_transizioni_temporali.
-        self._plug_confermato = False
+        # L'attesa verso ARMATO (_inizio_risveglio_s) parte solo quando
+        # _tenta_parla conferma che il PARLA e' partito, non qui - vedi la
+        # guardia su _parla_confermato in controlla_transizioni_temporali.
+        self._parla_confermato = False
         self._inizio_risveglio_s = 0.0
         self.stato = Stato.RISVEGLIO
         self._applica_stile_stato()
-        self._tenta_accensione_plug()
+        self._tenta_parla()
 
-    def _tenta_accensione_plug(self) -> None:
-        """Un tentativo di accensione. Se fallisce NON si avanza: si resta
-        in RISVEGLIO (la UI mostra un avviso) e si riprova al prossimo tick
-        utile - vedi RITARDO_RETRY_PLUG_S, per non martellare l'host ogni
-        200ms mentre il problema persiste."""
-        if self.plug.accendi():
-            self._plug_confermato = True
-            self._inizio_risveglio_s = time.monotonic()
-            self._imposta_avviso("plug", None)
-            self._aggiungi_log("Smart plug accesa -> attendo sincronizzazione daisy chain")
-            self._blocca_reset_per(RESET_BLOCCATO_DOPO_ACCENSIONE_S)
+    def _tenta_parla(self) -> None:
+        """Un tentativo di far parlare la daisy chain. Se l'ESP non e'
+        raggiungibile NON si avanza: si resta in RISVEGLIO (la UI mostra un
+        avviso) e si riprova dopo RITARDO_RETRY_DAISY_S."""
+        if self.daisy.connesso:
+            self.daisy.parla()
+            self._parla_confermato = True
+            self._inizio_risveglio_s = self._ultimo_parla_s = time.monotonic()
+            self._imposta_avviso("daisy", None)
+            self._aggiungi_log("PARLA inviato alla daisy chain -> attendo il primo marcatore")
         else:
-            self._prossimo_tentativo_plug_s = time.monotonic() + RITARDO_RETRY_PLUG_S
-            self._imposta_avviso("plug", f"SMART PLUG NON RISPONDE ({self.plug.host}) — nuovo tentativo in corso…")
+            self._prossimo_tentativo_daisy_s = time.monotonic() + RITARDO_RETRY_DAISY_S
+            self._imposta_avviso("daisy", f"DAISY CHAIN NON RAGGIUNGIBILE (ESP {self.daisy.host}) — nuovo tentativo in corso…")
             self._aggiungi_log(
-                f"Smart plug: accensione non riuscita, resto in RISVEGLIO e riprovo tra {RITARDO_RETRY_PLUG_S:.0f}s"
+                f"ESP non raggiungibile ({self.daisy.ultimo_errore}), resto in RISVEGLIO e riprovo tra {RITARDO_RETRY_DAISY_S:.0f}s"
             )
 
-    def _blocca_reset_per(self, secondi: float) -> None:
-        """RESET non cliccabile per qualche secondo dopo l'accensione della
-        Shelly - vedi RESET_BLOCCATO_DOPO_ACCENSIONE_S."""
-        self.btn_riarma.setEnabled(False)
-        self.btn_riarma.setText("⟲  RESET (attendi)")
-        QtCore.QTimer.singleShot(int(secondi * 1000), self._sblocca_reset)
-
-    def _sblocca_reset(self) -> None:
-        self.btn_riarma.setEnabled(True)
-        self.btn_riarma.setText("⟲  RESET")
+    def _gestisci_daisy(self, ora: float) -> None:
+        """Ogni tick: messaggi del master nell'archivio (+ avvisi utili) e,
+        mentre deve parlare, il PARLA periodico (vedi INTERVALLO_PARLA_S)."""
+        for riga in self.daisy.righe_ricevute():
+            self.archivio.evento("master", testo=riga)
+            if "NON RISPONDE" in riga or "nessun PARLA" in riga:
+                self._aggiungi_log(f"Master: {riga}")
+            if riga.startswith("Nodo"):
+                self._imposta_avviso("nodo", f"DAISY CHAIN: {riga}" if "NON RISPONDE" in riga else None)
+        if self._parla_confermato and self.stato in (Stato.RISVEGLIO, Stato.ARMATO):
+            if ora - self._ultimo_parla_s >= INTERVALLO_PARLA_S:
+                self.daisy.parla()
+                self._ultimo_parla_s = ora
+            self._imposta_avviso(
+                "daisy", None if self.daisy.connesso
+                else f"DAISY CHAIN NON RAGGIUNGIBILE (ESP {self.daisy.host}) — il master si zittira' da solo"
+            )
 
     def _elabora_tappeti(self, campioni: np.ndarray) -> None:
         if self.protocollo_tappeti is None:
@@ -1461,17 +1431,19 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     def controlla_transizioni_temporali(self) -> None:
         ora = time.monotonic()
 
+        self._gestisci_daisy(ora)
+
         if self.stato == Stato.RISVEGLIO:
-            if not self._plug_confermato:
-                # Niente boot daisy chain finché la presa non è confermata
-                # accesa - vedi _tenta_accensione_plug per il motivo.
-                if ora >= self._prossimo_tentativo_plug_s:
-                    self._tenta_accensione_plug()
+            if not self._parla_confermato:
+                # Niente ARMATO finché il PARLA non è partito davvero - vedi
+                # _tenta_parla per il motivo.
+                if ora >= self._prossimo_tentativo_daisy_s:
+                    self._tenta_parla()
             elif ora - self._inizio_risveglio_s >= self.config.ATTESA_BOOT_DAISY_CHAIN_S:
                 self._ultima_chiusura_s = ora
                 self._inizio_armato_s = ora
                 self._ultimo_evento_f1f2_s = ora
-                self._aggiungi_log("Daisy chain considerata sincronizzata -> ARMATO")
+                self._aggiungi_log("Daisy chain in ascolto -> ARMATO")
                 self.stato = Stato.ARMATO
                 self._applica_stile_stato()
 
@@ -1504,10 +1476,9 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         for pannello in (self.pannello_timer, self.pannello_timer_vista):
             pannello.aggiorna(
                 self.stato.name, ora, self._ultima_chiusura_s, self._inizio_armato_s,
-                # Finché la plug non è confermata passo "ora" invece del
-                # vero inizio: il countdown resta fermo al valore pieno
-                # invece di scorrere come se il boot fosse già in corso.
-                self._inizio_risveglio_s if self._plug_confermato else ora,
+                # Finché il PARLA non è partito passo "ora" invece del vero
+                # inizio: il countdown resta fermo al valore pieno.
+                self._inizio_risveglio_s if self._parla_confermato else ora,
                 self.config.ATTESA_BOOT_DAISY_CHAIN_S,
             )
 
@@ -1518,10 +1489,10 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         if self.stato == Stato.AMBIENTE:
             return
         self._aggiungi_log(f"{motivo} -> AMBIENTE")
-        self.plug.spegni()
-        self._plug_confermato = False
-        self._prossimo_tentativo_plug_s = 0.0
-        self._imposta_avviso("plug", None)
+        self.daisy.zitto()
+        self._parla_confermato = False
+        self._prossimo_tentativo_daisy_s = 0.0
+        self._imposta_avviso("daisy", None)
         self._imposta_avviso("tappeti", None)
         self.protocollo_tappeti = None
         self._pulisci_indicatori_tappeti()
@@ -1582,7 +1553,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         # "QThread: Destroyed while thread is still running" in chiusura.
         self.worker.running = False
         self.worker.wait(1000)
-        self.plug.spegni()
+        self.daisy.chiudi()  # manda ZITTO prima di chiudere
         self._chiudi_prova("chiusura di 3main.py con la prova ancora in corso")
         self.archivio.chiudi()
         event.accept()
