@@ -108,8 +108,11 @@ guasto sembra un tappeto tranquillo (REVISIONE.md B2).
 
 ## 7. Frequenze e tempi cambiabili con un comando (senza ricaricare il codice)
 
-**SI' — solo firmware del master.** Comando `FREQ 4400 3200`, salvato in
-EEPROM. Comodo, ma con il punto 1 già fatto è meno urgente.
+**SUPERATO (22/10/2026) dal punto 1:** si cambia `master.ino` e si carica
+via WiFi (`python others/carica_master_wifi.py`). Un comando non farebbe
+risparmiare niente: le frequenze vanno cambiate anche in 3main.py
+(F1_HZ/F2_HZ) e i tempi anche nello slave (SOGLIA_TIMEOUT_RESET_MS), e
+cambiarle solo sul master le disallineerebbe senza avvisare.
 
 ---
 
