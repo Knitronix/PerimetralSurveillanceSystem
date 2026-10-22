@@ -150,7 +150,12 @@ const unsigned long SOGLIA_CLASSIFICAZIONE_RISPOSTA_MS =
     (DURATA_RISPOSTA_APERTO_MS + DURATA_RISPOSTA_CHIUSO_MS) / 2;
 const unsigned long TIMEOUT_RISPOSTA_MS = 45;
 
-const unsigned long PAUSA_FINE_CICLO_MS = 500;
+// 21/10/2026: da 500 a 250 -> ciclo da ~1.05s a ~0.80s (reazione piu' veloce).
+// LEGATA a SOGLIA_TIMEOUT_RESET_MS in slave2.ino (340): lo slave capisce che
+// e' iniziato un ciclo nuovo dal silenzio sul bus. Silenzio fra due cicli =
+// ~145ms + questa pausa (~395ms) deve restare SOPRA 340; il silenzio piu'
+// lungo dentro un ciclo (dopo il marcatore, 8+T0_MS+GAP_MS = 278ms) SOTTO 340.
+const unsigned long PAUSA_FINE_CICLO_MS = 250;
 
 const int PIN_INTERRUTTORE = A0;
 const unsigned long DEBOUNCE_INTERRUTTORE_MS = 30;

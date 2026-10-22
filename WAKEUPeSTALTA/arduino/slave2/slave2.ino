@@ -59,7 +59,12 @@ const unsigned long DURATA_RISPOSTA_CHIUSO_MS = 18; // impulso lungo = chiuso
 // del master e' sicuramente finito - lo slave si resetta da solo, pronto a
 // riconoscere il prossimo impulso come "0". Fa da rete di sicurezza anche
 // se un impulso si perde per rumore elettrico.
-const unsigned long SOGLIA_TIMEOUT_RESET_MS = 300;
+// 21/10/2026: da 300 a 340, a meta' strada tra i due silenzi da distinguere
+// (margine ~60ms per lato): il piu' lungo DENTRO un ciclo (dopo il marcatore,
+// 8+T0_MS+GAP_MS = 278ms) e quello FRA due cicli (~145ms + PAUSA_FINE_CICLO_MS
+// del master = ~395ms con la pausa a 250). Se cambi T0_MS, GAP_MS o la pausa
+// nel master, ricontrolla questo valore.
+const unsigned long SOGLIA_TIMEOUT_RESET_MS = 340;
 
 const unsigned long DEBOUNCE_US = 2000; // 2ms, rimbalzi elettrici sul fronte (restart.md)
 
