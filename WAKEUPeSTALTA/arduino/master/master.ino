@@ -17,7 +17,12 @@
 //             se sta gia' parlando rinnova soltanto il "sono ancora qui"
 //   ZITTO     smette subito di suonare
 //   MODO n    sceglie la modalita' (0/1/2), resta ZITTO fino al prossimo PARLA
-//   STATO     stampa modalita', parla/zitto, frequenze
+//   STATO     stampa modalita', parla/zitto, frequenze, volumi
+//   VOL a b   volume di f1 e f2 in % (0-100), salvato in EEPROM: resta
+//             anche dopo un riavvio. Vale solo per la daisy chain (le
+//             modalita' 1/2 suonano sempre a piena ampiezza). ATTENZIONE:
+//             la potenza vista da Goertzel va col quadrato del volume
+//             (50% = 1/4): dopo un cambio ritarare con 1tarasoglie.py
 //   ON / OFF  sinonimi di PARLA / ZITTO (comandi di prima)
 // Sicurezza: se non arriva un PARLA per TIMEOUT_PARLA_MS il master si
 // zittisce da solo - se 3main.py si blocca o il WiFi cade, il master non
@@ -66,6 +71,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <math.h>
+#include <EEPROM.h>
 
 // ============================================================
 // Modalita' e parla/zitto (vedi intestazione sopra)
@@ -96,6 +102,13 @@ const uint32_t SAMPLE_RATE = 40000; // Hz
 volatile bool soundEnabled = false;
 volatile bool canale1_on = false;
 volatile bool canale2_on = false;
+
+// Volume di f1/f2 in daisy chain (comando VOL, vedi intestazione). La ISR
+// scala l'onda: uscita = 128 + (onda - 128) * scala / 256, scala = vol% * 256 / 100.
+uint8_t volume_f1 = 100, volume_f2 = 100;          // in %
+volatile uint16_t scala_f1 = 256, scala_f2 = 256;  // letti nella ISR
+const int EEPROM_VOLUME = 16;          // 3 byte: firma, volume f1, volume f2
+const uint8_t FIRMA_VOLUME = 0xA5;     // EEPROM mai scritta = 0xFF -> 100/100
 
 // ============================================================
 // Modalita' 0: DAISY CHAIN (produzione)
@@ -197,8 +210,10 @@ void setup_daisy_chain() {
   Serial.print(F("  T1_MS=")); Serial.print(T1_MS);
   Serial.print(F("  GAP_MS=")); Serial.println(GAP_MS);
   Serial.print(F("NUMERO_NODI=")); Serial.println(NUMERO_NODI);
+  Serial.print(F("VOL f1=")); Serial.print(volume_f1);
+  Serial.print(F("% f2=")); Serial.print(volume_f2); Serial.println(F("%"));
   Serial.print(F("interruttore proprio: ")); Serial.println(interruttoreChiuso ? "CHIUSO" : "aperto");
-  Serial.println(F("Pronto, ZITTO: aspetto PARLA (comandi: PARLA, ZITTO, MODO n, STATO)."));
+  Serial.println(F("Pronto, ZITTO: aspetto PARLA (comandi: PARLA, ZITTO, MODO n, VOL a b, STATO)."));
 }
 
 // Misura la durata di un impulso HIGH su PIN_BUS, con timeout - stessa cosa
@@ -552,7 +567,45 @@ void stampa_stato() {
   Serial.print(parla ? F(", PARLA") : F(", ZITTO"));
   Serial.print(F(", FREQ1=")); Serial.print(FREQ1);
   Serial.print(F("Hz FREQ2=")); Serial.print(FREQ2);
-  Serial.println(F("Hz"));
+  Serial.print(F("Hz, VOL=")); Serial.print(volume_f1);
+  Serial.print(F(" ")); Serial.println(volume_f2);
+}
+
+void applica_volume(uint8_t v1, uint8_t v2) {
+  volume_f1 = v1;
+  volume_f2 = v2;
+  uint16_t s1 = (uint16_t)v1 * 256 / 100, s2 = (uint16_t)v2 * 256 / 100;
+  cli();  // 16 bit: la ISR non deve leggerne meta' vecchia e meta' nuova
+  scala_f1 = s1;
+  scala_f2 = s2;
+  sei();
+}
+
+void carica_volume() {
+  if (EEPROM.read(EEPROM_VOLUME) == FIRMA_VOLUME
+      && EEPROM.read(EEPROM_VOLUME + 1) <= 100 && EEPROM.read(EEPROM_VOLUME + 2) <= 100) {
+    applica_volume(EEPROM.read(EEPROM_VOLUME + 1), EEPROM.read(EEPROM_VOLUME + 2));
+  } else {
+    applica_volume(100, 100);
+  }
+}
+
+// "VOL a b" (gia' maiuscolo e senza spazi ai lati)
+void comando_volume(const String& cmd) {
+  int spazio = cmd.indexOf(' ', 4);
+  long v1 = cmd.substring(4, spazio < 0 ? cmd.length() : spazio).toInt();
+  long v2 = spazio < 0 ? -1 : cmd.substring(spazio + 1).toInt();
+  if (spazio < 0 || v1 < 0 || v1 > 100 || v2 < 0 || v2 > 100) {
+    Serial.println(F("VOL sbagliato: VOL f1 f2, in % da 0 a 100 (es. VOL 100 60)"));
+    return;
+  }
+  applica_volume((uint8_t)v1, (uint8_t)v2);
+  EEPROM.update(EEPROM_VOLUME, FIRMA_VOLUME);
+  EEPROM.update(EEPROM_VOLUME + 1, volume_f1);
+  EEPROM.update(EEPROM_VOLUME + 2, volume_f2);
+  Serial.print(F("VOL f1=")); Serial.print(volume_f1);
+  Serial.print(F("% f2=")); Serial.print(volume_f2);
+  Serial.println(F("% (salvato)"));
 }
 
 void avvia_parlato() {
@@ -615,6 +668,8 @@ void esegui_comando(String cmd) {
     Serial.println(debug_risposte ? F("DEBUG risposte: ACCESO") : F("DEBUG risposte: SPENTO"));
   } else if (cmd == "STATO") {
     stampa_stato();
+  } else if (cmd.startsWith("VOL ")) {
+    comando_volume(cmd);
   } else if (cmd.length() > 0) {
     Serial.print(F("Comando sconosciuto: "));
     Serial.println(cmd);
@@ -659,6 +714,8 @@ void setup() {
 
   sei();
 
+  carica_volume();
+
   // Sempre modalita' 0 e ZITTO all'accensione (vedi intestazione).
   modalita_attiva = DAISY_CHAIN;
   setup_daisy_chain();
@@ -676,9 +733,9 @@ ISR(TIMER2_COMPA_vect) {
   if (modalita_attiva == DAISY_CHAIN) {
     phase2 += inc2;
     uint8_t idx2 = phase2 >> 24;
-    uint8_t contrib1 = canale1_on ? sineTable[idx1] : 128;
-    uint8_t contrib2 = canale2_on ? sineTable[idx2] : 128;
-    OCR1B = ((uint16_t)contrib1 + contrib2) / 2;
+    int16_t onda1 = canale1_on ? (((int16_t)sineTable[idx1] - 128) * (int16_t)scala_f1) >> 8 : 0;
+    int16_t onda2 = canale2_on ? (((int16_t)sineTable[idx2] - 128) * (int16_t)scala_f2) >> 8 : 0;
+    OCR1B = (uint8_t)(128 + (onda1 + onda2) / 2);
   } else {
     // Modalita' sweep: un solo tono, piena ampiezza (non mediato con un
     // secondo canale fittizio) - stessa uscita delle vecchie sketch

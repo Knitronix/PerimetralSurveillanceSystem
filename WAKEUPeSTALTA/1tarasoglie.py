@@ -19,6 +19,10 @@ Regola, volutamente semplice:
     attuali e con quelle calcolate - le nuove si consigliano solo se non
     perdono niente
 
+Volume: la riga "Volume f1/f2" imposta il volume del master (comando VOL,
+salvato nel master). La potenza va col quadrato del volume (50% = 1/4):
+dopo ogni cambio rifare la misura. Il report dice con che volume e' fatta.
+
 Frequenze, soglie attuali e decodificatore sono letti da 3main.py stesso.
 Registrazione + report in archivio/AAAA-MM-GG/taratura/.
 """
@@ -27,6 +31,7 @@ from __future__ import annotations
 
 import socket
 import importlib
+import re
 import sys
 import threading
 import time
@@ -205,13 +210,17 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.buf: list[np.ndarray] = []
         self.n_on = 0
         self.t_fase = 0.0
-        self.daisy: ComandiDaisy | None = None
         self.t_parla = 0.0
+        self.volume: tuple[int, int] | None = None  # come lo riporta il master
+        self.stato_chiesto = False
         self.coda = np.zeros(0, dtype=np.int16)
         n_grafico = int(SECONDI_GRAFICO * FS / B)
         self.storico_f1 = np.full(n_grafico, 1e-9)
         self.storico_f2 = np.full(n_grafico, 1e-9)
         self._costruisci_ui()
+        # Collegamento all'ESP aperto per tutta la vita della finestra: serve
+        # alla misura (PARLA/ZITTO) e al volume (VOL, STATO).
+        self.daisy = ComandiDaisy(self.campo_ip.text().strip())
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self._tick)
         self.timer.start(30)
@@ -229,8 +238,27 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         riga = QtWidgets.QHBoxLayout()
         riga.addWidget(etichetta("IP ESP"))
         self.campo_ip = QtWidgets.QLineEdit(M.Config().ESP_HOST)
+        self.campo_ip.editingFinished.connect(self._cambia_ip)
         riga.addWidget(self.campo_ip, 1)
         lay.addLayout(riga)
+        riga_vol = QtWidgets.QHBoxLayout()
+        riga_vol.addWidget(etichetta("Volume f1 %"))
+        self.spin_vol_f1 = QtWidgets.QSpinBox()
+        self.spin_vol_f1.setRange(0, 100)
+        self.spin_vol_f1.setValue(100)
+        riga_vol.addWidget(self.spin_vol_f1)
+        riga_vol.addWidget(etichetta("f2 %"))
+        self.spin_vol_f2 = QtWidgets.QSpinBox()
+        self.spin_vol_f2.setRange(0, 100)
+        self.spin_vol_f2.setValue(100)
+        riga_vol.addWidget(self.spin_vol_f2)
+        self.btn_volume = QtWidgets.QPushButton("Imposta volume")
+        self.btn_volume.setObjectName("Piatto")
+        self.btn_volume.clicked.connect(self._imposta_volume)
+        riga_vol.addWidget(self.btn_volume)
+        self.label_volume = QtWidgets.QLabel("master: …")
+        riga_vol.addWidget(self.label_volume, 1)
+        lay.addLayout(riga_vol)
         riga_nota = QtWidgets.QHBoxLayout()
         riga_nota.addWidget(etichetta("Nota"))
         self.campo_nota = QtWidgets.QLineEdit()
@@ -308,7 +336,6 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
 
     def _sequenza(self, host: str):
         inizio = time.monotonic()
-        self.daisy = ComandiDaisy(host)
         if not self.daisy.aspetta_connessione(5.0):
             self.segnali.errore.emit(f"ESP {host} non raggiungibile ({self.daisy.ultimo_errore}).")
             return
@@ -318,9 +345,37 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.segnali.fase.emit("misura")
 
     def _ferma_daisy(self):
-        if self.daisy is not None:
-            daisy, self.daisy = self.daisy, None
-            threading.Thread(target=daisy.chiudi, daemon=True).start()  # ZITTO
+        self.daisy.zitto()
+
+    # --- volume (comando VOL del master) ---------------------------------
+    def _cambia_ip(self):
+        if self.campo_ip.text().strip() != self.daisy.host:
+            self.daisy.imposta_host(self.campo_ip.text())
+            self.volume, self.stato_chiesto = None, False
+            self.label_volume.setText("master: …")
+
+    def _imposta_volume(self):
+        if self.fase != "inattivo":
+            self.label_volume.setText("non durante la misura")
+            return
+        self.daisy.comando(f"VOL {self.spin_vol_f1.value()} {self.spin_vol_f2.value()}")
+
+    def _leggi_master(self):
+        if not self.daisy.connesso:
+            if self.volume is None:
+                self.label_volume.setText("master: ESP non raggiungibile")
+            self.stato_chiesto = False
+            return
+        if not self.stato_chiesto:
+            self.daisy.comando("STATO")  # risponde anche con "VOL=a b"
+            self.stato_chiesto = True
+        for riga in self.daisy.righe_ricevute():
+            m = re.search(r"VOL=(\d+) (\d+)", riga) or re.search(r"VOL f1=(\d+)% f2=(\d+)%", riga)
+            if m:
+                self.volume = (int(m.group(1)), int(m.group(2)))
+                self.spin_vol_f1.setValue(self.volume[0])
+                self.spin_vol_f2.setValue(self.volume[1])
+                self.label_volume.setText(f"master: f1 {self.volume[0]}%  f2 {self.volume[1]}%")
 
     def _cambia_fase(self, fase: str):
         if self.fase == "inattivo":
@@ -332,6 +387,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
             self.t_parla = self.t_fase
 
     def _tick(self):
+        self._leggi_master()
         if self.sock is None:
             return
         pacchetti = []
@@ -349,7 +405,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
             self._aggiorna_grafico(nuovi)
         if self.fase == "misura":
             trascorso = time.monotonic() - self.t_fase
-            if self.daisy is not None and time.monotonic() - self.t_parla >= INTERVALLO_PARLA_S:
+            if time.monotonic() - self.t_parla >= INTERVALLO_PARLA_S:
                 self.daisy.parla()
                 self.t_parla = time.monotonic()
             self.barra.setValue(int(1000 * min(1.0, trascorso / DURATA_S)))
@@ -377,9 +433,10 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.sock = None
         x = np.concatenate(self.buf)
         nota = self.campo_nota.text().strip()
+        volume = f"f1 {self.volume[0]}%, f2 {self.volume[1]}%" if self.volume else "non letto dal master"
         base = cartella_taratura() / time.strftime("soglie_%H%M%S")
-        np.savez_compressed(base.with_suffix(".npz"), x=x, n_on=self.n_on, nota=nota)
-        self._lancia_analisi(x, self.n_on, base, nota)
+        np.savez_compressed(base.with_suffix(".npz"), x=x, n_on=self.n_on, nota=nota, volume=volume)
+        self._lancia_analisi(x, self.n_on, base, nota, volume)
 
     def _apri(self):
         percorso, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Apri registrazione", str(CARTELLA_ARCHIVIO), "Registrazioni (*.npz)")
@@ -390,15 +447,16 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.btn_avvia.setEnabled(False)
         self.btn_apri.setEnabled(False)
         nota = str(d["nota"]) if "nota" in d.files else ""
-        self._lancia_analisi(d["x"], int(d["n_on"]), Path(percorso).with_suffix(""), nota)
+        volume = str(d["volume"]) if "volume" in d.files else "non registrato"
+        self._lancia_analisi(d["x"], int(d["n_on"]), Path(percorso).with_suffix(""), nota, volume)
 
-    def _lancia_analisi(self, x, n_on, base: Path, nota: str = ""):
+    def _lancia_analisi(self, x, n_on, base: Path, nota: str = "", volume: str = ""):
         self.label_fase.setText("Analisi in corso…")
 
         def lavoro():
             try:
                 r = analizza(x, n_on)
-                r["report"] = f"Nota: {nota or '(nessuna)'}\n\n" + componi_report(r)
+                r["report"] = f"Nota: {nota or '(nessuna)'}\nVolume: {volume}\n\n" + componi_report(r)
                 base.with_suffix(".txt").write_text(r["report"], encoding="utf-8")
                 r["file"] = str(base.with_suffix(".txt"))
                 self.segnali.risultato.emit(r)
@@ -434,8 +492,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.btn_apri.setEnabled(True)
 
     def closeEvent(self, evento):
-        if self.daisy is not None:
-            self.daisy.chiudi()  # ZITTO prima di uscire
+        self.daisy.chiudi()  # ZITTO prima di uscire
         if self.sock is not None:
             self.sock.close()
         super().closeEvent(evento)
