@@ -677,8 +677,12 @@ void loop() {
   switch (modalita_attiva) {
     case DAISY_CHAIN:
       aggiorna_interruttore();
-      // mentre e' zitto la pressione si ricorda solo per MEMORIA_CHIUSURA_MS
-      if (!parla && interruttoreChiuso && ora - ultimo_chiuso_ms > MEMORIA_CHIUSURA_MS) {
+      // Mentre e' zitto la pressione si ricorda solo per MEMORIA_CHIUSURA_MS.
+      // millis() e non "ora": ultimo_chiuso_ms e' appena stato aggiornato DOPO
+      // "ora" da aggiorna_interruttore(), e ora - ultimo_chiuso_ms andrebbe
+      // sotto zero -> numero enorme -> pressione cancellata subito (bug
+      // trovato nella prova dal vivo del 22/10/2026).
+      if (!parla && interruttoreChiuso && millis() - ultimo_chiuso_ms > MEMORIA_CHIUSURA_MS) {
         interruttoreChiuso = false;
       }
       stampa_stato_interruttore();

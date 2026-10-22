@@ -88,8 +88,17 @@ unsigned long ultimo_cambio_lettura_ms = 0;
 // breve tra un ciclo e l'altro andrebbe perso. Va a true SOLO dentro
 // aggiorna_interruttore() (mai a false li' dentro), e torna a false SOLO in
 // invia_risposta() subito dopo essere stato consumato per la durata
-// dell'impulso - nessun altro punto del codice deve scriverci.
+// dell'impulso - e (22/10/2026) in loop() quando scade la memoria, vedi
+// MEMORIA_CHIUSURA_MS. Nessun altro punto del codice deve scriverci.
 bool interruttoreChiuso = false;
+
+// Il master puo' restare ZITTO per ore (Arduino sempre accesi, parlano solo
+// su comando di 3main.py): senza interrogazioni il latch non verrebbe mai
+// consumato e al risveglio verrebbe segnalata una pressione di ore prima.
+// Una pressione si ricorda solo per questo tempo dall'ultima volta che il
+// tappeto era premuto - stesso valore e stessa logica del master.
+const unsigned long MEMORIA_CHIUSURA_MS = 10000;
+unsigned long ultimo_chiuso_ms = 0;
 
 // Valore GREZZO (debounced) del pin, sale E scende liberamente - usato
 // internamente da aggiorna_interruttore() per decidere quando riarmare il
@@ -138,6 +147,7 @@ void setup() {
   valoreGrezzoInterruttore = letturaGrezzaCorrente;
   if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
+    ultimo_chiuso_ms = millis();
   }
 
   sei();
@@ -241,6 +251,7 @@ void aggiorna_interruttore() {
   // consuma, vedi dichiarazione di interruttoreChiuso).
   if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
+    ultimo_chiuso_ms = millis();
   }
 }
 
@@ -256,6 +267,12 @@ void stampa_stato_interruttore() {
 
 void loop() {
   aggiorna_interruttore();
+  // Memoria con scadenza (vedi MEMORIA_CHIUSURA_MS). millis() calcolato qui,
+  // DOPO aggiorna_interruttore(): con un tempo letto prima la sottrazione
+  // andrebbe sotto zero (stesso bug trovato e corretto nel master).
+  if (interruttoreChiuso && millis() - ultimo_chiuso_ms > MEMORIA_CHIUSURA_MS) {
+    interruttoreChiuso = false;
+  }
   stampa_stato_interruttore();
   aggiorna_slave(millis());
   // nessun delay() qui fuori: l'attesa dell'impulso di indirizzamento e'
