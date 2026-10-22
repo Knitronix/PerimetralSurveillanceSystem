@@ -1,41 +1,30 @@
 // Sketch standalone per Arduino Mega - nessuna dipendenza da file esterni
-// a parte le librerie AVR/EEPROM incluse sotto. restart.md (nella cartella
+// a parte le librerie AVR incluse sotto. restart.md (nella cartella
 // arduino/ che contiene anche questa) spiega l'architettura del bus
 // daisy chain e il perche' delle scelte di timing.
 //
-// UN SOLO sketch, TRE modalita' (per non dover riflashare via USB una volta
-// installato - vedi "Selettore modalita'" sotto):
+// UN SOLO sketch, TRE modalita':
 //   0 = DAISY_CHAIN     produzione: catena daisy chain vera (vedi sotto)
-//   1 = SWEEP_FREQUENZE caratterizzazione risposta in frequenza (ex
-//                       TEST ARMONICHE/sweep_gradini.ino)
-//   2 = SWEEP_TEMPI     caratterizzazione delta t minimo (ex
-//                       TEST TEMPI/sweep_tempi.ino)
+//   1 = SWEEP_FREQUENZE caratterizzazione risposta in frequenza (0trovafrequenze.py)
+//   2 = SWEEP_TEMPI     caratterizzazione delta t minimo (2analizzatempiminimi.py)
 //
-// --- Selettore modalita' (nessun filo/pin in piu': solo accensione e
-// spegnimento, via la stessa Shelly che alimenta la scheda) ---
-// Ad ogni boot, in EEPROM si tiene un contatore e un flag "sessione
-// confermata" (scritto UNA SOLA volta per boot, appena si supera
-// SOGLIA_SESSIONE_LUNGA_MS - non periodicamente, per non usurare l'EEPROM).
-// Se la sessione PRECEDENTE si era confermata (era durata piu' di quella
-// soglia - sempre il caso in uso reale: un evento vero accende la Shelly
-// per minuti, non secondi), questo boot riparte dal contatore 0 = DAISY
-// CHAIN, SENZA NESSUN ritardo aggiunto - identico al comportamento di
-// sempre. Se invece la sessione precedente era stata interrotta PRIMA di
-// quella soglia, vuol dire che si stava ciclando di proposito: il
-// contatore avanza di uno (mod 3) e la modalita' di QUESTO boot e' quella
-// nuova - decisa e avviata subito, zero ritardo anche qui.
-// Per scegliere la modalita' K: accendere/spegnere velocemente (< soglia)
-// la Shelly K volte, poi lasciarla accesa l'ultima volta (si confermera'
-// da sola dopo la soglia). Per tornare in DAISY CHAIN basta un ciclo
-// qualsiasi lasciato acceso: il boot successivo riparte sempre da 0.
-// Questo e' SICURO per l'uso reale: la Shelly non si accende/spegne mai
-// cosi' velocemente da sola (ATTESA_BOOT_DAISY_CHAIN_S e i timeout di
-// WAKEUPeSTALTA sono tutti in secondi/minuti, non in questo ordine di
-// grandezza), quindi un'intrusione vera non puo' mai essere scambiata per
-// una richiesta di cambio modalita'.
-// Pilotato in automatico (nessuna azione manuale) dagli script Python
-// analizza_armoniche_sweep.py/2analizzatempiminimi.py tramite
-// FREQUENCY DETECTION/shelly_mode_selector.py, PRIMA di aprire la seriale.
+// --- Sempre acceso, parla solo a comando (22/10/2026) ---
+// Gli Arduino restano SEMPRE alimentati (niente piu' Shelly che li accende
+// e spegne) e il master e' ZITTO finche' 3main.py non gli dice di parlare,
+// via WiFi (modulo ESP con esp-link sulla seriale 0). Comandi, una riga
+// ciascuno (maiuscole/minuscole indifferenti):
+//   PARLA     inizia a suonare (in modalita' 0 parte subito dal marcatore);
+//             se sta gia' parlando rinnova soltanto il "sono ancora qui"
+//   ZITTO     smette subito di suonare
+//   MODO n    sceglie la modalita' (0/1/2), resta ZITTO fino al prossimo PARLA
+//   STATO     stampa modalita', parla/zitto, frequenze
+//   ON / OFF  sinonimi di PARLA / ZITTO (comandi di prima)
+// Sicurezza: se non arriva un PARLA per TIMEOUT_PARLA_MS il master si
+// zittisce da solo - se 3main.py si blocca o il WiFi cade, il master non
+// resta a suonare per sempre (la fibra sarebbe sorda per lo STA/LTA).
+// All'accensione: SEMPRE modalita' 0, ZITTO.
+// Mentre e' zitto continua a leggere il proprio interruttore: una pressione
+// viene ricordata per MEMORIA_CHIUSURA_MS e segnalata appena riparla.
 //
 // --- Modalita' 0, DAISY CHAIN (come documentato da sempre) ---
 // Bus condiviso, open-loop a tempo fisso (vedi restart.md). Il master e'
@@ -77,33 +66,23 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <math.h>
-#include <EEPROM.h>
 
 // ============================================================
-// Selettore modalita' (vedi intestazione sopra)
+// Modalita' e parla/zitto (vedi intestazione sopra)
 // ============================================================
 enum Modalita : uint8_t { DAISY_CHAIN = 0, SWEEP_FREQUENZE = 1, SWEEP_TEMPI = 2, NUM_MODALITA = 3 };
+volatile Modalita modalita_attiva = DAISY_CHAIN;  // letta anche nella ISR
 
-const int EEPROM_ADDR_CONTATORE = 0;
-const int EEPROM_ADDR_CONFERMATO = 1;
-// Il primo flash di questo sketch trova in EEPROM qualunque valore ci
-// fosse prima (mai scritta da questo sketch finora) - senza una firma che
-// segnali "questo layout l'ho già inizializzato io", il primissimo boot
-// partirebbe in una modalità indeterminata invece che, in modo prevedibile,
-// in DAISY_CHAIN. FIRMA_INIZIALIZZATA e' un valore arbitrario, improbabile
-// per puro caso (0x00/0xFF, i due valori "vuoti" tipici, sono esclusi).
-const int EEPROM_ADDR_FIRMA = 2;
-const uint8_t FIRMA_INIZIALIZZATA = 0xA5;
-// Sopra questa soglia di uptime, la sessione e' considerata "vera" (non un
-// ciclo rapido di selezione) - deve restare ABBONDANTEMENTE piu' breve di
-// qualunque tempo reale di accensione (ATTESA_BOOT_DAISY_CHAIN_S e i
-// timeout di WAKEUPeSTALTA sono in secondi/minuti), e scritta in EEPROM
-// una sola volta per boot (non periodicamente, per non usurarla).
-const unsigned long SOGLIA_SESSIONE_LUNGA_MS = 2500;
-
-volatile Modalita modalita_attiva;  // letta anche nella ISR, decisa una volta a setup()
-bool sessione_confermata = false;
-unsigned long inizio_boot_ms = 0;
+bool parla = false;                 // true = sta suonando (su comando PARLA)
+unsigned long ultimo_parla_ms = 0;  // ultimo PARLA ricevuto (rinnovo)
+// Senza un PARLA per questo tempo il master si zittisce da solo. 3main.py
+// rinnova ogni ~2s: 10s tollerano qualche messaggio perso sul WiFi.
+const unsigned long TIMEOUT_PARLA_MS = 10000;
+// Una pressione fatta mentre il master era zitto viene segnalata se e'
+// avvenuta negli ultimi MEMORIA_CHIUSURA_MS (o se il tappeto e' ancora
+// premuto): non deve tornare fuori una pressione di ore prima.
+const unsigned long MEMORIA_CHIUSURA_MS = 10000;
+unsigned long ultimo_chiuso_ms = 0;
 
 // ============================================================
 // DDS/PWM condiviso da tutte le modalita' (Timer1 Fast PWM su OC1B come
@@ -198,12 +177,15 @@ void setup_daisy_chain() {
   inc1 = (uint32_t)(((uint64_t)FREQ1 << 32) / SAMPLE_RATE);
   inc2 = (uint32_t)(((uint64_t)FREQ2 << 32) / SAMPLE_RATE);
 
-  soundEnabled = true; // parte GIA' ACCESO - in campo nessuno scrive "ON" a mano
-  digitalWrite(11, HIGH);
+  soundEnabled = false; // ZITTO finche' non arriva PARLA (vedi intestazione)
+  digitalWrite(11, LOW);
 
   letturaGrezzaCorrente = (digitalRead(PIN_INTERRUTTORE) == HIGH);
   valoreGrezzoInterruttore = letturaGrezzaCorrente;
-  if (valoreGrezzoInterruttore) interruttoreChiuso = true;
+  if (valoreGrezzoInterruttore) {
+    interruttoreChiuso = true;
+    ultimo_chiuso_ms = millis();
+  }
   interruttoreChiuso_stampato = interruttoreChiuso;
 
   inizio_stato_ms = millis();
@@ -216,7 +198,7 @@ void setup_daisy_chain() {
   Serial.print(F("  GAP_MS=")); Serial.println(GAP_MS);
   Serial.print(F("NUMERO_NODI=")); Serial.println(NUMERO_NODI);
   Serial.print(F("interruttore proprio: ")); Serial.println(interruttoreChiuso ? "CHIUSO" : "aperto");
-  Serial.println(F("Pronto, suono GIA' ACCESO. Scrivi 'OFF' o 'ON' e premi invio per disattivare/riattivare."));
+  Serial.println(F("Pronto, ZITTO: aspetto PARLA (comandi: PARLA, ZITTO, MODO n, STATO)."));
 }
 
 // Misura la durata di un impulso HIGH su PIN_BUS, con timeout - stessa cosa
@@ -370,6 +352,7 @@ void aggiorna_interruttore() {
   valoreGrezzoInterruttore = letturaGrezzaCorrente;
   if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
+    ultimo_chiuso_ms = millis();
   }
 }
 
@@ -420,7 +403,7 @@ void setup_sweep_frequenze() {
   Serial.print(F("  FREQ_MAX=")); Serial.print(SWEEPF_FREQ_MAX);
   Serial.print(F("  FREQ_STEP=")); Serial.println(SWEEPF_FREQ_STEP);
   Serial.print(F("STEP_DURATION_MS=")); Serial.println(SWEEPF_STEP_DURATION_MS);
-  Serial.println(F("Pronto (silenzio). Scrivi 'ON' o 'OFF' e premi invio."));
+  Serial.println(F("Sweep partito (ZITTO per fermarlo)."));
   sweepf_stampa(sweepf_freq_corrente);
 }
 
@@ -518,7 +501,7 @@ void setup_sweep_tempi() {
   Serial.println(F("--- MODALITA 2: sweep tempi (TEST TEMPI) ---"));
   Serial.print(F("FREQ_TEST_HZ=")); Serial.println(TEMPI_FREQ_TEST_HZ);
   Serial.print(F("RIPETIZIONI_PER_GRADINO=")); Serial.println(TEMPI_RIPETIZIONI_PER_GRADINO);
-  Serial.println(F("Pronto (silenzio). Scrivi 'ON' o 'OFF' e premi invio."));
+  Serial.println(F("Sweep partito (ZITTO per fermarlo)."));
 
   tempi_avvia_gradino();
 }
@@ -547,18 +530,90 @@ void aggiorna_sweep_tempi(unsigned long ora_ms) {
 // ============================================================
 // Comune a tutte le modalita'
 // ============================================================
-void gestisci_seriale() {
-  if (Serial.available()) {
-    String cmd = Serial.readStringUntil('\n');
-    cmd.trim();
-    if (cmd.equalsIgnoreCase("ON")) {
-      digitalWrite(11, HIGH);
+void stampa_stato() {
+  Serial.print(F("STATO: MODALITA "));
+  Serial.print((int)modalita_attiva);
+  Serial.print(parla ? F(", PARLA") : F(", ZITTO"));
+  Serial.print(F(", FREQ1=")); Serial.print(FREQ1);
+  Serial.print(F("Hz FREQ2=")); Serial.print(FREQ2);
+  Serial.println(F("Hz"));
+}
+
+void avvia_parlato() {
+  if (parla) {  // gia' parla: rinnova soltanto
+    ultimo_parla_ms = millis();
+    return;
+  }
+  parla = true;
+  ultimo_parla_ms = millis();
+  switch (modalita_attiva) {
+    case DAISY_CHAIN:
+      // Si riparte sempre dal marcatore, cosi' 3main.py sa subito chi e' chi.
+      // Prima PAUSA_FINE_CICLO_MS di silenzio: l'amplificatore (pin 11) appena
+      // acceso impiega ~150ms a suonare (misurato 22/10/2026: senza pausa il
+      // primo marcatore arrivava tagliato a 60ms e il primo ciclo si perdeva).
+      contatore_impulso = 0;
+      stato = PAUSA_FINE_CICLO;
+      inizio_stato_ms = millis();
       soundEnabled = true;
-      Serial.println("Suono ON");
-    } else if (cmd.equalsIgnoreCase("OFF")) {
-      digitalWrite(11, LOW);
-      soundEnabled = false;
-      Serial.println("Suono OFF");
+      digitalWrite(11, HIGH);
+      break;
+    case SWEEP_FREQUENZE: setup_sweep_frequenze(); break;
+    case SWEEP_TEMPI:     tempi_fase_corrente = TEMPI_FASE_A; tempi_indice_gradino = 0; setup_sweep_tempi(); break;
+    default: break;
+  }
+  Serial.println(F("PARLA"));
+}
+
+void ferma_parlato(const __FlashStringHelper* motivo) {
+  parla = false;
+  soundEnabled = false;
+  digitalWrite(11, LOW);
+  canale1_on = false;
+  canale2_on = false;
+  pinMode(PIN_BUS, OUTPUT);
+  digitalWrite(PIN_BUS, LOW);
+  Serial.print(F("ZITTO"));
+  Serial.println(motivo);
+}
+
+void esegui_comando(String cmd) {
+  cmd.trim();
+  cmd.toUpperCase();
+  if (cmd == "PARLA" || cmd == "ON") {
+    avvia_parlato();
+  } else if (cmd == "ZITTO" || cmd == "OFF") {
+    ferma_parlato(F(""));
+  } else if (cmd.startsWith("MODO ")) {
+    int m = cmd.substring(5).toInt();
+    if (m >= 0 && m < NUM_MODALITA && cmd.length() == 6) {
+      if (parla) ferma_parlato(F(" (cambio modalita')"));
+      modalita_attiva = (Modalita)m;
+      if (modalita_attiva == DAISY_CHAIN) setup_daisy_chain();
+      stampa_stato();
+    } else {
+      Serial.println(F("MODO sconosciuto (0, 1 o 2)"));
+    }
+  } else if (cmd == "STATO") {
+    stampa_stato();
+  } else if (cmd.length() > 0) {
+    Serial.print(F("Comando sconosciuto: "));
+    Serial.println(cmd);
+  }
+}
+
+// Legge i comandi un carattere alla volta, SENZA aspettare: prima
+// readStringUntil() poteva fermare loop() fino a 1s se una riga arrivava a
+// meta', allungando toni e pause del protocollo.
+String riga_seriale = "";
+void gestisci_seriale() {
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (riga_seriale.length() > 0) esegui_comando(riga_seriale);
+      riga_seriale = "";
+    } else if (riga_seriale.length() < 32) {
+      riga_seriale += c;
     }
   }
 }
@@ -583,35 +638,11 @@ void setup() {
   OCR2A = (16000000UL / 8 / SAMPLE_RATE) - 1;
   TIMSK2 = _BV(OCIE2A);
 
-  // --- Selettore modalita' (vedi intestazione del file) ---
-  if (EEPROM.read(EEPROM_ADDR_FIRMA) != FIRMA_INIZIALIZZATA) {
-    // Primo boot dopo il flash di questo sketch: forza un punto di
-    // partenza noto (modalita' 0, sessione "confermata") invece di fidarsi
-    // di qualunque valore residuo ci fosse in EEPROM prima.
-    EEPROM.write(EEPROM_ADDR_FIRMA, FIRMA_INIZIALIZZATA);
-    EEPROM.write(EEPROM_ADDR_CONTATORE, 0);
-    EEPROM.write(EEPROM_ADDR_CONFERMATO, 1);
-  }
-  uint8_t era_confermato = EEPROM.read(EEPROM_ADDR_CONFERMATO);
-  uint8_t contatore = EEPROM.read(EEPROM_ADDR_CONTATORE);
-  if (era_confermato) {
-    contatore = 0;
-  } else {
-    contatore = (contatore + 1) % NUM_MODALITA;
-  }
-  EEPROM.write(EEPROM_ADDR_CONTATORE, contatore);
-  EEPROM.write(EEPROM_ADDR_CONFERMATO, 0);
-  modalita_attiva = (Modalita)contatore;
-  inizio_boot_ms = millis();
-
   sei();
 
-  switch (modalita_attiva) {
-    case DAISY_CHAIN:     setup_daisy_chain(); break;
-    case SWEEP_FREQUENZE: setup_sweep_frequenze(); break;
-    case SWEEP_TEMPI:     setup_sweep_tempi(); break;
-    default: break;
-  }
+  // Sempre modalita' 0 e ZITTO all'accensione (vedi intestazione).
+  modalita_attiva = DAISY_CHAIN;
+  setup_daisy_chain();
 }
 
 ISR(TIMER2_COMPA_vect) {
@@ -638,22 +669,26 @@ ISR(TIMER2_COMPA_vect) {
 }
 
 void loop() {
-  if (!sessione_confermata && millis() - inizio_boot_ms >= SOGLIA_SESSIONE_LUNGA_MS) {
-    sessione_confermata = true;
-    EEPROM.write(EEPROM_ADDR_CONFERMATO, 1); // scrittura UNICA per boot
+  unsigned long ora = millis();
+  if (parla && ora - ultimo_parla_ms > TIMEOUT_PARLA_MS) {
+    ferma_parlato(F(" (nessun PARLA da 10s)"));
   }
 
   switch (modalita_attiva) {
     case DAISY_CHAIN:
       aggiorna_interruttore();
+      // mentre e' zitto la pressione si ricorda solo per MEMORIA_CHIUSURA_MS
+      if (!parla && interruttoreChiuso && ora - ultimo_chiuso_ms > MEMORIA_CHIUSURA_MS) {
+        interruttoreChiuso = false;
+      }
       stampa_stato_interruttore();
-      aggiorna_master(millis());
+      if (parla) aggiorna_master(ora);
       break;
     case SWEEP_FREQUENZE:
-      aggiorna_sweep_frequenze(millis());
+      if (parla) aggiorna_sweep_frequenze(ora);
       break;
     case SWEEP_TEMPI:
-      aggiorna_sweep_tempi(millis());
+      if (parla) aggiorna_sweep_tempi(ora);
       break;
     default:
       break;
