@@ -6,7 +6,7 @@ in base alla potenza con cui sente davvero f1 e f2 sulla daisy chain.
 
 Uso (3main.py deve essere CHIUSO: stessa porta UDP):
   1. AVVIA: ~1s di fibra muta (non toccare niente) = il RUMORE
-  2. la Shelly si accende, la daisy chain suona: per 30s PREMI i tappeti,
+  2. via WiFi (ESP) la daisy chain parla: per 30s PREMI i tappeti,
      ognuno almeno 5 volte (senza pressioni f2 non suona)
   3. report: le soglie vanno bene / da cambiare (con i valori da copiare)
 
@@ -39,12 +39,13 @@ import pyqtgraph as pg
 # 3main.py inizia con un numero (ordine d'uso degli script): "import 3main"
 # non e' sintassi valida, si importa per nome.
 M = importlib.import_module("3main")
-from others import shelly_control
+from others.comandi_daisy import ComandiDaisy
 from others.archivio import CARTELLA_ARCHIVIO, cartella_taratura
 from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card, etichetta, stile_plot
 
 DURATA_S = 30.0
-PRIMA_ACCENSIONE_S = 1.0  # fibra muta registrata prima di accendere la Shelly
+PRIMA_ACCENSIONE_S = 1.0  # fibra muta registrata prima di mandare PARLA
+INTERVALLO_PARLA_S = 2.0  # PARLA ripetuto: senza, il master si zittisce dopo 10s
 FRAZIONE_SOGLIA_OFF = 0.65
 TONO_SU_RUMORE = 30.0     # un blocco conta come "tono" se supera di tanto il rumore
 PERCENTILE_TONO = 10      # "tono" = 10° percentile dei picchi dei singoli toni (la parte bassa)
@@ -119,7 +120,7 @@ def analizza(x: np.ndarray, n_on: int) -> dict:
         n_toni.append(len(picchi))
     if toni[0] is None:
         raise TaraturaErrore(f"Nessun tono a {M.F1_HZ:.0f}Hz: la daisy chain non e' partita? "
-                             "(Shelly, alimentazione, master non in modalita' produzione)")
+                             "(ESP/WiFi, alimentazione, fibra staccata dal trasduttore)")
 
     on1 = float(np.sqrt(rumore[0] * toni[0]))
     calcolate = [on1, on1 * FRAZIONE_SOGLIA_OFF, M.SOGLIA_ON_F2, M.SOGLIA_OFF_F2]
@@ -204,6 +205,8 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.buf: list[np.ndarray] = []
         self.n_on = 0
         self.t_fase = 0.0
+        self.daisy: ComandiDaisy | None = None
+        self.t_parla = 0.0
         self.coda = np.zeros(0, dtype=np.int16)
         n_grafico = int(SECONDI_GRAFICO * FS / B)
         self.storico_f1 = np.full(n_grafico, 1e-9)
@@ -224,8 +227,8 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         sinistra = QtWidgets.QVBoxLayout()
         card, lay, _ = crea_card("Misura", colore_titolo=COLORI["accento"])
         riga = QtWidgets.QHBoxLayout()
-        riga.addWidget(etichetta("IP Shelly"))
-        self.campo_ip = QtWidgets.QLineEdit(M.Config().SMART_PLUG_HOST)
+        riga.addWidget(etichetta("IP ESP"))
+        self.campo_ip = QtWidgets.QLineEdit(M.Config().ESP_HOST)
         riga.addWidget(self.campo_ip, 1)
         lay.addLayout(riga)
         riga_nota = QtWidgets.QHBoxLayout()
@@ -303,21 +306,21 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.label_fase.setText("Registro la fibra muta…")
         threading.Thread(target=self._sequenza, args=(self.campo_ip.text().strip(),), daemon=True).start()
 
-    def _shelly(self, host: str, accendi: bool) -> bool:
-        for _ in range(5):
-            try:
-                (shelly_control.turn_on if accendi else shelly_control.turn_off)(host)
-                return True
-            except Exception:
-                time.sleep(0.5)
-        return False
-
     def _sequenza(self, host: str):
-        time.sleep(PRIMA_ACCENSIONE_S)
-        if not self._shelly(host, True):
-            self.segnali.errore.emit(f"Shelly {host} non risponde: accensione non riuscita.")
+        inizio = time.monotonic()
+        self.daisy = ComandiDaisy(host)
+        if not self.daisy.aspetta_connessione(5.0):
+            self.segnali.errore.emit(f"ESP {host} non raggiungibile ({self.daisy.ultimo_errore}).")
             return
+        self.daisy.comando("MODO 0")  # daisy chain normale (uno strumento potrebbe aver lasciato 1 o 2)
+        time.sleep(max(0.0, PRIMA_ACCENSIONE_S - (time.monotonic() - inizio)))
+        self.daisy.parla()
         self.segnali.fase.emit("misura")
+
+    def _ferma_daisy(self):
+        if self.daisy is not None:
+            daisy, self.daisy = self.daisy, None
+            threading.Thread(target=daisy.chiudi, daemon=True).start()  # ZITTO
 
     def _cambia_fase(self, fase: str):
         if self.fase == "inattivo":
@@ -326,6 +329,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.t_fase = time.monotonic()
         if fase == "misura":
             self.n_on = sum(len(b) for b in self.buf)
+            self.t_parla = self.t_fase
 
     def _tick(self):
         if self.sock is None:
@@ -345,6 +349,9 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
             self._aggiorna_grafico(nuovi)
         if self.fase == "misura":
             trascorso = time.monotonic() - self.t_fase
+            if self.daisy is not None and time.monotonic() - self.t_parla >= INTERVALLO_PARLA_S:
+                self.daisy.parla()
+                self.t_parla = time.monotonic()
             self.barra.setValue(int(1000 * min(1.0, trascorso / DURATA_S)))
             self.label_fase.setText(f"Daisy chain accesa — PREMI i tappeti! {trascorso:.0f}/{DURATA_S:.0f}s")
             if trascorso >= DURATA_S:
@@ -365,8 +372,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
 
     def _fine_misura(self):
         self.fase = "analisi"
-        host = self.campo_ip.text().strip()
-        threading.Thread(target=self._shelly, args=(host, False), daemon=True).start()
+        self._ferma_daisy()
         self.sock.close()
         self.sock = None
         x = np.concatenate(self.buf)
@@ -415,8 +421,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self._fine(f"{esito(r)}  ·  report: {r['file']}")
 
     def _errore(self, messaggio: str):
-        if self.fase in ("muta", "misura"):
-            threading.Thread(target=self._shelly, args=(self.campo_ip.text().strip(), False), daemon=True).start()
+        self._ferma_daisy()
         if self.sock is not None:
             self.sock.close()
             self.sock = None
@@ -429,8 +434,8 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.btn_apri.setEnabled(True)
 
     def closeEvent(self, evento):
-        if self.fase in ("muta", "misura"):
-            self._shelly(self.campo_ip.text().strip(), False)
+        if self.daisy is not None:
+            self.daisy.chiudi()  # ZITTO prima di uscire
         if self.sock is not None:
             self.sock.close()
         super().closeEvent(evento)

@@ -6,11 +6,12 @@ frequenze devo usare per f1/f2?". Sostituisce analizza_armoniche_sweep.py
 per la scelta delle frequenze (quello resta per l'analisi delle spurie).
 
 Cosa fa, da solo, premendo AVVIA:
-  1. spegne la Shelly e registra SILENZIO_S secondi di fibra senza toni:
-     e' il rumore ambientale vero, contro cui ogni tono deve spiccare
-  2. porta il master in MODALITA' 1 (sweep 200->6000Hz, gradini da 4s)
-     ciclando la Shelly, poi registra N cicli completi della rampa
-  3. spegne la Shelly, analizza, salva registrazione grezza + report in
+  1. via WiFi (ESP) manda al master "MODO 1" (sweep, zitto) e registra
+     SILENZIO_S secondi di fibra senza toni: e' il rumore ambientale vero,
+     contro cui ogni tono deve spiccare
+  2. manda PARLA (ripetuto ogni 2s) e registra N cicli completi della
+     rampa (sweep 200->6000Hz, gradini da 4s)
+  3. manda ZITTO e "MODO 0" (daisy chain normale), analizza, salva registrazione grezza + report in
      misure_frequenze/ (la registrazione si puo' rianalizzare dopo con
      "Apri registrazione...")
 
@@ -50,12 +51,12 @@ from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 
 from others.archivio import CARTELLA_ARCHIVIO, cartella_taratura
-from others.shelly_mode_selector import seleziona_modalita, spegni_master
+from others.comandi_daisy import ComandiDaisy
 from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card, etichetta, stile_plot
 
 # --- Configurazione ---
-SMART_PLUG_HOST_DEFAULT = "10.27.239.193"  # modificabile anche dalla GUI
 MODALITA_SWEEP_FREQUENZE = 1  # vedi arduino/master/master.ino
+INTERVALLO_PARLA_S = 2.0  # PARLA ripetuto: senza, il master si zittisce dopo 10s
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
@@ -467,6 +468,8 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         self.fase = "inattivo"
         self.sock: socket.socket | None = None
         self._annulla = threading.Event()
+        self.daisy: ComandiDaisy | None = None
+        self.t_parla = 0.0
         self._reset_buffer()
         self.ultimo_risultato: dict | None = None
 
@@ -488,8 +491,8 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         sinistra = QtWidgets.QVBoxLayout()
         card, lay, _ = crea_card("Misura", colore_titolo=COLORI["accento"])
         riga = QtWidgets.QHBoxLayout()
-        riga.addWidget(etichetta("IP Shelly"))
-        self.campo_ip = QtWidgets.QLineEdit(SMART_PLUG_HOST_DEFAULT)
+        riga.addWidget(etichetta("IP ESP"))
+        self.campo_ip = QtWidgets.QLineEdit(importlib.import_module("3main").Config().ESP_HOST)
         riga.addWidget(self.campo_ip, 1)
         riga.addWidget(etichetta("Cicli"))
         self.spin_cicli = QtWidgets.QSpinBox()
@@ -613,33 +616,45 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         self.btn_apri.setEnabled(False)
         self.btn_ferma.setEnabled(True)
         host = self.campo_ip.text().strip()
-        threading.Thread(target=self._sequenza_shelly, args=(host,), daemon=True).start()
+        threading.Thread(target=self._sequenza, args=(host,), daemon=True).start()
 
-    def _sequenza_shelly(self, host: str):
-        try:
-            self.segnali.fase.emit("spegnimento")
-            spegni_master(host)
-            if self._annulla.wait(2.0):
-                return
-            self.segnali.fase.emit("silenzio")
-            if self._annulla.wait(SILENZIO_S):
-                return
-            self.segnali.fase.emit("selezione")
-            seleziona_modalita(host, MODALITA_SWEEP_FREQUENZE)
-            if not self._annulla.is_set():
-                self.segnali.fase.emit("sweep")
-        except Exception as e:  # rete, Shelly irraggiungibile...
-            self.segnali.errore.emit(f"Shelly {host} non risponde: {e}")
+    def _sequenza(self, host: str):
+        self.segnali.fase.emit("spegnimento")
+        self.daisy = ComandiDaisy(host)
+        if not self.daisy.aspetta_connessione(5.0):
+            self.segnali.errore.emit(f"ESP {host} non raggiungibile ({self.daisy.ultimo_errore}).")
+            return
+        self.daisy.comando(f"MODO {MODALITA_SWEEP_FREQUENZE}")  # anche ZITTO, se stava parlando
+        if self._annulla.wait(1.0):
+            self._ferma_daisy()  # fermato nel frattempo: master di nuovo in MODO 0
+            return
+        self.segnali.fase.emit("silenzio")
+        if self._annulla.wait(SILENZIO_S):
+            self._ferma_daisy()
+            return
+        self.daisy.parla()
+        self.segnali.fase.emit("sweep")
+
+    def _ferma_daisy(self, aspetta: bool = False):
+        """ZITTO e ritorno alla daisy chain normale (MODO 0)."""
+        if self.daisy is None:
+            return
+        daisy, self.daisy = self.daisy, None
+        daisy.comando("MODO 0")
+        if aspetta:
+            daisy.chiudi()
+        else:
+            threading.Thread(target=daisy.chiudi, daemon=True).start()
 
     def _cambia_fase(self, fase: str):
         if self.fase in ("inattivo", "analisi"):
             return  # fermato nel frattempo
         self.fase = fase
         self.t_inizio_fase = time.monotonic()
+        self.t_parla = self.t_inizio_fase
         testi = {
-            "spegnimento": "Spengo il master…",
+            "spegnimento": "Mi collego all'ESP del master…",
             "silenzio": f"Registro {SILENZIO_S:.0f}s di SILENZIO (rumore ambientale) — non toccare la fibra",
-            "selezione": "Porto il master in modalità sweep (cicli della Shelly)…",
             "sweep": "Registro lo sweep…",
         }
         self.label_fase.setText(testi.get(fase, fase))
@@ -668,6 +683,9 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         if self.fase == "silenzio":
             self.barra.setValue(int(1000 * min(1.0, (ora - self.t_inizio_fase) / SILENZIO_S)))
         elif self.fase == "sweep":
+            if self.daisy is not None and ora - self.t_parla >= INTERVALLO_PARLA_S:
+                self.daisy.parla()
+                self.t_parla = ora
             durata = self.spin_cicli.value() * DURATA_CICLO_S + 2 * SWEEP_STEP_S
             trascorso = ora - self.t_inizio_fase
             self.barra.setValue(int(1000 * min(1.0, trascorso / durata)))
@@ -703,8 +721,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         fase_prima = self.fase
         self.fase = "analisi"
         self.btn_ferma.setEnabled(False)
-        host = self.campo_ip.text().strip()
-        threading.Thread(target=self._spegni_silenzioso, args=(host,), daemon=True).start()
+        self._ferma_daisy()
         if fase_prima != "sweep" or not self.buf_sweep:
             self._fine("Fermato prima dello sweep: niente da analizzare.")
             return
@@ -716,13 +733,6 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         np.savez_compressed(base.with_suffix(".npz"), sweep=sweep, valido=valido, silenzio=silenzio,
                             sample_rate=SAMPLE_RATE, nota=nota)
         self._lancia_analisi(sweep, valido, silenzio, base, nota)
-
-    @staticmethod
-    def _spegni_silenzioso(host: str):
-        try:
-            spegni_master(host)
-        except Exception:
-            pass
 
     def _apri_registrazione(self):
         percorso, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -786,8 +796,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
 
     def _errore(self, messaggio: str):
         self._annulla.set()
-        if self.fase not in ("inattivo", "analisi"):
-            threading.Thread(target=self._spegni_silenzioso, args=(self.campo_ip.text().strip(),), daemon=True).start()
+        self._ferma_daisy()
         self._fine("ERRORE: " + messaggio)
 
     def _fine(self, testo: str):
@@ -798,9 +807,8 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         self.btn_ferma.setEnabled(False)
 
     def closeEvent(self, evento):
-        if self.fase not in ("inattivo",):
-            self._spegni_silenzioso(self.campo_ip.text().strip())
         self._annulla.set()
+        self._ferma_daisy(aspetta=True)
         self._chiudi_socket()
         super().closeEvent(evento)
 

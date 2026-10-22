@@ -3,8 +3,8 @@
 --------------------------
 Analisi automatica del delta t minimo affidabile, pensata per lavorare con
 la MODALITA' 2 (sweep tempi) di arduino/master/master.ino - selezionata in
-automatico da questo script tramite shelly_mode_selector.py (nessuna azione
-manuale: lo script cicla da solo l'accensione della Shelly).
+automatico da questo script con un comando via WiFi all'ESP del master
+("MODO 2" + PARLA ripetuto ogni 2s; alla fine ZITTO e "MODO 0").
 
 NESSUNA dipendenza dalla seriale/USB: una volta installato il master non è
 quasi mai raggiungibile via cavo, quindi questo script non apre una porta
@@ -45,9 +45,9 @@ in arduino/master/master.ino (e le soglie con quelle attuali in 3main.py) -
 il risultato vale solo per la combinazione frequenza+soglie con cui è
 stato misurato.
 
-Uso: lancia lo script (l'IP della Shelly lo legge da 3main.py). Ctrl+C per
+Uso: lancia lo script (l'IP dell'ESP lo legge da 3main.py). Ctrl+C per
 fermare in anticipo (stampa comunque il riepilogo di quanto raccolto finora
-e spegne la Shelly); normalmente si ferma da solo a fine sweep.
+e zittisce il master); normalmente si ferma da solo a fine sweep.
 """
 
 import sys
@@ -67,13 +67,14 @@ from dataclasses import dataclass
 import numpy as np
 
 from others.archivio import cartella_taratura
-from others.shelly_mode_selector import seleziona_modalita, spegni_master
+from others.comandi_daisy import ComandiDaisy
 
-# IP della Shelly: letto da 3main.py (Config.SMART_PLUG_HOST), cosi' quando il
+# IP dell'ESP del master: letto da 3main.py (Config.ESP_HOST), cosi' quando il
 # DHCP lo cambia si corregge in un posto solo. "import 3main" non e' sintassi
 # valida (nome che inizia con un numero): si importa per nome.
-SMART_PLUG_HOST = importlib.import_module("3main").Config().SMART_PLUG_HOST
+ESP_HOST = importlib.import_module("3main").Config().ESP_HOST
 MODALITA_SWEEP_TEMPI = 2  # vedi arduino/master/master.ino
+INTERVALLO_PARLA_S = 2.0  # PARLA ripetuto: senza, il master si zittisce dopo 10s
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
@@ -305,10 +306,6 @@ def main():
     FILE_LOG = base.with_suffix(".jsonl")
     print(f"I file di questa prova andranno in: {base.parent}\n")
 
-    # Porta il master in modalita' sweep tempi ciclando la Shelly
-    # (arduino/master/master.ino intestazione, shelly_mode_selector.py).
-    seleziona_modalita(SMART_PLUG_HOST, MODALITA_SWEEP_TEMPI)
-
     goertzel = GoertzelSingolo(FREQ_TEST_HZ, SAMPLE_RATE, BLOCCO_CAMPIONI)
     # Tutto il segnale ricevuto, dall'inizio dell'ascolto: salvato a fine
     # prova in base.npz. campione_t0 = dove e' stato rilevato il tempo zero.
@@ -321,6 +318,27 @@ def main():
     sock.settimeout(0.5)
     bytes_attesi = CAMPIONI_PER_PACCHETTO * 2
 
+    # Master in modalita' sweep tempi e a parlare, via WiFi (ESP).
+    daisy = ComandiDaisy(ESP_HOST)
+    if not daisy.aspetta_connessione(5.0):
+        print(f"ERRORE: ESP {ESP_HOST} non raggiungibile ({daisy.ultimo_errore}).")
+        daisy.chiudi()
+        sock.close()
+        return
+    daisy.comando(f"MODO {MODALITA_SWEEP_TEMPI}")
+    daisy.parla()
+    ultimo_parla = time.time()
+
+    def rinnova_parla():
+        nonlocal ultimo_parla
+        if time.time() - ultimo_parla >= INTERVALLO_PARLA_S:
+            daisy.parla()
+            ultimo_parla = time.time()
+
+    def ferma_master():
+        daisy.comando("MODO 0")  # zitto e di nuovo daisy chain normale
+        daisy.chiudi()
+
     print(f"In ascolto UDP su porta {UDP_PORT}, in attesa che il tono ({FREQ_TEST_HZ}Hz) compaia...")
 
     # --- Fase 1: aspetta il tempo zero (vedi intestazione del file) ---
@@ -331,13 +349,14 @@ def main():
     conferme = 0
     t_inizio_attesa = time.time()
     while t0 is None:
+        rinnova_parla()
         try:
             data, _addr = sock.recvfrom(4096)
         except socket.timeout:
             if time.time() - t_inizio_attesa > TIMEOUT_PRIMO_SEGNALE_S:
                 print(f"ERRORE: nessun segnale rilevato entro {TIMEOUT_PRIMO_SEGNALE_S:.0f}s - "
-                      "controlla che la Shelly si sia accesa e che il master sia collegato al trasduttore.")
-                spegni_master(SMART_PLUG_HOST)
+                      "controlla l'ESP/WiFi e che il master sia collegato al trasduttore.")
+                ferma_master()
                 sock.close()
                 return
             continue
@@ -387,6 +406,7 @@ def main():
 
     try:
         while True:
+            rinnova_parla()
             try:
                 data, _addr = sock.recvfrom(4096)
             except socket.timeout:
@@ -413,7 +433,7 @@ def main():
         print("\n\nInterrotto dall'utente, chiudo l'ultimo gradino in corso...")
         chiudi_gradino_corrente()
     finally:
-        spegni_master(SMART_PLUG_HOST)
+        ferma_master()
         sock.close()
         if registrazione:
             np.savez_compressed(base.with_suffix(".npz"), x=np.concatenate(registrazione),

@@ -47,6 +47,17 @@ class ComandiDaisy:
     def zitto(self) -> None:
         self._comandi.put("ZITTO")
 
+    def comando(self, testo: str) -> None:
+        """Un comando qualsiasi del master (es. "MODO 1", "STATO")."""
+        self._comandi.put(testo)
+
+    def aspetta_connessione(self, secondi: float) -> bool:
+        """Per gli strumenti: aspetta (bloccando) che l'ESP sia raggiungibile."""
+        fine = time.monotonic() + secondi
+        while not self.connesso and time.monotonic() < fine:
+            time.sleep(0.05)
+        return self.connesso
+
     def imposta_host(self, host: str) -> None:
         self.host = host.strip()
         self._riconnetti = True

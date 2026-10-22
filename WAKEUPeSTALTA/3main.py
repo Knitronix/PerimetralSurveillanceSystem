@@ -164,9 +164,6 @@ class Config:
     # Modulo ESP (esp-link) sulla seriale del master: modificabile anche dalla
     # tab 2. L'IP puo' cambiare se cambia la rete WiFi (DHCP).
     ESP_HOST: str = "10.27.239.225"
-    # Shelly: non piu' usata da 3main.py. Resta solo per 1tarasoglie.py e
-    # 2analizzatempiminimi.py finche' non vengono aggiornati (passo D).
-    SMART_PLUG_HOST: str = "10.27.239.193"
 
 
 class Stato(Enum):
