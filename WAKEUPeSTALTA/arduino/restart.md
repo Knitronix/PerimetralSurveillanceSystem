@@ -153,8 +153,21 @@ versi**, ma non contemporaneamente:
   su tutti i `PIN_BUS` (D2) degli slave (bus condiviso). Passa brevemente a
   INPUT solo durante l'interrogazione di un nodo remoto (vedi sopra).
 - **Ogni slave** (2, 3, ..., N): `PIN_BUS` (D2) normalmente INPUT con
-  interrupt, pull-down 10kΩ verso GND. Passa brevemente a OUTPUT solo per
-  inviare la propria risposta quando interrogato, poi torna a INPUT.
+  interrupt. Passa brevemente a OUTPUT solo per inviare la propria risposta
+  quando interrogato, poi torna a INPUT.
+- **Pull-down della linea del bus: 10kΩ tra D8 e GND sul MASTER**
+  (obbligatorio, montato il 22/10/2026). Quando il master rilascia la linea
+  per ascoltare la risposta di uno slave, e' l'unica cosa che la tiene bassa.
+  Sullo slave2 il pull-down sul D2 che questo documento dava per montato
+  **non c'e' mai stato** (misurato: ~9MΩ tra D2 e GND). Finche' il cablaggio
+  era tranquillo funzionava lo stesso (linea "per aria" ma ferma); dopo
+  l'aggiunta dell'ESP e il ricablaggio dell'alimentazione la linea raccoglieva
+  disturbi (spilli da ~20us = portante audio a 62.5kHz del pin 12) e il master
+  leggeva meta' delle risposte sbagliate (tappeto 2 premuto visto
+  "aperto/chiuso" a cicli alterni). Con la 10kΩ sul D8: 38/38 risposte
+  corrette. Diagnosi: comando `DEBUG` del master (durata e attesa di ogni
+  risposta). Tenere comunque il filo del bus lontano dal filo audio (pin 12)
+  e dall'amplificatore.
 - `GND` comune a tutti i nodi (obbligatorio)
 
 ```cpp

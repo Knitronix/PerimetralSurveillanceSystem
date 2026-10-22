@@ -37,7 +37,7 @@
 
 // --- Pin daisy chain (restart.md - non cambiare senza aggiornare anche il
 // cablaggio) ---
-const int PIN_BUS = 2; // dal bus condiviso D8 del master (interrupt-capable, pull-down 10k gia' cablato)
+const int PIN_BUS = 2; // dal bus condiviso D8 del master (interrupt-capable; pull-down 10k sul D8 del MASTER, qui non c'e' - vedi restart.md)
 
 // --- Identita' di questo nodo sul bus ---
 const uint8_t NODE_ID_PROPRIO = 2;
@@ -134,7 +134,7 @@ void onImpulsoRicevuto() {
 void setup() {
   Serial.begin(9600);
 
-  pinMode(PIN_BUS, INPUT); // pull-down 10k esterno gia' cablato, non serve INPUT_PULLUP
+  pinMode(PIN_BUS, INPUT); // linea tenuta bassa dal pull-down 10k sul D8 del master (restart.md)
   pinMode(PIN_INTERRUTTORE, INPUT); // pull-down 10k esterno gia' cablato
 
   // Interrupt hardware sul fronte di salita (riposo LOW via pull-down,
@@ -182,7 +182,7 @@ void invia_risposta() {
   digitalWrite(PIN_BUS, HIGH);
   delay(interruttoreChiuso ? DURATA_RISPOSTA_CHIUSO_MS : DURATA_RISPOSTA_APERTO_MS);
   digitalWrite(PIN_BUS, LOW);
-  pinMode(PIN_BUS, INPUT); // torna in ascolto, il pull-down esterno riprende il controllo
+  pinMode(PIN_BUS, INPUT); // torna in ascolto, il pull-down sul D8 del master riprende il controllo
   attachInterrupt(digitalPinToInterrupt(PIN_BUS), onImpulsoRicevuto, RISING);
 
   // Consumato per questa risposta: unico punto del codice che rimette il

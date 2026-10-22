@@ -103,7 +103,7 @@ volatile bool canale2_on = false;
 // --- Pin daisy chain (restart.md - non cambiare senza aggiornare anche il
 // cablaggio). Bidirezionale: OUTPUT per gli impulsi di indirizzamento,
 // INPUT quando si ascolta la risposta di un nodo remoto. ---
-const int PIN_BUS = 8; // bus condiviso, verso D2 di TUTTI gli slave in parallelo
+const int PIN_BUS = 8; // bus condiviso, verso D2 di TUTTI gli slave in parallelo. Pull-down 10k D8->GND OBBLIGATORIO (restart.md)
 
 // --- Frequenze canale (Hz) ---
 const uint32_t FREQ1 = 4400;  // f1: clock/counter (cambiata da 4600 il 13/10/2026, vedi TEST ARMONICHE su questa fibra)
@@ -206,12 +206,19 @@ void setup_daisy_chain() {
 // microsecondi contando cicli di CPU, e l'interrupt di Timer2 (il DDS) che
 // spara ogni 25us continuamente corrompe quel conteggio. micros() usa
 // Timer0, indipendente da Timer2: resta accurato comunque.
+// Diagnostica (comando DEBUG): quanto si e' aspettato prima che la linea
+// salisse, e quanto e' durato l'impulso - stampati per ogni interrogazione.
+bool debug_risposte = false;
+unsigned long ultima_attesa_us = 0;
+
 unsigned long attendi_impulso_risposta(unsigned long timeout_us) {
   unsigned long inizio = micros();
+  ultima_attesa_us = 0;
   while (digitalRead(PIN_BUS) == LOW) {
     if ((unsigned long)(micros() - inizio) > timeout_us) return 0;
   }
   unsigned long inizio_impulso = micros();
+  ultima_attesa_us = inizio_impulso - inizio;
   while (digitalRead(PIN_BUS) == HIGH) {
     if ((unsigned long)(micros() - inizio) > timeout_us) return 0;
   }
@@ -227,6 +234,15 @@ void interroga_nodo_remoto() {
     unsigned long durata_risposta_ms = durata_risposta_us / 1000UL;
     nodoRemotoVivo = true;
     nodoRemotoChiuso = durata_risposta_ms > SOGLIA_CLASSIFICAZIONE_RISPOSTA_MS;
+  }
+  if (debug_risposte) {
+    Serial.print(F("RISPOSTA nodo "));
+    Serial.print(contatore_impulso);
+    Serial.print(F(": attesa "));
+    Serial.print(ultima_attesa_us);
+    Serial.print(F("us, durata "));
+    Serial.print(durata_risposta_us);
+    Serial.println(durata_risposta_us == 0 ? F("us -> NESSUNA") : (nodoRemotoChiuso ? F("us -> chiuso") : F("us -> aperto")));
   }
 
   uint8_t idx = contatore_impulso;
@@ -594,6 +610,9 @@ void esegui_comando(String cmd) {
     } else {
       Serial.println(F("MODO sconosciuto (0, 1 o 2)"));
     }
+  } else if (cmd == "DEBUG") {
+    debug_risposte = !debug_risposte;
+    Serial.println(debug_risposte ? F("DEBUG risposte: ACCESO") : F("DEBUG risposte: SPENTO"));
   } else if (cmd == "STATO") {
     stampa_stato();
   } else if (cmd.length() > 0) {
