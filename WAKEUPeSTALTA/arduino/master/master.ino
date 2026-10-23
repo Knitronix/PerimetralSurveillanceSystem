@@ -54,6 +54,11 @@
 //                il master rilascia brevemente il bus e ascolta un impulso
 //                di risposta da quel nodo (vivo? interruttore chiuso?),
 //                poi genera LUI il tono f1 [+f2] per conto di quello slot
+// Tappeto GUASTO (23/10/2026): lo slave legge il tappeto in tensione
+// (resistenza di fine linea) e risponde "guasto" (30ms) se il cavo e'
+// tagliato. Il guasto resta TRA GLI ARDUINO: il master lo stampa ("Nodo n:
+// GUASTO", visibile via WiFi) e sulla fibra lo trasmette come CHIUSO (f1+f2,
+// slot normale) - un cavo tagliato da' allarme, la fibra non cambia.
 // Dopo l'ultimo impulso, pausa fine ciclo e si riparte dall'impulso 0.
 //
 // Interrogazione remota: stessa linea del trigger (PIN_BUS), usata a turno
@@ -138,9 +143,14 @@ const unsigned long DURATA_IMPULSO_TRIGGER_MS = 8;
 const unsigned long MARGINE_SICUREZZA_RISPOSTA_MS = 15;
 const unsigned long DURATA_RISPOSTA_APERTO_MS = 6;
 const unsigned long DURATA_RISPOSTA_CHIUSO_MS = 18;
+const unsigned long DURATA_RISPOSTA_GUASTO_MS = 30;  // 23/10/2026, cavo del tappeto tagliato
 const unsigned long SOGLIA_CLASSIFICAZIONE_RISPOSTA_MS =
     (DURATA_RISPOSTA_APERTO_MS + DURATA_RISPOSTA_CHIUSO_MS) / 2;
-const unsigned long TIMEOUT_RISPOSTA_MS = 45;
+const unsigned long SOGLIA_GUASTO_RISPOSTA_MS =
+    (DURATA_RISPOSTA_CHIUSO_MS + DURATA_RISPOSTA_GUASTO_MS) / 2;
+// Da 45 a 60 il 23/10/2026: la risposta "guasto" finisce a ~15+30 = 45ms
+// dall'inizio dell'attesa, proprio sul vecchio limite.
+const unsigned long TIMEOUT_RISPOSTA_MS = 60;
 
 // 21/10/2026: da 500 a 250 -> ciclo da ~1.05s a ~0.80s (reazione piu' veloce).
 // LEGATA a SOGLIA_TIMEOUT_RESET_MS in slave2.ino (340): lo slave capisce che
@@ -149,9 +159,19 @@ const unsigned long TIMEOUT_RISPOSTA_MS = 45;
 // lungo dentro un ciclo (dopo il marcatore, 8+T0_MS+GAP_MS = 278ms) SOTTO 340.
 const unsigned long PAUSA_FINE_CICLO_MS = 250;
 
+// Tappeto 1 su A0, letto come TENSIONE (23/10/2026, resistenza di fine linea,
+// stesso schema e stesse soglie dello slave): 5V --cavo-- [tappeto con 10k in
+// parallelo, ai suoi morsetti] --cavo-- A0, pull-down 10k A0->GND.
+//   ~2,5V riposo   ~5V premuto (o fili in corto)   ~0V cavo tagliato = GUASTO
+// Un guasto sulla fibra va come CHIUSO (allarme), come per gli slave.
 const int PIN_INTERRUTTORE = A0;
+const int SOGLIA_TAGLIATO = 256;  // sotto ~1,25V: cavo tagliato
+const int SOGLIA_CHIUSO = 768;    // sopra ~3,75V: premuto
 const unsigned long DEBOUNCE_INTERRUTTORE_MS = 30;
-bool letturaGrezzaCorrente = false;
+uint8_t letturaGrezzaCorrente = 0;  // 0 riposo, 1 premuto, 2 guasto (vedi leggi_tappeto)
+int ultima_lettura_a0 = 0;
+bool tappetoGuasto = false;
+bool tappetoGuasto_stampato = false;
 unsigned long ultimo_cambio_lettura_ms = 0;
 bool interruttoreChiuso = false;
 bool valoreGrezzoInterruttore = false;
@@ -161,11 +181,13 @@ const bool CANALE2_ABILITATO = true;
 
 bool interruttoreChiuso_stampato = false;
 bool nodoRemotoVivo = false;
-bool nodoRemotoChiuso = false;
+bool nodoRemotoChiuso = false;   // per la fibra: chiuso OPPURE guasto
+bool nodoRemotoGuasto = false;   // lo slave ha risposto "guasto"
 
 const uint8_t MAX_NODI_SUPPORTATI = 8;
 bool vivoPrecedente[MAX_NODI_SUPPORTATI] = {false};
 bool vivoNotoPrecedente[MAX_NODI_SUPPORTATI] = {false};
+bool guastoPrecedente[MAX_NODI_SUPPORTATI] = {false};  // per stampare "GUASTO" solo ai cambi
 
 enum StatoMaster : uint8_t {
   EMETTI_IMPULSO,
@@ -193,8 +215,10 @@ void setup_daisy_chain() {
   soundEnabled = false; // ZITTO finche' non arriva PARLA (vedi intestazione)
   digitalWrite(11, LOW);
 
-  letturaGrezzaCorrente = (digitalRead(PIN_INTERRUTTORE) == HIGH);
-  valoreGrezzoInterruttore = letturaGrezzaCorrente;
+  letturaGrezzaCorrente = leggi_tappeto();
+  valoreGrezzoInterruttore = (letturaGrezzaCorrente == 1);
+  tappetoGuasto = (letturaGrezzaCorrente == 2);
+  tappetoGuasto_stampato = tappetoGuasto;
   if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
     ultimo_chiuso_ms = millis();
@@ -212,7 +236,9 @@ void setup_daisy_chain() {
   Serial.print(F("NUMERO_NODI=")); Serial.println(NUMERO_NODI);
   Serial.print(F("VOL f1=")); Serial.print(volume_f1);
   Serial.print(F("% f2=")); Serial.print(volume_f2); Serial.println(F("%"));
-  Serial.print(F("interruttore proprio: ")); Serial.println(interruttoreChiuso ? "CHIUSO" : "aperto");
+  Serial.print(F("interruttore proprio: "));
+  Serial.print(tappetoGuasto ? "GUASTO" : (interruttoreChiuso ? "CHIUSO" : "aperto"));
+  Serial.print(F("  A0=")); Serial.println(ultima_lettura_a0);
   Serial.println(F("Pronto, ZITTO: aspetto PARLA (comandi: PARLA, ZITTO, MODO n, VOL a b, STATO)."));
 }
 
@@ -245,10 +271,21 @@ void interroga_nodo_remoto() {
   if (durata_risposta_us == 0) {
     nodoRemotoVivo = false;
     nodoRemotoChiuso = false;
+    nodoRemotoGuasto = false;
   } else {
     unsigned long durata_risposta_ms = durata_risposta_us / 1000UL;
     nodoRemotoVivo = true;
+    nodoRemotoGuasto = durata_risposta_ms > SOGLIA_GUASTO_RISPOSTA_MS;
+    // Guasto = chiuso sulla fibra (vedi intestazione): allarme, mai silenzio.
     nodoRemotoChiuso = durata_risposta_ms > SOGLIA_CLASSIFICAZIONE_RISPOSTA_MS;
+  }
+  // Stampa solo ai cambi, per ciascun nodo (come "risponde"/"NON RISPONDE").
+  if (contatore_impulso < MAX_NODI_SUPPORTATI && nodoRemotoGuasto != guastoPrecedente[contatore_impulso]) {
+    guastoPrecedente[contatore_impulso] = nodoRemotoGuasto;
+    Serial.print(F("Nodo "));
+    Serial.print(contatore_impulso);
+    Serial.println(nodoRemotoGuasto ? F(": GUASTO (cavo del tappeto tagliato?)")
+                                    : F(": tappeto di nuovo a posto"));
   }
   if (debug_risposte) {
     Serial.print(F("RISPOSTA nodo "));
@@ -257,7 +294,9 @@ void interroga_nodo_remoto() {
     Serial.print(ultima_attesa_us);
     Serial.print(F("us, durata "));
     Serial.print(durata_risposta_us);
-    Serial.println(durata_risposta_us == 0 ? F("us -> NESSUNA") : (nodoRemotoChiuso ? F("us -> chiuso") : F("us -> aperto")));
+    Serial.println(durata_risposta_us == 0 ? F("us -> NESSUNA")
+                   : nodoRemotoGuasto ? F("us -> guasto")
+                   : (nodoRemotoChiuso ? F("us -> chiuso") : F("us -> aperto")));
   }
 
   uint8_t idx = contatore_impulso;
@@ -315,7 +354,7 @@ void aggiorna_master(unsigned long ora_ms) {
 
     case TONO_SLOT_PROPRIO:
       canale1_on = CANALE1_ABILITATO;
-      canale2_on = CANALE2_ABILITATO && interruttoreChiuso;
+      canale2_on = CANALE2_ABILITATO && (interruttoreChiuso || tappetoGuasto);  // guasto = allarme
       if (trascorso >= T1_MS) {
         interruttoreChiuso = false;
         stato = GAP_DOPO_SLOT_PROPRIO;
@@ -370,8 +409,15 @@ void aggiorna_master(unsigned long ora_ms) {
   }
 }
 
+// Lettura istantanea di A0: 0 = riposo, 1 = premuto, 2 = guasto.
+uint8_t leggi_tappeto() {
+  ultima_lettura_a0 = analogRead(PIN_INTERRUTTORE);
+  if (ultima_lettura_a0 < SOGLIA_TAGLIATO) return 2;
+  return ultima_lettura_a0 > SOGLIA_CHIUSO ? 1 : 0;
+}
+
 void aggiorna_interruttore() {
-  bool letturaOra = (digitalRead(PIN_INTERRUTTORE) == HIGH);
+  uint8_t letturaOra = leggi_tappeto();
   if (letturaOra != letturaGrezzaCorrente) {
     letturaGrezzaCorrente = letturaOra;
     ultimo_cambio_lettura_ms = millis();
@@ -380,7 +426,8 @@ void aggiorna_interruttore() {
   if (millis() - ultimo_cambio_lettura_ms < DEBOUNCE_INTERRUTTORE_MS) {
     return;
   }
-  valoreGrezzoInterruttore = letturaGrezzaCorrente;
+  valoreGrezzoInterruttore = (letturaGrezzaCorrente == 1);
+  tappetoGuasto = (letturaGrezzaCorrente == 2);
   if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
     ultimo_chiuso_ms = millis();
@@ -390,7 +437,13 @@ void aggiorna_interruttore() {
 void stampa_stato_interruttore() {
   if (interruttoreChiuso != interruttoreChiuso_stampato) {
     interruttoreChiuso_stampato = interruttoreChiuso;
-    Serial.println(interruttoreChiuso ? "INT: chiuso" : "INT: aperto");
+    Serial.print(interruttoreChiuso ? "INT: chiuso" : "INT: aperto");
+    Serial.print(F("  A0=")); Serial.println(ultima_lettura_a0);
+  }
+  if (tappetoGuasto != tappetoGuasto_stampato) {
+    tappetoGuasto_stampato = tappetoGuasto;
+    Serial.print(tappetoGuasto ? F("TAPPETO 1: GUASTO (cavo tagliato?)") : F("TAPPETO 1: cavo di nuovo a posto"));
+    Serial.print(F("  A0=")); Serial.println(ultima_lettura_a0);
   }
 }
 
@@ -568,7 +621,8 @@ void stampa_stato() {
   Serial.print(F(", FREQ1=")); Serial.print(FREQ1);
   Serial.print(F("Hz FREQ2=")); Serial.print(FREQ2);
   Serial.print(F("Hz, VOL=")); Serial.print(volume_f1);
-  Serial.print(F(" ")); Serial.println(volume_f2);
+  Serial.print(F(" ")); Serial.print(volume_f2);
+  Serial.print(F(", A0=")); Serial.println(ultima_lettura_a0);
 }
 
 void applica_volume(uint8_t v1, uint8_t v2) {

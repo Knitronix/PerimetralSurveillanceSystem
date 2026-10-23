@@ -53,6 +53,7 @@ const uint8_t NODE_ID_PROPRIO = 2;
 const unsigned long MARGINE_SICUREZZA_RISPOSTA_MS = 15;
 const unsigned long DURATA_RISPOSTA_APERTO_MS = 6;  // impulso corto = aperto
 const unsigned long DURATA_RISPOSTA_CHIUSO_MS = 18; // impulso lungo = chiuso
+const unsigned long DURATA_RISPOSTA_GUASTO_MS = 30; // 23/10/2026: cavo del tappeto tagliato
 
 // Soglia di timeout per il self-healing (restart.md, valore suggerito
 // 300ms): se non arriva nessun impulso per piu' di questo tempo, il ciclo
@@ -74,9 +75,9 @@ const unsigned long DEBOUNCE_US = 2000; // 2ms, rimbalzi elettrici sul fronte (r
 //   ~2,5V  a riposo (corrente attraverso la 10k del tappeto)
 //   ~5V    tappeto premuto (o i due fili in corto)
 //   ~0V    cavo tagliato / morsetto staccato -> GUASTO
-// Finche' il protocollo non ha lo stato "guasto" (TODO_ESP.md punto 5) un
-// guasto viene riferito al master come CHIUSO: un cavo tagliato deve dare
-// allarme, mai sembrare un tappeto tranquillo.
+// Un guasto viene riferito al master con l'impulso "guasto" (30ms): il
+// master trasmette uno slot lungo e 3main.py mostra il tappeto giallo. Il
+// guasto NON e' memorizzato come una pressione: vale finche' dura.
 const int PIN_INTERRUTTORE = A0;
 // Soglie su analogRead (0-1023 = 0-5V), a meta' tra i valori attesi -
 // PROVVISORIE: da confermare con i valori letti (MOSTRA_TENSIONE).
@@ -96,7 +97,7 @@ bool tappetoGuasto_stampato = false;
 // generare piu' fronti spuri e far scattare il latch per rumore elettrico
 // invece che per una pressione vera.
 const unsigned long DEBOUNCE_INTERRUTTORE_MS = 30;
-bool letturaGrezzaCorrente = false; // ultima lettura del pin, non ancora stabilizzata
+uint8_t letturaGrezzaCorrente = 0; // ultima lettura (0/1/2, vedi leggi_tappeto), non ancora stabilizzata
 unsigned long ultimo_cambio_lettura_ms = 0;
 
 // Latch, non una lettura istantanea: true se l'interruttore e' stato chiuso
@@ -160,8 +161,9 @@ void setup() {
 
   // Stato iniziale: leggi subito il pin reale, cosi' non si parte sempre da
   // "aperto" per un giro intero se l'interruttore e' gia' chiuso al boot.
-  letturaGrezzaCorrente = leggi_tappeto_allarme();
-  valoreGrezzoInterruttore = letturaGrezzaCorrente;
+  letturaGrezzaCorrente = leggi_tappeto();
+  valoreGrezzoInterruttore = (letturaGrezzaCorrente == 1);
+  tappetoGuasto = (letturaGrezzaCorrente == 2);
   if (valoreGrezzoInterruttore) {
     interruttoreChiuso = true;
     ultimo_chiuso_ms = millis();
@@ -172,7 +174,8 @@ void setup() {
   Serial.println(F("--- daisy chain (bus condiviso): SLAVE2 (NODE_ID=2), nessun tono generato qui ---"));
   Serial.print(F("MARGINE_SICUREZZA_RISPOSTA_MS=")); Serial.println(MARGINE_SICUREZZA_RISPOSTA_MS);
   Serial.print(F("risposta aperto=")); Serial.print(DURATA_RISPOSTA_APERTO_MS);
-  Serial.print(F("ms  chiuso=")); Serial.print(DURATA_RISPOSTA_CHIUSO_MS); Serial.println(F("ms"));
+  Serial.print(F("ms  chiuso=")); Serial.print(DURATA_RISPOSTA_CHIUSO_MS);
+  Serial.print(F("ms  guasto=")); Serial.print(DURATA_RISPOSTA_GUASTO_MS); Serial.println(F("ms"));
   Serial.print(F("SOGLIA_TIMEOUT_RESET_MS=")); Serial.println(SOGLIA_TIMEOUT_RESET_MS);
   Serial.print(F("interruttore proprio: ")); Serial.println(interruttoreChiuso ? "CHIUSO" : "aperto");
   interruttoreChiuso_stampato = interruttoreChiuso;
@@ -197,7 +200,8 @@ void invia_risposta() {
   detachInterrupt(digitalPinToInterrupt(PIN_BUS));
   pinMode(PIN_BUS, OUTPUT);
   digitalWrite(PIN_BUS, HIGH);
-  delay(interruttoreChiuso ? DURATA_RISPOSTA_CHIUSO_MS : DURATA_RISPOSTA_APERTO_MS);
+  delay(tappetoGuasto ? DURATA_RISPOSTA_GUASTO_MS
+        : (interruttoreChiuso ? DURATA_RISPOSTA_CHIUSO_MS : DURATA_RISPOSTA_APERTO_MS));
   digitalWrite(PIN_BUS, LOW);
   pinMode(PIN_BUS, INPUT); // torna in ascolto, il pull-down sul D8 del master riprende il controllo
   attachInterrupt(digitalPinToInterrupt(PIN_BUS), onImpulsoRicevuto, RISING);
@@ -241,15 +245,16 @@ void aggiorna_slave(unsigned long ora_ms) {
 // riflette sempre lo stato piu' recente, cosi' se cambia mentre il nodo non
 // sta rispondendo la prossima invia_risposta() lo trova gia' aggiornato -
 // non serve piu' rileggerlo "a mano" in un punto fisso del ciclo.
-// Lettura istantanea di A0: true = allarme (premuto O guasto). Aggiorna
-// ultima_lettura_a0 (per la stampa e per distinguere il guasto).
-bool leggi_tappeto_allarme() {
+// Lettura istantanea di A0: 0 = riposo, 1 = premuto, 2 = guasto.
+// Aggiorna ultima_lettura_a0 (per la stampa).
+uint8_t leggi_tappeto() {
   ultima_lettura_a0 = analogRead(PIN_INTERRUTTORE);
-  return ultima_lettura_a0 > SOGLIA_CHIUSO || ultima_lettura_a0 < SOGLIA_TAGLIATO;
+  if (ultima_lettura_a0 < SOGLIA_TAGLIATO) return 2;
+  return ultima_lettura_a0 > SOGLIA_CHIUSO ? 1 : 0;
 }
 
 void aggiorna_interruttore() {
-  bool letturaOra = leggi_tappeto_allarme();
+  uint8_t letturaOra = leggi_tappeto();
   if (letturaOra != letturaGrezzaCorrente) {
     // Il pin ha appena cambiato stato: potrebbe essere un rimbalzo, riparti
     // a cronometrare la stabilita' da qui invece di accettarlo subito.
@@ -264,8 +269,8 @@ void aggiorna_interruttore() {
   // Valore grezzo (debounced): sale E scende liberamente, riflette il pin
   // cosi' com'e' (a differenza del latch sotto) - usato solo internamente
   // per decidere quando riarmare il latch.
-  valoreGrezzoInterruttore = letturaGrezzaCorrente;
-  tappetoGuasto = valoreGrezzoInterruttore && ultima_lettura_a0 < SOGLIA_TAGLIATO;
+  valoreGrezzoInterruttore = (letturaGrezzaCorrente == 1);
+  tappetoGuasto = (letturaGrezzaCorrente == 2);
   // Latch: va a true ad OGNI passaggio in cui il pin risulta stabilmente
   // chiuso, non solo alla prima transizione false->true - altrimenti un
   // interruttore tenuto chiuso per piu' cicli smetterebbe di essere
@@ -290,7 +295,7 @@ void stampa_stato_interruttore() {
   }
   if (tappetoGuasto != tappetoGuasto_stampato) {
     tappetoGuasto_stampato = tappetoGuasto;
-    Serial.println(tappetoGuasto ? F("TAPPETO: GUASTO (cavo tagliato?) -> riferito come chiuso")
+    Serial.println(tappetoGuasto ? F("TAPPETO: GUASTO (cavo tagliato?)")
                                  : F("TAPPETO: cavo di nuovo a posto"));
   }
   if (MOSTRA_TENSIONE && millis() - ultima_stampa_tensione_ms >= INTERVALLO_TENSIONE_MS) {

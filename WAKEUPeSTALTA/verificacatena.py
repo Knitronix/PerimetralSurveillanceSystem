@@ -13,12 +13,20 @@ avrebbero senso):
   1. Fibra non sorda   - arrivano pacchetti UDP dall'interrogatore
   2. ESP               - il modulo WiFi del master risponde
   3. Master            - risponde ai comandi (MODO 0: daisy chain, zitto)
-  4. Fibra             - con il master zitto: pacchetti continui, rumore
+  4. Cavi dei tappeti  - nessun tappeto GUASTO (cavo tagliato, letto dagli
+                         Arduino con la resistenza di fine linea). Il guasto
+                         NON viaggia sulla fibra (li' un tappeto guasto
+                         sembra chiuso): si legge dalle righe del master via
+                         WiFi - "interruttore proprio"/"TAPPETO 1" per il
+                         suo, risposte degli slave con DEBUG per gli altri.
+                         Se fallisce si continua: i tappeti guasti vengono
+                         saltati nel walk test.
+  5. Fibra             - con il master zitto: pacchetti continui, rumore
                          plausibile, niente clipping
-  5. Daisy chain       - il master parla: cicli completi (marcatore + tutti
+  6. Daisy chain       - il master parla: cicli completi (marcatore + tutti
                          i tappeti) decodificati come in 3main.py, lo slave
                          risponde, nessun tappeto sempre chiuso
-  6. Walk test         - "CALPESTA IL TAPPETO n": ogni tappeto deve essere
+  7. Walk test         - "CALPESTA IL TAPPETO n": ogni tappeto deve essere
                          visto chiuso sulla fibra per CICLI_CHIUSO_RICHIESTI
                          cicli di fila (una pressione vera resta chiusa
                          ~10s grazie alla memoria; un colpo di rumore dei
@@ -68,6 +76,7 @@ TIMEOUT_MASTER_S = 3.0
 DURATA_FIBRA_S = 5.0
 CICLI_RICHIESTI = 5
 TIMEOUT_DAISY_S = 10.0
+TIMEOUT_CAVI_S = 5.0
 TIMEOUT_TAPPETO_S = 60.0
 CICLI_CHIUSO_RICHIESTI = 3  # ~2.4s, ben dentro i 10s di memoria del tappeto
 
@@ -85,6 +94,7 @@ PASSI = [
     ("udp", "Fibra non sorda (pacchetti UDP)"),
     ("esp", "ESP raggiungibile"),
     ("master", "Master risponde"),
+    ("cavi", "Cavi dei tappeti integri"),
     ("fibra", "Fibra: continuita', rumore, clipping"),
     ("daisy", "Daisy chain: cicli completi"),
 ]
@@ -136,6 +146,8 @@ class VerificaCatena:
         # se e' stato visto chiuso. Il suo: righe "INT: chiuso/aperto"; gli
         # altri: "RISPOSTA nodo n: ... -> chiuso" (solo con DEBUG acceso).
         self.master_chiuso: dict[int, bool] = {}
+        # Tappeti GUASTI secondo gli Arduino (cavo tagliato): tappeto -> True.
+        self.guasti: dict[int, bool] = {}
         self.debug_acceso = False
         self._coda = np.zeros(0, dtype=np.int16)
         self._parla = False
@@ -205,6 +217,8 @@ class VerificaCatena:
             ok = self._passo(r, "udp", self._verifica_udp)
             ok = ok and self._passo(r, "esp", self._verifica_esp)
             ok = ok and self._passo(r, "master", self._verifica_master)
+            if ok:  # un guasto non ferma la verifica: si salta quel tappeto
+                self._passo(r, "cavi", self._verifica_cavi)
             ok = ok and self._passo(r, "fibra", self._verifica_fibra)
             ok = ok and self._passo(r, "daisy", self._verifica_daisy)
             r.durata_automatica_s = time.monotonic() - t_inizio
@@ -212,6 +226,10 @@ class VerificaCatena:
                 t_walk = time.monotonic()
                 self._imposta_debug(True)  # risposte dello slave visibili
                 for n in range(1, self.numero_nodi + 1):
+                    if self.guasti.get(n):
+                        self._passo(r, f"tappeto{n}", lambda: (False, "saltato: cavo del tappeto tagliato"),
+                                    nome=f"Walk test: tappeto {n}")
+                        continue
                     ok = self._passo(r, f"tappeto{n}", lambda n=n: self._verifica_tappeto(n),
                                      nome=f"Walk test: tappeto {n}") and ok
                 r.durata_walk_test_s = time.monotonic() - t_walk
@@ -344,20 +362,56 @@ class VerificaCatena:
             visti = f"{len(cicli)} marcatori, {len(completi)} cicli completi"
             return False, (f"{visti} in {TIMEOUT_DAISY_S:.0f}s: tono non sentito (trasduttore staccato "
                            "dalla fibra? volume?) o tappeti mancanti")
-        sempre_chiusi = [n for n in range(1, self.numero_nodi + 1) if all(c[n] == "chiuso" for c in completi)]
+        # un tappeto guasto va sulla fibra come chiuso: gia' segnalato da "cavi"
+        sempre_chiusi = [n for n in range(1, self.numero_nodi + 1)
+                         if not self.guasti.get(n) and all(c[n] == "chiuso" for c in completi)]
         if sempre_chiusi:
             return False, (f"tappeto {', '.join(map(str, sempre_chiusi))} sempre chiuso: "
                            "qualcuno sopra o tappeto bloccato")
         return True, f"{len(completi)} cicli completi, {self.numero_nodi} tappeti, slave risponde"
 
     def _leggi_riga_master(self, riga: str) -> None:
-        if riga == "INT: chiuso":
+        if riga.startswith("INT: chiuso"):  # "INT: chiuso  A0=1023"
             self.master_chiuso[1] = True
-        m = re.match(r"RISPOSTA nodo (\d+): .*-> chiuso", riga)
+        m = re.match(r"RISPOSTA nodo (\d+): .*-> (\w+)", riga)
         if m:
-            self.master_chiuso[int(m.group(1))] = True
+            nodo, esito = int(m.group(1)), m.group(2)
+            if esito == "chiuso":
+                self.master_chiuso[nodo] = True
+            if esito in ("aperto", "chiuso", "guasto"):
+                self.guasti[nodo] = esito == "guasto"
+        # tappeto del master: intestazione (MODO 0) e cambi
+        if riga.startswith("interruttore proprio:"):
+            self.guasti[1] = "GUASTO" in riga
+        elif riga.startswith("TAPPETO 1: GUASTO"):
+            self.guasti[1] = True
+        elif riga.startswith("TAPPETO 1: cavo di nuovo a posto"):
+            self.guasti[1] = False
         if riga.startswith("DEBUG risposte:"):
             self.debug_acceso = riga.endswith("ACCESO")
+
+    def _verifica_cavi(self) -> tuple[bool, str]:
+        """Il master parla con DEBUG acceso: ogni slave interrogato risponde
+        aperto/chiuso/guasto; il tappeto del master e' gia' noto dall'intestazione."""
+        self._imposta_debug(True)
+        self.daisy.parla()
+        self._parla, self._t_parla = True, time.monotonic()
+        remoti = range(2, self.numero_nodi + 1)
+        self._ascolta(TIMEOUT_CAVI_S, finito=lambda: all(n in self.guasti for n in remoti))
+        self._imposta_debug(False)
+        self._parla = False
+        self.daisy.zitto()  # il controllo della fibra che segue vuole il master zitto
+        self._ascolta(0.5)
+        if 1 not in self.guasti:
+            return False, "il master non ha detto lo stato del suo tappeto (firmware vecchio?)"
+        mancanti = [n for n in remoti if n not in self.guasti]
+        if mancanti:
+            return False, f"nessuna risposta dal tappeto {', '.join(map(str, mancanti))}: slave spento o bus?"
+        guasti = [n for n in range(1, self.numero_nodi + 1) if self.guasti[n]]
+        if guasti:
+            return False, (f"tappeto {', '.join(map(str, guasti))} GUASTO: cavo tagliato o morsetto "
+                           "staccato (sara' saltato nel walk test)")
+        return True, f"tutti i {self.numero_nodi} tappeti collegati"
 
     def _imposta_debug(self, acceso: bool) -> None:
         """DEBUG nel master e' un interruttore (ACCESO/SPENTO): lo si manda
