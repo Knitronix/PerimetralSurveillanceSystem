@@ -104,15 +104,23 @@ CONFIG_DEFAULT = {
 }
 
 # --- PARAMETRI STA/LTA ---
-STA_FINESTRA_SEC = 0.1
+# 29/10/2026: STA da 0.1 a 0.25s e soglia ON da 1.55 a 3.0. Misura di 60s a
+# fibra ferma: con 0.1s/1.55 6 falsi trigger in 56s (ognuno salvato come
+# campione della classe scelta), con 0.25s/3.0 nessuno.
+STA_FINESTRA_SEC = 0.25
 LTA_FINESTRA_SEC = 3.0
-STA_LTA_SOGLIA_ON_DEFAULT = 1.55
+STA_LTA_SOGLIA_ON_DEFAULT = 3.0
 STA_LTA_SOGLIA_OFF_DEFAULT = 1.2
 PRE_TRIGGER_SEC = 0.3
 ISTERESI_CHIUSURA_SEC = 0.25
 DURATA_MASSIMA_EVENTO_SEC = 4.0
 DURATA_BLOCCO_RUMORE_SEC = 1.5
 TEMPO_RIARMO_SEC = 1.0
+# Pulsante "Registra 4 s" (modalita' Dataset): salva gli ultimi N secondi di
+# fibra con la classe scelta, SENZA trigger. Per i rumori continui (vento,
+# pioggia, motore lontano) che lo STA/LTA per costruzione non vede: diventano
+# il "fondo" in pochi secondi. 4s = durata massima di un evento a trigger.
+DURATA_CATTURA_MANUALE_SEC = 10.0
 SOGLIA_CLIPPING = 32000
 FILE_LOG_EVENTI = "eventi_log.jsonl"
 FILE_LOG_RICONOSCIMENTI = "riconoscimenti_log.jsonl"
@@ -499,6 +507,15 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
         self.combo_classi.addItems(self.classi_dataset)
         self.combo_classi.currentTextChanged.connect(self.cambia_classe)
         layout_selezione_classe.addWidget(self.combo_classi)
+        self.btn_cattura_manuale = QtWidgets.QPushButton(
+            f"⏺ Registra {DURATA_CATTURA_MANUALE_SEC:.0f} s (senza trigger)")
+        self.btn_cattura_manuale.setToolTip(
+            f"Salva gli ultimi {DURATA_CATTURA_MANUALE_SEC:.0f} secondi di fibra con la classe scelta. "
+            "Per i rumori continui (vento, pioggia) che non fanno scattare lo STA/LTA.")
+        self.btn_cattura_manuale.setStyleSheet(
+            "background-color: #3a3a3a; color: white; padding: 6px; border-radius: 4px;")
+        self.btn_cattura_manuale.clicked.connect(self.registra_manuale)
+        layout_selezione_classe.addWidget(self.btn_cattura_manuale)
         colonna_destra.addWidget(self.widget_selezione_classe)
         colonna_destra.addSpacing(15)
 
@@ -717,6 +734,16 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
         except Exception as e:
             log.error(f"Errore scrittura log calibrazione: {e}")
 
+    def registra_manuale(self):
+        """Salva subito gli ultimi DURATA_CATTURA_MANUALE_SEC secondi (gia' nel
+        buffer dello storico), con la classe scelta, senza aspettare il trigger."""
+        n = int(SAMPLE_RATE * DURATA_CATTURA_MANUALE_SEC)
+        if self.campioni_totali_ricevuti < n:
+            self.testo_log.append(f"⚠ Aspetta: servono almeno {DURATA_CATTURA_MANUALE_SEC:.0f} s di fibra ricevuta.")
+            return
+        dati = self._estrai_ultimi_campioni(n)
+        self.salva_file(len(dati), dati=dati, manuale=True)
+
     def gestisci_pressione_bottone(self):
         self.armato = not self.armato
         self.catturando_evento = False
@@ -844,7 +871,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
     # ------------------------------------------------------------------
     # Salvataggio — modalità Dataset
     # ------------------------------------------------------------------
-    def salva_file(self, n_campioni_validi):
+    def salva_file(self, n_campioni_validi, dati=None, manuale=False):
         cartella_dest = os.path.join(CARTELLA_DATASET, self.id_fibra, self.classe_corrente)
         os.makedirs(cartella_dest, exist_ok=True)
 
@@ -853,7 +880,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
         nome_file = os.path.join(cartella_dest, nome_file_base)
 
         try:
-            dati_validi = self.buffer_impulso_array[:n_campioni_validi]
+            dati_validi = self.buffer_impulso_array[:n_campioni_validi] if dati is None else dati
 
             picco_assoluto = int(np.max(np.abs(dati_validi))) if len(dati_validi) else 0
             clipping = picco_assoluto >= SOGLIA_CLIPPING
@@ -868,8 +895,8 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
             rms = float(np.sqrt(np.mean(dati_validi.astype(np.float64) ** 2))) if len(dati_validi) else 0.0
 
             avviso_clip = "  ⚠ CLIPPING" if clipping else ""
-            msg = (f"✓ Salvato: {self.id_fibra}/{self.classe_corrente}/{nome_file_base} "
-                   f"({durata_s:.2f}s){avviso_clip}")
+            msg = (f"✓ Salvato{' (manuale)' if manuale else ''}: {self.id_fibra}/{self.classe_corrente}/"
+                   f"{nome_file_base} ({durata_s:.2f}s){avviso_clip}")
             self.testo_log.append(msg)
             log.info(msg)
 
@@ -882,6 +909,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
                 "picco": picco_assoluto,
                 "clipping": clipping,
                 "file_audio": os.path.join(self.id_fibra, self.classe_corrente, nome_file_base),
+                "manuale": manuale,  # True = pulsante "Registra 4 s", senza trigger
             }
             self._scrivi_log(self.path_log_eventi, record)
         except Exception as e:

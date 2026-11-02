@@ -86,7 +86,7 @@ FATTORE_PRODUZIONE = 0.25
 FREQ_MIN_UTILE = 1000
 
 SILENZIO_S = 10.0
-CICLI_DEFAULT = 3
+CICLI_DEFAULT = 2
 GUARDIA_S = 0.5  # si scarta l'inizio e la fine di ogni gradino (transizioni)
 FRAME_ALLINEAMENTO = 6000  # 0.25s, risoluzione 4Hz: le frequenze della rampa cadono su bin esatti
 # Un "buco" nel flusso UDP piu' lungo di cosi' viene riempito di zeri (marcati
