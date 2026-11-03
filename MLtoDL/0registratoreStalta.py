@@ -47,11 +47,15 @@ log = logging.getLogger("registratore_stalta")
 # --- CONFIGURAZIONE FISSA ---
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
+# Formato vero dei pacchetti (Wireshark, 02/11/2026): 127 campioni int32
+# little-endian a 12kHz. Fino al 02/11 si leggevano 254 int16 a 24kHz (stessi
+# byte, lettura sbagliata): report/REPORT_2026-10-28_29.md, §4.
+CAMPIONI_PER_PACCHETTO = 127
+SAMPLE_RATE = 12000
+DTYPE_CAMPIONI = np.dtype("<i4")
 SECONDI_VISIBILI = 15
 STORICO_CAMPIONI = SAMPLE_RATE * SECONDI_VISIBILI
-CARTELLA_DATASET = "dataset_sensori_24kHz"
+CARTELLA_DATASET = "dataset_sensori_12kHz"
 CARTELLA_EVENTI_RICONOSCIUTI = "eventi_riconosciuti"
 FILE_CONFIG = "config_soglie_ia.json"
 ID_FIBRA_DEFAULT = "fibra1"
@@ -67,7 +71,7 @@ INTERVALLO_ATTESO_PACCHETTO = CAMPIONI_PER_PACCHETTO / SAMPLE_RATE
 # bufferizza internamente e scarica raffiche di ~16 pacchetti quasi
 # simultanei, con una pausa strutturale di ~169ms tra una raffica e la
 # successiva (misurato con Wireshark: intervalli ~0.169s, coerenti con
-# 16 × 254/24000 = 0.1693s). Non è un problema di rete né una perdita di
+# 16 × 127/12000 = 0.1693s). Non è un problema di rete né una perdita di
 # dati: è il comportamento normale del dispositivo, non modificabile. La
 # diagnostica va calibrata su QUESTO ritmo, non su un intervallo
 # pacchetto-per-pacchetto teorico che il dispositivo non rispetta mai.
@@ -121,7 +125,10 @@ TEMPO_RIARMO_SEC = 1.0
 # pioggia, motore lontano) che lo STA/LTA per costruzione non vede: diventano
 # il "fondo" in pochi secondi. 4s = durata massima di un evento a trigger.
 DURATA_CATTURA_MANUALE_SEC = 10.0
-SOGLIA_CLIPPING = 32000
+# Fondo scala reale dell'interrogatore non noto (int32; il massimo visto il
+# 02/11 e' ~2.1 milioni): soglia messa vicino al limite dell'int32, da
+# rivedere se si scopre il fondo scala vero.
+SOGLIA_CLIPPING = 2_000_000_000
 FILE_LOG_EVENTI = "eventi_log.jsonl"
 FILE_LOG_RICONOSCIMENTI = "riconoscimenti_log.jsonl"
 SOGLIA_CONFIDENZA_RICONOSCIMENTO = 0.75
@@ -218,7 +225,7 @@ class NetworkWorker(QtCore.QThread):
             return
 
         sock.settimeout(0.5)
-        bytes_attesi = self.packet_size * 2
+        bytes_attesi = self.packet_size * DTYPE_CAMPIONI.itemsize
 
         while self.running:
             try:
@@ -241,7 +248,7 @@ class NetworkWorker(QtCore.QThread):
                 except Exception as e:
                     log.error(f"Errore scrittura wav continuo: {e}")
 
-            nuovi_campioni = np.frombuffer(data, dtype=np.int16)
+            nuovi_campioni = np.frombuffer(data, dtype=DTYPE_CAMPIONI)
             self.nuovi_dati_signal.emit(nuovi_campioni)
 
             self.stats.pacchetti_ricevuti += 1
@@ -275,7 +282,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
         # KPI 4.1 (Calibration time): timestamp di avvio dell'app.
         self._tempo_avvio_app = time.monotonic()
 
-        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int16)
+        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int32)
         self.write_pos = 0
         self.asse_tempo = np.linspace(-SECONDI_VISIBILI, 0, STORICO_CAMPIONI, dtype=np.float32)
 
@@ -314,7 +321,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
 
         self.campioni_pre_trigger = int(SAMPLE_RATE * PRE_TRIGGER_SEC)
         self.campioni_massimi_evento = int(SAMPLE_RATE * DURATA_MASSIMA_EVENTO_SEC) + self.campioni_pre_trigger
-        self.buffer_impulso_array = np.zeros(self.campioni_massimi_evento, dtype=np.int16)
+        self.buffer_impulso_array = np.zeros(self.campioni_massimi_evento, dtype=np.int32)
         self.pos_impulso = 0
 
         self.campioni_blocco_rumore_continuo = int(SAMPLE_RATE * DURATA_BLOCCO_RUMORE_SEC)
@@ -332,7 +339,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
         try:
             self.wav_file = wave.open(self.nome_file_wav, "wb")
             self.wav_file.setnchannels(1)
-            self.wav_file.setsampwidth(2)
+            self.wav_file.setsampwidth(DTYPE_CAMPIONI.itemsize)
             self.wav_file.setframerate(SAMPLE_RATE)
         except Exception as e:
             log.error(f"Impossibile aprire il file wav continuo: {e}")
@@ -766,7 +773,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
         self.write_pos = fine % STORICO_CAMPIONI
 
         # --- Spettrogramma: calcolato SOLO in modalità dataset. Questo è
-        # il risparmio di CPU vero e proprio (FFT su 24.000 campioni),
+        # il risparmio di CPU vero e proprio (FFT su 12.000 campioni),
         # non solo il pannello nascosto. ---
         if self.modalita == "dataset":
             self.campioni_totali_ricevuti += n
@@ -887,7 +894,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
 
             with wave.open(nome_file, "wb") as wf:
                 wf.setnchannels(1)
-                wf.setsampwidth(2)
+                wf.setsampwidth(DTYPE_CAMPIONI.itemsize)
                 wf.setframerate(SAMPLE_RATE)
                 wf.writeframes(dati_validi.tobytes())
 
@@ -934,7 +941,7 @@ class SagnacDatasetBuilderStaLta(QtWidgets.QMainWindow):
             nome_file_base = f"evento_{timestamp_ms}.wav"
             with wave.open(os.path.join(cartella_dest, nome_file_base), "wb") as wf:
                 wf.setnchannels(1)
-                wf.setsampwidth(2)
+                wf.setsampwidth(DTYPE_CAMPIONI.itemsize)
                 wf.setframerate(SAMPLE_RATE)
                 wf.writeframes(dati_validi.tobytes())
 

@@ -45,6 +45,7 @@ from others.widget_timer import WidgetTimer
 from others.tema import (COLORI, FONT_MONO, SPAZIO, STYLE_QSS, T_VALORE, Stepper, applica_palette,
                          crea_card, etichetta, legenda_linea, rgba, separatore, stile_chip, stile_plot)
 from others.vista_impianto import VistaImpianto
+from others import formato_dati
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,8 +60,9 @@ log = logging.getLogger("wakeup_stalta")
 # ============================================================
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
+# Formato dei pacchetti (int32, 12kHz, 127 campioni): others/formato_dati.py
+CAMPIONI_PER_PACCHETTO = formato_dati.CAMPIONI_PER_PACCHETTO
+SAMPLE_RATE = formato_dati.SAMPLE_RATE
 SECONDI_VISIBILI = 15
 STORICO_CAMPIONI = SAMPLE_RATE * SECONDI_VISIBILI
 INTERVALLO_ATTESO_PACCHETTO = CAMPIONI_PER_PACCHETTO / SAMPLE_RATE
@@ -94,10 +96,15 @@ BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.
 # Storia: fino al 13/10 erano 4x troppo alte (calcolate su un tono a piena
 # ampiezza, in produzione e' a meta' ampiezza): con la fibra di oggi f1 e f2
 # sarebbero rimasti sotto soglia, nessun tappeto sentito.
-SOGLIA_ON_F1 = 0.000062
-SOGLIA_OFF_F1 = 0.000040
-SOGLIA_ON_F2 = 0.000058
-SOGLIA_OFF_F2 = 0.000038
+# 02/11/2026: x4 rispetto ai valori del 19/10 (0.000062/40/58/38), che erano
+# misurati leggendo i dati a 16 bit: letto correttamente a 32 bit lo stesso
+# tono ha potenza 4 volte maggiore (verificato sulle registrazioni del 29/10,
+# rapporto 4.00).
+# Provvisorie: da rimisurare con 1tarasoglie.py.
+SOGLIA_ON_F1 = 0.000248
+SOGLIA_OFF_F1 = 0.000160
+SOGLIA_ON_F2 = 0.000232
+SOGLIA_OFF_F2 = 0.000152
 
 # --- STA/LTA ---
 STA_FINESTRA_SEC_DEFAULT = 0.5
@@ -163,7 +170,7 @@ class Config:
     TIMEOUT_MASSIMO_MIN: float = 5.0  # TODO decidere il valore reale insieme
     # Modulo ESP (esp-link) sulla seriale del master: modificabile anche dalla
     # tab 2. L'IP puo' cambiare se cambia la rete WiFi (DHCP).
-    ESP_HOST: str = "10.27.239.225"
+    ESP_HOST: str = "10.19.161.225"
 
 
 class Stato(Enum):
@@ -173,18 +180,13 @@ class Stato(Enum):
 
 
 COLORE_STATO = {
-    Stato.AMBIENTE: "#5eb1ff",
-    Stato.RISVEGLIO: "#e8a33d",
-    Stato.ARMATO: "#00d2c4",
+    Stato.AMBIENTE: COLORI["blu"],
+    Stato.RISVEGLIO: COLORI["ambra"],
+    Stato.ARMATO: COLORI["accento"],
 }
 # Stessi colori in RGB, per costruire a runtime il badge di stato "a
-# pillola" (sfondo tenue + testo/bordo pieno) senza doverne tenere una
-# seconda tabella hardcoded in giro.
-COLORE_STATO_RGB = {
-    Stato.AMBIENTE: (94, 177, 255),
-    Stato.RISVEGLIO: (232, 163, 61),
-    Stato.ARMATO: (0, 210, 196),
-}
+# pillola" (sfondo tenue + testo/bordo pieno), ricavati dalla tabella sopra.
+COLORE_STATO_RGB = {stato: QtGui.QColor(colore).getRgb()[:3] for stato, colore in COLORE_STATO.items()}
 
 # Tetto a quanti "Sensore N" mostrare in tab Ascolto: il counter di
 # RilevatoreProtocolloF1F2 non ha un limite proprio (sale finché non arriva
@@ -203,8 +205,8 @@ MAX_TAPPETI_VISUALIZZATI = 8
 # ============================================================
 class RilevatoreGoertzel:
     """Filtro di Goertzel su una singola frequenza nota: potenza normalizzata
-    (0..1 = tono a piena scala int16), indipendente dalla dimensione del
-    blocco."""
+    (1 = tono di ampiezza 32768, vedi others/formato_dati.py), indipendente
+    dalla dimensione del blocco."""
 
     def __init__(self, frequenza_hz, sample_rate, dimensione_blocco):
         self.frequenza_hz = frequenza_hz
@@ -428,7 +430,6 @@ class NetworkWorker(QtCore.QThread):
             return
 
         sock.settimeout(0.5)
-        bytes_attesi = self.packet_size * 2
         while self.running:
             try:
                 data, _addr = sock.recvfrom(4096)
@@ -437,9 +438,10 @@ class NetworkWorker(QtCore.QThread):
             except OSError as e:
                 log.error(f"Errore socket: {e}")
                 break
-            if len(data) != bytes_attesi:
+            campioni = formato_dati.decodifica_pacchetto(data)
+            if campioni is None:
                 continue
-            self.nuovi_dati_signal.emit(np.frombuffer(data, dtype=np.int16))
+            self.nuovi_dati_signal.emit(campioni)
         sock.close()
 
 
@@ -470,12 +472,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._prossimo_tentativo_daisy_s = 0.0
         self._ultimo_parla_s = 0.0
         self.protocollo_tappeti: RilevatoreProtocolloF1F2 | None = None
-        self._accumulo_tappeti = np.empty(0, dtype=np.int16)
+        self._accumulo_tappeti = np.empty(0, dtype=np.int32)
         self.stato_tappeti: dict[int, bool] = {}  # counter -> chiuso?
         self._visti_questo_ciclo: set[int] = set()  # counter visti nel ciclo daisy chain in corso
 
         # --- buffer forma d'onda (sempre aggiornato, in qualunque stato) ---
-        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int16)
+        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int32)
         self.write_pos = 0
         self.asse_tempo = np.linspace(-SECONDI_VISIBILI, 0, STORICO_CAMPIONI, dtype=np.float32)
 
@@ -614,7 +616,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self.label_risveglio = QtWidgets.QLabel("◉  RISVEGLIO")
         colore_r = COLORE_STATO[Stato.RISVEGLIO]
         self.label_risveglio.setStyleSheet(
-            f"background-color: {colore_r}; color: #1a1205; font-size: 13px; font-weight: 800;"
+            f"background-color: {colore_r}; color: {COLORI['accento_testo_su']}; font-size: 13px; font-weight: 800;"
             f" letter-spacing: 1px; border: 1px solid {colore_r}; border-radius: 15px; padding: 6px 14px;"
         )
         effetto = QtWidgets.QGraphicsOpacityEffect(self.label_risveglio)
@@ -1036,7 +1038,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         # cambia la rete WiFi (riassegnazione DHCP).
         riga.addWidget(etichetta("ESP DAISY CHAIN", "Eyebrow"))
         self.campo_ip_esp = QtWidgets.QLineEdit(self.config.ESP_HOST)
-        self.campo_ip_esp.setPlaceholderText("es. 10.27.239.225")
+        self.campo_ip_esp.setPlaceholderText("es. 10.19.161.225")
         self.campo_ip_esp.setFixedWidth(170)
         self.campo_ip_esp.returnPressed.connect(self.cambia_ip_esp)
         riga.addWidget(self.campo_ip_esp)
@@ -1288,7 +1290,7 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         )
         self.pannello_timer.segna_allarme()
         self.pannello_timer_vista.segna_allarme()
-        self._accumulo_tappeti = np.empty(0, dtype=np.int16)
+        self._accumulo_tappeti = np.empty(0, dtype=np.int32)
         self._pulisci_indicatori_tappeti()
         self.protocollo_tappeti = RilevatoreProtocolloF1F2(
             SAMPLE_RATE, BLOCCO_GOERTZEL_CAMPIONI,

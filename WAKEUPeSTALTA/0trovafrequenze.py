@@ -50,6 +50,7 @@ import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 
+from others import formato_dati
 from others.archivio import CARTELLA_ARCHIVIO, cartella_taratura
 from others.comandi_daisy import ComandiDaisy
 from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card, etichetta, stile_plot
@@ -60,8 +61,9 @@ INTERVALLO_PARLA_S = 2.0  # PARLA ripetuto: senza, il master si zittisce dopo 10
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
+# Formato dei pacchetti (int32, 12kHz, 127 campioni): others/formato_dati.py
+CAMPIONI_PER_PACCHETTO = formato_dati.CAMPIONI_PER_PACCHETTO
+SAMPLE_RATE = formato_dati.SAMPLE_RATE
 
 # Rampa del master in modalita' 1 - DEVE restare uguale a SWEEPF_* in master.ino
 SWEEP_FREQ_MIN = 200
@@ -109,7 +111,7 @@ class AnalisiErrore(Exception):
 
 def potenze_blocchi(campioni: np.ndarray, freqs: np.ndarray) -> np.ndarray:
     """Potenza a ciascuna frequenza in blocchi da 20ms, stessa scala del
-    Goertzel di 3main.py (1.0 = tono a piena scala int16). Righe = blocchi."""
+    Goertzel di 3main.py (1.0 = tono di ampiezza 32768). Righe = blocchi."""
     n = len(campioni) // BLOCCO
     if n == 0:
         return np.zeros((0, len(freqs)))
@@ -583,7 +585,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         self.buf_valido: list[np.ndarray] = []
         self.campioni_sweep = 0
         self.t_inizio_fase = 0.0
-        self.coda_live = np.zeros(SAMPLE_RATE // 2, dtype=np.int16)
+        self.coda_live = np.zeros(SAMPLE_RATE // 2, dtype=np.int32)
 
     def _apri_socket(self):
         if self.sock is not None:
@@ -668,8 +670,9 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
                 dati = self.sock.recv(4096)
             except (BlockingIOError, OSError):
                 break
-            if len(dati) == CAMPIONI_PER_PACCHETTO * 2:
-                pacchetti.append(np.frombuffer(dati, dtype=np.int16))
+            campioni = formato_dati.decodifica_pacchetto(dati)
+            if campioni is not None:
+                pacchetti.append(campioni)
         ora = time.monotonic()
         if pacchetti:
             nuovi = np.concatenate(pacchetti)
@@ -699,7 +702,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
         attesi = (ora - self.t_inizio_fase) * SAMPLE_RATE
         buco = int(attesi - self.campioni_sweep - len(nuovi))
         if self.campioni_sweep > 0 and buco > BUCO_MINIMO_S * SAMPLE_RATE:
-            self.buf_sweep.append(np.zeros(buco, dtype=np.int16))
+            self.buf_sweep.append(np.zeros(buco, dtype=np.int32))
             self.buf_valido.append(np.zeros(buco, dtype=bool))
             self.campioni_sweep += buco
         self.buf_sweep.append(nuovi)
@@ -727,7 +730,7 @@ class FinestraTrovaFrequenze(QtWidgets.QMainWindow):
             return
         sweep = np.concatenate(self.buf_sweep)
         valido = np.concatenate(self.buf_valido)
-        silenzio = np.concatenate(self.buf_silenzio) if self.buf_silenzio else np.zeros(0, dtype=np.int16)
+        silenzio = np.concatenate(self.buf_silenzio) if self.buf_silenzio else np.zeros(0, dtype=np.int32)
         nota = self.campo_nota.text().strip()
         base = cartella_taratura() / time.strftime("frequenze_%H%M%S")
         np.savez_compressed(base.with_suffix(".npz"), sweep=sweep, valido=valido, silenzio=silenzio,

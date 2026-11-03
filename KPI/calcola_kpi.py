@@ -16,7 +16,7 @@ Uso:
     python calcola_kpi.py pd --pianificati eventi_pianificati.csv
     python calcola_kpi.py far --inizio ... --fine ...
 
---log ha un default che punta a MLtoDL/dataset_sensori_24kHz/eventi_log.jsonl (modalità
+--log ha un default che punta a MLtoDL/dataset_sensori_12kHz/eventi_log.jsonl (modalità
 Dataset); per una campagna condotta in modalità Riconoscimento passa esplicitamente
 --log ../MLtoDL/riconoscimenti_log.jsonl.
 """
@@ -33,7 +33,7 @@ MLTODL_DIR = KPI_DIR.parent / "MLtoDL"
 
 FILE_LOG_CALIBRAZIONE = KPI_DIR / "kpi_calibration_log.jsonl"
 FILE_LOG_SELFTEST = KPI_DIR / "kpi_selftest_log.jsonl"
-FILE_EVENTI_DATASET_DEFAULT = MLTODL_DIR / "dataset_sensori_24kHz" / "eventi_log.jsonl"
+FILE_EVENTI_DATASET_DEFAULT = MLTODL_DIR / "dataset_sensori_12kHz" / "eventi_log.jsonl"
 FILE_PIANIFICATI_DEFAULT = KPI_DIR / "eventi_pianificati.csv"
 
 # Tolleranza temporale per associare un evento pianificato a un evento

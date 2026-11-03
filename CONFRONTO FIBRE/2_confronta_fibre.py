@@ -2,7 +2,7 @@
 Confronta le fibre ottiche testate, leggendo i campioni salvati dal
 registratore (1_registratore.py) nella cartella:
 
-    dataset_sensori_24kHz/<id_fibra>/<classe>/campione_*.wav
+    dataset_sensori_12kHz/<id_fibra>/<classe>/campione_*.wav
 
 Uso:
     python 2_confronta_fibre.py
@@ -26,9 +26,13 @@ import wave
 import csv
 import numpy as np
 
-CARTELLA_DATASET = "dataset_sensori_24kHz"
+CARTELLA_DATASET = "dataset_sensori_12kHz"
 CLASSE_RUMORE_DI_FONDO = "RUMORE_AMBIENTALE"
-SOGLIA_CLIPPING_CAMPIONE = 32760
+# Fondo scala reale dell'interrogatore non noto (int32; massimo visto il
+# 02/11 ~2.1 milioni). Prima del 02/11 era 32760 sulla lettura a 16 bit:
+# il "clipping" che squalificava una fibra era in realta' il riavvolgimento
+# dei segnali oltre +-32767 (report §4), non una saturazione vera.
+SOGLIA_CLIPPING_CAMPIONE = 2_000_000_000
 EPS_DBFS = 1e-9
 EPS_POTENZA = 1e-12
 FILE_CSV_OUTPUT = "confronto_fibre.csv"
@@ -58,8 +62,11 @@ def leggi_wav_come_array(percorso):
     with wave.open(percorso, "rb") as wf:
         n_campioni = wf.getnframes()
         sample_rate = wf.getframerate()
+        larghezza = wf.getsampwidth()
         dati = wf.readframes(n_campioni)
-    campioni = np.frombuffer(dati, dtype=np.int16).astype(np.float64)
+    # 4 byte = formato vero (int32, 12kHz). 2 byte = WAV vecchio a 16 bit: quelli
+    # del progetto sono stati tutti convertiti il 02/11/2026.
+    campioni = np.frombuffer(dati, dtype="<i4" if larghezza == 4 else "<i2").astype(np.float64)
     return campioni, sample_rate
 
 

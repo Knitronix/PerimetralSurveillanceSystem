@@ -62,6 +62,7 @@ CARTELLA_WAKEUP = Path(__file__).resolve().parent
 
 M = importlib.import_module("3main")  # "import 3main" non e' sintassi valida
 from others.archivio import cartella_taratura
+from others import formato_dati
 from others.comandi_daisy import ComandiDaisy
 from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card, etichetta
 
@@ -80,13 +81,17 @@ TIMEOUT_CAVI_S = 5.0
 TIMEOUT_TAPPETO_S = 60.0
 CICLI_CHIUSO_RICHIESTI = 3  # ~2.4s, ben dentro i 10s di memoria del tappeto
 
-# Fibra (con il master zitto). Misurato: fibra collegata rms ~200-600,
-# fibra staccata dal trasduttore ~10000-12000.
+# Fibra (con il master zitto). Misurato leggendo a 16 bit: fibra collegata
+# rms ~200-600, fibra staccata dal trasduttore ~10000-12000. Il 02/11/2026,
+# letto a 32 bit (others/formato_dati.py), a riposo rms ~1300-9700: i limiti
+# RMS qui sotto sono PROVVISORI, da rimisurare a 32 bit (fibra collegata e
+# staccata). Niente piu' controllo di clipping: il limite dei 16 bit (32767)
+# era un effetto della lettura sbagliata, il fondo scala vero
+# dell'interrogatore non e' ancora noto - il picco resta solo mostrato.
 FRAZIONE_MINIMA_CAMPIONI = 0.85  # campioni ricevuti / attesi
 BUCO_MASSIMO_S = 0.6             # le pause tra raffiche (~169ms) sono normali
 RMS_MINIMO = 5.0                 # sotto: segnale piatto, sospetto
-RMS_MASSIMO = 5000.0             # sopra: fibra staccata o saturata
-SOGLIA_CLIPPING = 32000
+RMS_MASSIMO = 50000.0            # sopra: fibra staccata o saturata (provvisorio)
 
 IN_CORSO, PASS, FAIL = "IN CORSO", "PASS", "FAIL"
 
@@ -149,7 +154,7 @@ class VerificaCatena:
         # Tappeti GUASTI secondo gli Arduino (cavo tagliato): tappeto -> True.
         self.guasti: dict[int, bool] = {}
         self.debug_acceso = False
-        self._coda = np.zeros(0, dtype=np.int16)
+        self._coda = np.zeros(0, dtype=np.int32)
         self._parla = False
         self._t_parla = 0.0
         self.decoder = self._nuovo_decoder()
@@ -193,8 +198,8 @@ class VerificaCatena:
                 dati = self.sock.recv(4096)
             except socket.timeout:
                 dati = None
-            if dati is not None and len(dati) == M.CAMPIONI_PER_PACCHETTO * 2:
-                campioni = np.frombuffer(dati, dtype=np.int16)
+            campioni = formato_dati.decodifica_pacchetto(dati) if dati is not None else None
+            if campioni is not None:
                 if su_pacchetto is not None:
                     su_pacchetto(campioni, time.monotonic())
                 if su_evento is not None:
@@ -332,14 +337,12 @@ class VerificaCatena:
             problemi.append(f"segnale piatto (rms {rms:.0f})")
         if rms > RMS_MASSIMO:
             problemi.append(f"rms {rms:.0f} troppo alto: fibra staccata dal trasduttore?")
-        if picco >= SOGLIA_CLIPPING:
-            problemi.append(f"clipping (picco {picco})")
         misure = f"campioni {frazione:.0%}, buco max {buco:.2f}s, rms {rms:.0f}, picco {picco}"
         return (False, "; ".join(problemi) + f"  [{misure}]") if problemi else (True, misure)
 
     def _verifica_daisy(self) -> tuple[bool, str]:
         self.decoder = self._nuovo_decoder()
-        self._coda = np.zeros(0, dtype=np.int16)
+        self._coda = np.zeros(0, dtype=np.int32)
         self.righe_master.clear()
         cicli: list[dict[int, str]] = []  # per ogni ciclo: tappeto -> stato
         completi = []

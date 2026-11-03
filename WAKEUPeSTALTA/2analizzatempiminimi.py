@@ -66,6 +66,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from others import formato_dati
 from others.archivio import cartella_taratura
 from others.comandi_daisy import ComandiDaisy
 
@@ -78,8 +79,9 @@ INTERVALLO_PARLA_S = 2.0  # PARLA ripetuto: senza, il master si zittisce dopo 10
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
+# Formato dei pacchetti (int32, 12kHz, 127 campioni): others/formato_dati.py
+CAMPIONI_PER_PACCHETTO = formato_dati.CAMPIONI_PER_PACCHETTO
+SAMPLE_RATE = formato_dati.SAMPLE_RATE
 
 # Deve restare allineata a mano con TEMPI_FREQ_TEST_HZ in
 # arduino/master/master.ino (di default = FREQ2 = 3200Hz, F2 - il canale
@@ -93,8 +95,10 @@ FREQ_TEST_HZ = 3200
 # RAPPORTO tono/soglia della produzione (ON = 20% del tono, OFF = 65%
 # dell'ON), cosi' il test misura i tempi minimi nelle stesse condizioni di
 # rilevamento di 3main.py. Regola di conversione: soglia qui = soglia 3main.py x 4.
-SOGLIA_ON = 0.000686
-SOGLIA_OFF = 0.000446
+# 02/11/2026: x4 rispetto a 0.000686/0.000446, misurate leggendo a 16 bit
+# (a 32 bit lo stesso tono ha potenza 4 volte maggiore, come in 3main.py).
+SOGLIA_ON = 0.002744
+SOGLIA_OFF = 0.001784
 
 BLOCCO_MS = 20.0
 BLOCCO_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_MS / 1000.0))
@@ -316,7 +320,6 @@ def main():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((UDP_IP, UDP_PORT))
     sock.settimeout(0.5)
-    bytes_attesi = CAMPIONI_PER_PACCHETTO * 2
 
     # Master in modalita' sweep tempi e a parlare, via WiFi (ESP).
     daisy = ComandiDaisy(ESP_HOST)
@@ -360,9 +363,10 @@ def main():
                 sock.close()
                 return
             continue
-        if len(data) != bytes_attesi:
+        campioni = formato_dati.decodifica_pacchetto(data)
+        if campioni is None:
             continue
-        registrazione.append(np.frombuffer(data, dtype=np.int16))
+        registrazione.append(campioni)
         buffer_rilevamento.append(registrazione[-1])
         campioni_accumulati += CAMPIONI_PER_PACCHETTO
         if campioni_accumulati < CAMPIONI_PER_FINESTRA_RILEVAMENTO:
@@ -411,7 +415,8 @@ def main():
                 data, _addr = sock.recvfrom(4096)
             except socket.timeout:
                 continue
-            if len(data) != bytes_attesi:
+            campioni = formato_dati.decodifica_pacchetto(data)
+            if campioni is None:
                 continue
 
             trascorso_s = time.time() - t0
@@ -424,7 +429,7 @@ def main():
                 chiudi_gradino_corrente()
                 step_corrente = step
 
-            registrazione.append(np.frombuffer(data, dtype=np.int16))
+            registrazione.append(campioni)
             buffer_gradino.append(registrazione[-1])
 
         chiudi_gradino_corrente()

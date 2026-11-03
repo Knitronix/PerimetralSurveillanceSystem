@@ -24,7 +24,7 @@ main.py     -> UNICO entry point del progetto: interrogatore (ricezione UDP,
 ```
 
 `main.py` accorpa in un solo file/finestra Qt:
-- **Interrogatore** (`NetworkWorker`): ricezione UDP grezza a 24kHz, pacchetti da 254 campioni int16, porta 12345. Nessuna scrittura su disco (nessuna registrazione).
+- **Interrogatore** (`NetworkWorker`): ricezione UDP grezza a 12kHz, pacchetti da 127 campioni int32 little-endian, porta 12345 (fino al 02/11/2026 letti per errore come 254 int16 a 24kHz: soglie Goertzel x4 da allora, vedi `report/REPORT_2026-10-28_29.md` §4). Nessuna scrittura su disco (nessuna registrazione).
 - **Visualizzatore**: forma d'onda sempre attiva; spettrogramma disattivabile da checkbox (default OFF — sia il grafico che il calcolo FFT si fermano quando disattivato, non solo il disegno).
 - **Rilevatore f1/f2** (`RilevatoreGoertzel`, `MacchinaStatoFrequenza`, `RilevatoreProtocolloF1F2`), agganciato nel metodo `gestisci_dati()`. Non esiste un file `rilevatore_freq.py` separato: la logica del protocollo (§2-3) vive dentro `main.py`.
 
@@ -73,7 +73,7 @@ Valori correnti sempre in `config_condivisa.py` (§5) - non duplicarli qui a mem
 
 **Pipeline (implementata in `main.py`):**
 
-1. Due filtri di Goertzel indipendenti in parallelo, uno su f1 e uno su f2, calcolati sugli stessi blocchi di campioni dello stream a 24 kHz.
+1. Due filtri di Goertzel indipendenti in parallelo, uno su f1 e uno su f2, calcolati sugli stessi blocchi di campioni dello stream a 12 kHz.
 2. Blocco da 20 ms (480 campioni, `BLOCCO_GOERTZEL_MS` in `main.py`) → con `T1_MS=50ms`/`T0_MS=200ms` correnti, uno slot è 2.5 blocchi (non un multiplo intero!) e un marcatore è 10 blocchi.
 3. Per ogni blocco: potenza Goertzel normalizzata, confrontata con **doppia soglia (isteresi)** per decidere lo stato ON/OFF di quella frequenza, evitando sfarfallio sul confine di soglia.
 4. Macchina a stati per ciascuna frequenza: misura la durata continuativa di ON; quando torna OFF, classifica la durata:

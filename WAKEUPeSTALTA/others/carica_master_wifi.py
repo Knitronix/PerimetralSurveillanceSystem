@@ -6,7 +6,7 @@ esp-link collegato alla seriale e al RESET del Mega), senza cavo USB.
 
 Uso (la Shelly deve essere ACCESA: l'ESP prende corrente dal Mega):
     python others/carica_master_wifi.py            (IP dell'ESP di default)
-    python others/carica_master_wifi.py 10.27.239.225
+    python others/carica_master_wifi.py 10.19.161.225
 
 Cosa fa, da solo:
   1. compila master.ino con arduino-cli (quello dell'Arduino IDE)
@@ -35,7 +35,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-ESP_DEFAULT = "10.27.239.225"
+ESP_DEFAULT = "10.19.161.225"
 SKETCH = Path(__file__).resolve().parent.parent / "arduino" / "master"
 FQBN = "arduino:avr:mega:cpu=atmega2560"
 BAUD_BOOTLOADER = 115200

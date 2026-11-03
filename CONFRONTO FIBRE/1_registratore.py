@@ -21,11 +21,15 @@ log = logging.getLogger("registratore")
 # --- CONFIGURAZIONE FISSA ---
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
+# Formato vero dei pacchetti (Wireshark, 02/11/2026): 127 campioni int32
+# little-endian a 12kHz. Fino al 02/11 si leggevano 254 int16 a 24kHz (stessi
+# byte, lettura sbagliata): report/REPORT_2026-10-28_29.md, §4.
+CAMPIONI_PER_PACCHETTO = 127
+SAMPLE_RATE = 12000
+DTYPE_CAMPIONI = np.dtype("<i4")
 SECONDI_VISIBILI = 15
 STORICO_CAMPIONI = SAMPLE_RATE * SECONDI_VISIBILI
-CARTELLA_DATASET = "dataset_sensori_24kHz"
+CARTELLA_DATASET = "dataset_sensori_12kHz"
 FILE_CONFIG = "config_soglie.json"
 ID_FIBRA_DEFAULT = "fibra1"
 
@@ -50,13 +54,13 @@ INTERVALLO_TIMER_MS = int(1000 / FPS_GRAFICO)
 
 # --- CONFIGURAZIONE SPETTROGRAMMA ---
 # Finestra FFT = SAMPLE_RATE campioni => risoluzione in frequenza esatta di 1 Hz
-# (risoluzione = SAMPLE_RATE / NPERSEG). Costa una FFT su 24.000 campioni, ma la
+# (risoluzione = SAMPLE_RATE / NPERSEG). Costa una FFT su 12.000 campioni, ma la
 # calcoliamo solo poche volte al secondo (vedi HOP), non ad ogni pacchetto.
 NPERSEG_SPETTROGRAMMA = SAMPLE_RATE
 MAX_FREQ_VISUALIZZATA = 6000  # Hz mostrati sull'asse Y (come da riferimento)
 
 # Ogni quanti NUOVI campioni calcoliamo una nuova colonna dello spettrogramma.
-# 2400 campioni = 100ms => una colonna nuova ogni 100ms, ~94% di overlap tra
+# 2400 campioni = 200ms => una colonna nuova ogni 200ms, ~94% di overlap tra
 # una finestra FFT e la successiva (spettrogramma "morbido" nel tempo).
 HOP_SPETTROGRAMMA_CAMPIONI = 2400
 N_COLONNE_SPETTROGRAMMA = STORICO_CAMPIONI // HOP_SPETTROGRAMMA_CAMPIONI
@@ -124,7 +128,7 @@ class NetworkWorker(QtCore.QThread):
             return
 
         sock.settimeout(0.5)
-        bytes_attesi = self.packet_size * 2  # int16 = 2 byte
+        bytes_attesi = self.packet_size * DTYPE_CAMPIONI.itemsize
 
         while self.running:
             try:
@@ -150,7 +154,7 @@ class NetworkWorker(QtCore.QThread):
                 except Exception as e:
                     log.error(f"Errore scrittura wav continuo: {e}")
 
-            nuovi_campioni = np.frombuffer(data, dtype=np.int16)
+            nuovi_campioni = np.frombuffer(data, dtype=DTYPE_CAMPIONI)
             self.nuovi_dati_signal.emit(nuovi_campioni)
 
             self.stats.pacchetti_ricevuti += 1
@@ -186,7 +190,7 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
         # (~94 volte al secondo). Questo è il cambiamento che elimina la
         # scattosità: prima si ricopiavano ~360.000 campioni decine di volte
         # al secondo, ora lo si fa solo 20 volte al secondo.
-        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int16)
+        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int32)
         self.write_pos = 0
         # Asse temporale in secondi, condiviso dal grafico d'onda e dallo
         # spettrogramma (0 = "adesso", -SECONDI_VISIBILI = campione più vecchio)
@@ -214,7 +218,9 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
 
         # --- LOGICA RECORDER ---
         self.classe_corrente = self.classi_dataset[0] if self.classi_dataset else "RUMORE_AMBIENTALE"
-        self.soglia_trigger = 2000.0
+        # 02/11/2026: 2000 -> 2830 (x1.41). Per i segnali piccoli l'RMS letto a
+        # 32 bit e' sqrt(2) volte quello letto a 16 bit (misurato: 1.41).
+        self.soglia_trigger = 2830.0
         self.usa_soglia = True  # False = cattura a durata fissa senza attendere soglia (es. sweep)
         # Stato unico di registrazione: quando True, il pulsante è "Ferma
         # Registrazione" ed è attiva la cattura (continua per RUMORE_AMBIENTALE,
@@ -228,7 +234,7 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
         # sweep) accumulare in una lista Python boxata sarebbe lo stesso
         # antipattern eliminato dal buffer del grafico (np.roll) - qui
         # sarebbe stato "list.extend()" ripetuto su ~700.000 elementi.
-        self.buffer_impulso_array = np.zeros(0, dtype=np.int16)
+        self.buffer_impulso_array = np.zeros(0, dtype=np.int32)
         self.pos_impulso = 0
         self.campioni_da_raccogliere = int(SAMPLE_RATE * 1.5)
 
@@ -250,7 +256,7 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
         try:
             self.wav_file = wave.open(self.nome_file_wav, "wb")
             self.wav_file.setnchannels(1)
-            self.wav_file.setsampwidth(2)
+            self.wav_file.setsampwidth(DTYPE_CAMPIONI.itemsize)
             self.wav_file.setframerate(SAMPLE_RATE)
         except Exception as e:
             log.error(f"Impossibile aprire il file wav continuo: {e}")
@@ -546,7 +552,7 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
         """Prealloca il buffer per la prossima cattura, con la dimensione
         esatta e corrente di campioni_da_raccogliere (letta al momento in
         cui la cattura INIZIA, non cambia più a metà cattura)."""
-        self.buffer_impulso_array = np.empty(self.campioni_da_raccogliere, dtype=np.int16)
+        self.buffer_impulso_array = np.empty(self.campioni_da_raccogliere, dtype=np.int32)
         self.pos_impulso = 0
 
     def _accumula_in_buffer_cattura(self, nuovi_campioni):
@@ -693,7 +699,7 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
             # troncamento necessario: lo fa già _accumula_in_buffer_cattura)
             with wave.open(nome_file, "wb") as wf:
                 wf.setnchannels(1)
-                wf.setsampwidth(2)
+                wf.setsampwidth(DTYPE_CAMPIONI.itemsize)
                 wf.setframerate(SAMPLE_RATE)
                 wf.writeframes(self.buffer_impulso_array.tobytes())
 
@@ -727,7 +733,8 @@ class SagnacDatasetBuilder(QtWidgets.QMainWindow):
         finestra_pesata = finestra * self.finestra_hann
         spettro = np.fft.rfft(finestra_pesata)
         ampiezza = np.abs(spettro[: self.bin_freq_max]) / NPERSEG_SPETTROGRAMMA
-        # dB relativi alla piena scala di un int16 (32768)
+        # dB relativi a 32768 (piena scala int16 di prima): riferimento tenuto
+        # per confrontabilita' con lo storico, i campioni ora sono int32
         db = 20.0 * np.log10(ampiezza / 32768.0 + 1e-12)
 
         self.spettro_immagine[:, self.col_scrittura_spettro] = db

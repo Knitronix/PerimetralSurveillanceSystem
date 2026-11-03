@@ -33,7 +33,7 @@ from train_classifier import carica_dataset, filtra_classi_troppo_piccole
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", default=str(MLTODL_DIR / "dataset_sensori_24kHz"))
+    ap.add_argument("--dataset", default=str(MLTODL_DIR / "dataset_sensori_12kHz"))
     ap.add_argument("--soglia-plateau", type=float, default=0.01,
                      help="miglioramento minimo di F1 macro tra due step consecutivi, sotto il quale si considera raggiunto il plateau")
     ap.add_argument("--out-grafico", default=str(KPI_DIR / "curva_apprendimento.png"))

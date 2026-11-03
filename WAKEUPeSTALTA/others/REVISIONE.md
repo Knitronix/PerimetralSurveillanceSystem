@@ -11,7 +11,7 @@ problemi sotto sono da decidere insieme (vedi "Domande aperte" e "Piano").
 
 ## 1. Come funziona oggi, in 6 passi
 
-1. **Ascolto (AMBIENTE)** — `3main.py` riceve la fibra via UDP (24 kHz) e
+1. **Ascolto (AMBIENTE)** — `3main.py` riceve la fibra via UDP (12 kHz, int32) e
    calcola lo STA/LTA a banda larga. La daisy chain è **spenta** (Shelly OFF).
 2. **Risveglio** — STA/LTA supera la soglia ON → `3main.py` accende la Shelly
    (riprova ogni 2 s se non risponde) e aspetta `ATTESA_BOOT_DAISY_CHAIN_S`

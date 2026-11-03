@@ -18,7 +18,7 @@ Tre programmi, tre compiti separati:
 
 ### 2.1 Cosa fa
 
-Riceve pacchetti UDP dall'interferometro (int16, 24kHz), li mostra in tempo reale su due grafici sincronizzati (forma d'onda e spettrogramma), e permette di registrare e catalogare campioni per fibra e classe di segnale (rumore ambientale, eventi a soglia, sweep a durata fissa).
+Riceve pacchetti UDP dall'interferometro (int32, 12kHz — fino al 02/11/2026 letti per errore come int16 a 24kHz, vedi `report/REPORT_2026-10-28_29.md` §4), li mostra in tempo reale su due grafici sincronizzati (forma d'onda e spettrogramma), e permette di registrare e catalogare campioni per fibra e classe di segnale (rumore ambientale, eventi a soglia, sweep a durata fissa).
 
 ### 2.2 Architettura interna
 
@@ -30,8 +30,8 @@ Riceve pacchetti UDP dall'interferometro (int16, 24kHz), li mostra in tempo real
 | Parametro | Valore | Perché |
 |---|---|---|
 | `UDP_IP` / `UDP_PORT` | `0.0.0.0` / `12345` | Ascolta su tutte le interfacce, porta fissa dell'interferometro |
-| `CAMPIONI_PER_PACCHETTO` | 254 | Campioni int16 per pacchetto UDP, definito dal firmware dell'interferometro |
-| `SAMPLE_RATE` | 24000 | Frequenza di campionamento dell'interferometro |
+| `CAMPIONI_PER_PACCHETTO` | 127 | Campioni int32 little-endian per pacchetto UDP (508 byte), definito dal firmware dell'interferometro |
+| `SAMPLE_RATE` | 12000 | Frequenza di campionamento dell'interferometro (banda utile 6kHz) |
 | `PAUSA_TRA_RAFFICHE_S` | 0.169 s | Pausa strutturale nota tra una raffica di pacchetti e la successiva (misurata con Wireshark: il dispositivo bufferizza e invia a raffiche di ~16 pacchetti quasi simultanei, non un flusso uniforme) |
 | `FATTORE_GAP_SOSPETTO` | 2.0 | Se il tempo tra due pacchetti supera 2× la pausa strutturale nota (quindi ~338ms), si sospetta una perdita di pacchetti reale e viene contata come "gap sospetto" nelle statistiche di rete a schermo |
 
@@ -40,16 +40,16 @@ Riceve pacchetti UDP dall'interferometro (int16, 24kHz), li mostra in tempo real
 ### 2.4 Buffer di visualizzazione (forma d'onda)
 
 - **`SECONDI_VISIBILI = 15`**: quanti secondi di storico mostra il grafico.
-- **`STORICO_CAMPIONI = SAMPLE_RATE × SECONDI_VISIBILI`** (360.000 campioni): dimensione del buffer.
-- Il buffer è un array numpy fisso con un **puntatore di scrittura circolare** (`write_pos`): ogni pacchetto scrive solo i propri 254 campioni nella posizione corrente, invece di ricopiare l'intero array (come farebbe `np.roll`). La "linearizzazione" per il disegno avviene solo al momento del refresh (**`FPS_GRAFICO = 20`** volte al secondo), non ad ogni pacchetto (~94 volte al secondo) — è la scelta che rende fluida la visualizzazione.
+- **`STORICO_CAMPIONI = SAMPLE_RATE × SECONDI_VISIBILI`** (180.000 campioni): dimensione del buffer.
+- Il buffer è un array numpy fisso con un **puntatore di scrittura circolare** (`write_pos`): ogni pacchetto scrive solo i propri 127 campioni nella posizione corrente, invece di ricopiare l'intero array (come farebbe `np.roll`). La "linearizzazione" per il disegno avviene solo al momento del refresh (**`FPS_GRAFICO = 20`** volte al secondo), non ad ogni pacchetto (~94 volte al secondo) — è la scelta che rende fluida la visualizzazione.
 
 ### 2.5 Spettrogramma
 
 | Parametro | Valore | Perché / come si calcola |
 |---|---|---|
-| `NPERSEG_SPETTROGRAMMA` | `SAMPLE_RATE` (24000) | Finestra FFT di 1 secondo intero → risoluzione in frequenza = SAMPLE_RATE/NPERSEG = **esattamente 1Hz** |
+| `NPERSEG_SPETTROGRAMMA` | `SAMPLE_RATE` (12000) | Finestra FFT di 1 secondo intero → risoluzione in frequenza = SAMPLE_RATE/NPERSEG = **esattamente 1Hz** |
 | `MAX_FREQ_VISUALIZZATA` | 6000 Hz | Range mostrato sull'asse Y |
-| `HOP_SPETTROGRAMMA_CAMPIONI` | 2400 (100ms) | Ogni quanti campioni nuovi si calcola una colonna. Una FFT da 24.000 campioni costa troppo per farla ad ogni pacchetto (~94/s) ma è banale farla ~10 volte al secondo — overlap ~94% tra una finestra e la successiva, per uno spettrogramma "morbido" |
+| `HOP_SPETTROGRAMMA_CAMPIONI` | 2400 (200ms) | Ogni quanti campioni nuovi si calcola una colonna. Una FFT da 12.000 campioni costa troppo per farla ad ogni pacchetto (~94/s) ma è banale farla ~5 volte al secondo — overlap ~94% tra una finestra e la successiva, per uno spettrogramma "morbido" |
 | `DINAMICA_DB_DEFAULT` | 60 dB | Il colore va dal picco corrente (99° percentile dei valori visibili, non il massimo assoluto, per non farsi rovinare da un singolo valore anomalo) fino a `picco − dinamica`. Non è una soglia assoluta in dB: dipende dalla scala reale dell'ADC, che non è nota a priori, quindi si auto-adatta ad ogni frame |
 | `VALORE_INIZIALE_DB` | -300 | Riempimento iniziale dell'immagine, ben sotto qualunque segnale reale, in attesa dei primi dati |
 
@@ -79,7 +79,7 @@ Per `RUMORE_AMBIENTALE`, il comportamento è sempre "a blocchi continui": mentre
 
 ### 2.7 Catalogazione per fibra
 
-**`id_fibra`** (default `"fibra1"`, modificabile da un campo di testo): ogni file salvato finisce in `dataset_sensori_24kHz/<id_fibra>/<classe>/campione_<timestamp>.wav`. Il cambio di fibra è una semplice stringa sanificata (solo alfanumerici, `-`, `_`) e non richiede nessuna interazione con il thread di rete: `salva_file()` gira interamente nel thread della GUI, quindi non ci sono race condition da gestire.
+**`id_fibra`** (default `"fibra1"`, modificabile da un campo di testo): ogni file salvato finisce in `dataset_sensori_12kHz/<id_fibra>/<classe>/campione_<timestamp>.wav`. Il cambio di fibra è una semplice stringa sanificata (solo alfanumerici, `-`, `_`) e non richiede nessuna interazione con il thread di rete: `salva_file()` gira interamente nel thread della GUI, quindi non ci sono race condition da gestire.
 
 ### 2.8 Classi di segnale
 
@@ -91,7 +91,7 @@ Definite in `config_soglie.json` (chiave = nome classe, valore = soglia di defau
 
 ### 3.1 Cosa fa
 
-Legge tutti i campioni salvati (`dataset_sensori_24kHz/<fibra>/<classe>/*.wav`), calcola metriche per file, le aggrega per fibra/classe, e produce un punteggio composito di confronto.
+Legge tutti i campioni salvati (`dataset_sensori_12kHz/<fibra>/<classe>/*.wav`), calcola metriche per file, le aggrega per fibra/classe, e produce un punteggio composito di confronto.
 
 ### 3.2 Metriche calcolate per ogni file
 
@@ -225,7 +225,7 @@ SNR_banda = risposta_media_sweep_banda − rumore_medio_banda      (stessa fibra
 
 ## 6. File generati
 
-- `dataset_sensori_24kHz/<id_fibra>/<classe>/campione_*.wav` — campioni catalogati
+- `dataset_sensori_12kHz/<id_fibra>/<classe>/campione_*.wav` — campioni catalogati
 - `registrazioni_audio/full_streaming_*.wav` — copia grezza e continua dell'intera sessione (non catalogata per fibra)
 - `confronto_fibre.csv` — dettaglio per-file dell'analisi eventi brevi
 - `confronto_sweep.csv` — dettaglio banda-per-banda dell'analisi sweep

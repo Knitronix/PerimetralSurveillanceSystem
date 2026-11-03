@@ -18,7 +18,7 @@ aggiungere feature quando il dataset è abbastanza grande da giustificarle.
 import numpy as np
 from scipy import signal as sp_signal
 
-SAMPLE_RATE_DEFAULT = 24000
+SAMPLE_RATE_DEFAULT = 12000  # interrogatore: 12kHz, int32 (fino al 02/11/2026 letto come 24kHz int16)
 
 BANDE_FREQUENZA = [
     (0, 50),
@@ -119,7 +119,10 @@ def estrai_feature_da_wav(path_wav):
     import wave
     with wave.open(path_wav, "rb") as wf:
         fs = wf.getframerate()
+        larghezza = wf.getsampwidth()
         n_frames = wf.getnframes()
         raw = wf.readframes(n_frames)
-    x = np.frombuffer(raw, dtype=np.int16)
+    # 4 byte = formato vero (int32). 2 byte = WAV vecchio a 16 bit: quelli del
+    # progetto sono stati tutti convertiti il 02/11/2026.
+    x = np.frombuffer(raw, dtype="<i4" if larghezza == 4 else "<i2")
     return estrai_feature(x, sample_rate=fs)

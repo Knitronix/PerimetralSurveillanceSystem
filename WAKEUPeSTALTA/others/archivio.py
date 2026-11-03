@@ -9,7 +9,9 @@ Una cartella per giornata, archivio/AAAA-MM-GG/:
   main_HHMMSS/      una sessione = un avvio di 3main.py
     sessione.json   fotografia della configurazione all'avvio
     audio/          segnale continuo della fibra, un WAV ogni DURATA_FILE_S
-                    (24kHz, 16 bit, mono - si apre con Audacity)
+                    (12kHz, 32 bit, mono - si apre con Audacity;
+                    fino al 02/11/2026 erano 24kHz 16 bit, vedi
+                    others/formato_dati.py)
     eventi.jsonl    una riga per evento: ora, file audio e secondo dentro
                     quel file in cui ritrovarlo, piu' i dati dell'evento
                     (comprese le prove etichettate: prova_inizio/prova_fine)
@@ -127,10 +129,10 @@ class ArchivioSessione:
             percorso.parent.mkdir(exist_ok=True)
             with wave.open(str(percorso), "wb") as w:
                 w.setnchannels(1)
-                w.setsampwidth(2)
+                w.setsampwidth(4)
                 w.setframerate(self.sample_rate)
                 if prova["pezzi"]:
-                    w.writeframes(np.concatenate(prova["pezzi"]).astype("<i2").tobytes())
+                    w.writeframes(np.concatenate(prova["pezzi"]).astype("<i4").tobytes())
             self.evento("prova_wav_salvato", etichetta=prova["etichetta"], file_prova=prova["nome"])
         except (OSError, wave.Error) as e:
             # un WAV di prova non riuscito non deve spegnere l'archivio
@@ -163,7 +165,7 @@ class ArchivioSessione:
                 # writeframes aggiorna anche l'intestazione del WAV ad ogni
                 # scrittura: il file resta leggibile anche se 3main.py si chiude
                 # male (crash, task manager).
-                self._wav.writeframes(campioni[inizio:inizio + n].astype("<i2").tobytes())
+                self._wav.writeframes(campioni[inizio:inizio + n].astype("<i4").tobytes())
                 self._campioni_file += n
                 self.campioni_totali += n
                 inizio += n
@@ -213,7 +215,7 @@ class ArchivioSessione:
         self._nome_wav = f"audio/{time.strftime('%H%M%S')}.wav"
         self._wav = wave.open(str(self.cartella / self._nome_wav), "wb")
         self._wav.setnchannels(1)
-        self._wav.setsampwidth(2)
+        self._wav.setsampwidth(4)
         self._wav.setframerate(self.sample_rate)
         self._campioni_file = 0
         self.evento("nuovo_file_audio")

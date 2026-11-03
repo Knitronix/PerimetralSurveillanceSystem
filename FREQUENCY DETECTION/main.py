@@ -60,8 +60,12 @@ log = logging.getLogger("rilevatore_f1_f2")
 # --- CONFIGURAZIONE FISSA: interrogatore (invariata rispetto a main.py) ---
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
+# Formato vero dei pacchetti (Wireshark, 02/11/2026): 127 campioni int32
+# little-endian a 12kHz. Fino al 02/11 si leggevano 254 int16 a 24kHz (stessi
+# byte, lettura sbagliata): report/REPORT_2026-10-28_29.md, §4.
+CAMPIONI_PER_PACCHETTO = 127
+SAMPLE_RATE = 12000
+DTYPE_CAMPIONI = np.dtype("<i4")
 SECONDI_VISIBILI = 15
 STORICO_CAMPIONI = SAMPLE_RATE * SECONDI_VISIBILI
 
@@ -116,7 +120,11 @@ T1_MS_DEFAULT = config_condivisa.T1_MS      # durata di uno slot
 TOLLERANZA_MS_DEFAULT = config_condivisa.TOLLERANZA_MS
 BLOCCO_GOERTZEL_MS = 20.0
 BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.0))
-# Soglie sulla potenza Goertzel normalizzata (0..1 = piena scala int16).
+# Soglie sulla potenza Goertzel normalizzata (1 = tono di ampiezza 32768).
+# 02/11/2026: tutte x4 rispetto ai valori sotto descritti, misurati con la
+# lettura a 16 bit: a 32 bit la potenza di un tono e' esattamente 4 volte
+# quella di prima (verificato su WAKEUPeSTALTA, rapporto 4.00). Da
+# rimisurare sul canale reale.
 # RITARATE per il nuovo setup daisy chain (SPECS.MD DAISY CHAIN/restart.md):
 # accoppiamento molto più debole del banco di sweep originale, picchi
 # segnale misurati "Azzera picchi" f1(4600Hz)=0.00041, f2(3200Hz)=0.0028
@@ -133,10 +141,10 @@ BLOCCO_GOERTZEL_CAMPIONI = max(1, round(SAMPLE_RATE * BLOCCO_GOERTZEL_MS / 1000.
 # vicino o sopra SOGLIA_ON_F1 qui sotto (0.000082), che diventerebbe
 # inaffidabile. Da verificare con la procedura di isolamento canali prima di
 # fidarsi sul campo.
-SOGLIA_ON_F1_DEFAULT = 0.000082
-SOGLIA_OFF_F1_DEFAULT = 0.000053
-SOGLIA_ON_F2_DEFAULT = 0.00056
-SOGLIA_OFF_F2_DEFAULT = 0.000364
+SOGLIA_ON_F1_DEFAULT = 0.000328
+SOGLIA_OFF_F1_DEFAULT = 0.000212
+SOGLIA_ON_F2_DEFAULT = 0.00224
+SOGLIA_OFF_F2_DEFAULT = 0.001456
 
 FILE_LOG_SLOT = "eventi_f1_f2_log.jsonl"
 MAX_RIGHE_LOG = 300
@@ -236,7 +244,7 @@ class NetworkWorker(QtCore.QThread):
             return
 
         sock.settimeout(0.5)
-        bytes_attesi = self.packet_size * 2
+        bytes_attesi = self.packet_size * DTYPE_CAMPIONI.itemsize
         timer = QtCore.QElapsedTimer()
         timer.start()
 
@@ -255,7 +263,7 @@ class NetworkWorker(QtCore.QThread):
 
             self._aggiorna_gap(timer.nsecsElapsed())
 
-            nuovi_campioni = np.frombuffer(data, dtype=np.int16)
+            nuovi_campioni = np.frombuffer(data, dtype=DTYPE_CAMPIONI)
             self.nuovi_dati_signal.emit(nuovi_campioni)
 
             self.stats.pacchetti_ricevuti += 1
@@ -283,7 +291,8 @@ class NetworkWorker(QtCore.QThread):
 
 class RilevatoreGoertzel:
     """Filtro di Goertzel su una singola frequenza nota: potenza normalizzata
-    (0..1 = tono a piena scala int16), indipendente dalla dimensione del
+    (1 = tono di ampiezza 32768; con i campioni int32 un tono forte supera 1),
+    indipendente dalla dimensione del
     blocco. Più economico di una FFT completa quando serve solo decidere
     presenza/assenza di un tono noto (SPECS.MD §3)."""
 
@@ -447,7 +456,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         super().__init__()
         pg.setConfigOptions(antialias=False)
 
-        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int16)
+        self.buffer_audio = np.zeros(STORICO_CAMPIONI, dtype=np.int32)
         self.write_pos = 0
         self.asse_tempo = np.linspace(-SECONDI_VISIBILI, 0, STORICO_CAMPIONI, dtype=np.float32)
 
@@ -471,7 +480,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         self.stato_ciclo_corrente = {}
         self.ciclo_riferimento = None
 
-        self._accumulo_goertzel = np.empty(0, dtype=np.int16)
+        self._accumulo_goertzel = np.empty(0, dtype=np.int32)
         self.protocollo = RilevatoreProtocolloF1F2(
             SAMPLE_RATE, BLOCCO_GOERTZEL_CAMPIONI,
             F1_HZ_DEFAULT, F2_HZ_DEFAULT, T0_MS_DEFAULT, T1_MS_DEFAULT, TOLLERANZA_MS_DEFAULT,
@@ -575,7 +584,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
         # Bottone (non più checkbox) per renderlo più evidente: stessa
         # evidenza teal a piena larghezza usata per "Parametri avanzati".
         self.checkbox_spettro = QtWidgets.QPushButton(
-            "📊  Spettrogramma (pesante — FFT 24000 punti, disattivato di default)"
+            "📊  Spettrogramma (pesante — FFT 12000 punti, disattivato di default)"
         )
         self.checkbox_spettro.setCheckable(True)
         self.checkbox_spettro.setMinimumHeight(36)
@@ -904,7 +913,7 @@ class RilevatoreF1F2(QtWidgets.QMainWindow):
             self.spin_soglia_on_f1.value(), self.spin_soglia_off_f1.value(),
             self.spin_soglia_on_f2.value(), self.spin_soglia_off_f2.value(),
         )
-        self._accumulo_goertzel = np.empty(0, dtype=np.int16)
+        self._accumulo_goertzel = np.empty(0, dtype=np.int32)
         self.azzera_picchi_potenza()
         self.azzera_riferimento_ripetibilita()
         self.label_counter.setText("Counter: --")

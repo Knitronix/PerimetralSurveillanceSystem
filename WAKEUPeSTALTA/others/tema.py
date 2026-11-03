@@ -23,23 +23,26 @@ from PySide6 import QtCore, QtGui, QtWidgets
 # ----------------------------------------------------------------------
 # Palette
 # ----------------------------------------------------------------------
+# Chiara (03/11/2026): la scura sotto il sole non si leggeva (report 28-29/10).
+# Testo quasi nero su bianco e colori di stato scuri e saturi: ognuno resta
+# leggibile come testo su bianco e regge il testo bianco quando fa da sfondo.
 COLORI = {
-    "bg": "#14161a",
-    "bg_elevato": "#1c1f24",
-    "bg_input": "#232730",
-    "bg_lista": "#111317",      # superfici incassate: grafici, log
-    "bordo": "#2b2f37",
-    "bordo_forte": "#3a3f48",
-    "testo": "#e4e6eb",
-    "testo_tenue": "#8b92a0",
-    "testo_spento": "#5b616c",
-    "accento": "#00d2c4",
-    "accento_hover": "#33ddd1",
-    "accento_testo_su": "#0a1210",
-    "pericolo": "#ff4757",
-    "ambra": "#e8a33d",
-    "blu": "#5eb1ff",
-    "verde": "#1fbf75",
+    "bg": "#e9edf2",
+    "bg_elevato": "#ffffff",
+    "bg_input": "#f3f5f8",
+    "bg_lista": "#fbfcfd",      # superfici incassate: grafici, log
+    "bordo": "#d3d9e1",
+    "bordo_forte": "#a9b2be",
+    "testo": "#11151b",
+    "testo_tenue": "#46505e",
+    "testo_spento": "#8a929e",
+    "accento": "#00796b",
+    "accento_hover": "#00897b",
+    "accento_testo_su": "#ffffff",
+    "pericolo": "#d0212f",
+    "ambra": "#b06200",
+    "blu": "#1a64c4",
+    "verde": "#12803f",
 }
 
 BG = COLORI["bg"]
@@ -93,7 +96,7 @@ def stile_chip(colore: str) -> str:
 # ----------------------------------------------------------------------
 STYLE_QSS = f"""
 /* Testo e font ovunque, ma lo sfondo SOLO sulla radice: un QWidget
-   contenitore dentro una card non deve dipingere una toppa scura. */
+   contenitore dentro una card non deve dipingere una toppa di sfondo. */
 QWidget {{
     color: {TESTO};
     font-family: {FONT};
@@ -158,7 +161,7 @@ QPushButton {{
     font-size: {T_TESTO}px;
     font-weight: 600;
 }}
-QPushButton:hover {{ background-color: #2a2f38; border-color: {ACCENTO}; color: {ACCENTO}; }}
+QPushButton:hover {{ background-color: {rgba(ACCENTO, 18)}; border-color: {ACCENTO}; color: {ACCENTO}; }}
 QPushButton:pressed {{ background-color: {BG_ELEVATO}; }}
 QPushButton:disabled {{ color: {TESTO_SPENTO}; border-color: {BORDO}; background-color: {BG_ELEVATO}; }}
 
@@ -237,9 +240,9 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none
 
 
 def applica_palette(app: QtWidgets.QApplication) -> None:
-    """Fusion + palette scura: i widget che non hanno una regola QSS propria
+    """Fusion + palette del tema: i widget che non hanno una regola QSS propria
     (viewport delle scroll area, popup, menu contestuali) non devono
-    ricadere sul grigio chiaro di default."""
+    ricadere sui colori di default di Windows."""
     app.setStyle("Fusion")
     pal = QtGui.QPalette()
     for ruolo, colore in (
@@ -368,7 +371,7 @@ def stile_plot(plot, etichetta_y: str | None = None, etichetta_x: str | None = "
     """Grafici pyqtgraph coerenti con le card: fondo incassato, assi tenui,
     nessun titolo interno (il titolo sta nella testata della card)."""
     plot.setBackground(BG_INSET)
-    plot.showGrid(x=True, y=True, alpha=0.12)
+    plot.showGrid(x=True, y=True, alpha=0.2)
     font_tick = QtGui.QFont(FONT_NOME)
     font_tick.setPixelSize(11)
     stile_label = {"color": TESTO_TENUE, "font-size": "11px"}

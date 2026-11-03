@@ -6,7 +6,7 @@ raccolti con registratore_stalta.py, e salva il migliore dei due (per F1
 macro sul test set).
 
 Uso:
-    python train_classifier.py --dataset dataset_sensori_24kHz --out modello_classificatore.pkl
+    python train_classifier.py --dataset dataset_sensori_12kHz --out modello_classificatore.pkl
 
 Perché confrontare due modelli invece di sceglierne uno a priori: con un
 dataset piccolo/medio non è ovvio in anticipo quale dei due generalizzi
@@ -77,7 +77,7 @@ def filtra_classi_troppo_piccole(X, y):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", default="dataset_sensori_24kHz")
+    ap.add_argument("--dataset", default="dataset_sensori_12kHz")
     ap.add_argument("--out", default="modello_classificatore.pkl")
     ap.add_argument("--test-size", type=float, default=0.25)
     args = ap.parse_args()

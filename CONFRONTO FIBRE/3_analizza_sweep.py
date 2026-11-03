@@ -7,8 +7,8 @@ sente bene ogni fibra a ciascuna frequenza").
 
 Si aspetta la stessa struttura di 2_confronta_fibre.py:
 
-    dataset_sensori_24kHz/<id_fibra>/<classe_sweep>/campione_*.wav
-    dataset_sensori_24kHz/<id_fibra>/RUMORE_AMBIENTALE/campione_*.wav
+    dataset_sensori_12kHz/<id_fibra>/<classe_sweep>/campione_*.wav
+    dataset_sensori_12kHz/<id_fibra>/RUMORE_AMBIENTALE/campione_*.wav
 
 REQUISITI SUL PROTOCOLLO DI REGISTRAZIONE:
 - Registra lo sweep con la modalità "durata fissa senza soglia" del
@@ -52,24 +52,29 @@ import csv
 import warnings
 import numpy as np
 
-CARTELLA_DATASET = "dataset_sensori_24kHz"
+CARTELLA_DATASET = "dataset_sensori_12kHz"
 CLASSE_SWEEP = "SWEEP"                    # deve esistere in config_soglie.json
 CLASSE_RUMORE_DI_FONDO = "RUMORE_AMBIENTALE"
 FILE_CSV_OUTPUT = "confronto_sweep.csv"
 
 # --- PARAMETRI DELLO SWEEP: DEVONO CORRISPONDERE AL TUO FILE AUDIO ---
 F_MIN_SWEEP = 20.0        # Hz, frequenza di partenza dello sweep
-F_MAX_SWEEP = 6000.0      # Hz, frequenza finale dello sweep
+F_MAX_SWEEP = 6000.0      # Hz, frequenza finale dello sweep (= Nyquist a 12kHz: l'ultima banda e' al limite)
 DURATA_SWEEP_S = 12.0     # secondi, durata dello sweep (non della registrazione)
 TIPO_SWEEP = "log"        # "log" (chirp logaritmico, il più comune) o "lineare"
 
 # --- PARAMETRI DI ANALISI ---
-NPERSEG_ANALISI = 1024    # campioni per finestra FFT (~43ms a 24kHz)
-HOP_ANALISI = 256         # avanzamento tra una finestra e la successiva
+# 02/11/2026: 1024/256 -> 512/128 a 12kHz, stessa finestra (~43ms) e stessa
+# risoluzione in frequenza (23.4Hz) di prima.
+NPERSEG_ANALISI = 512     # campioni per finestra FFT (~43ms a 12kHz)
+HOP_ANALISI = 128         # avanzamento tra una finestra e la successiva
 N_BANDE = 20              # bande log-spaziate tra F_MIN_SWEEP e F_MAX_SWEEP
 SNR_MINIMO_UTILE_DB = 6.0  # sotto questa soglia una banda è considerata "non coperta"
 STD_SOSPETTA_DB = 3.0     # sopra questa deviazione standard tra le registrazioni, la banda è da verificare
-SOGLIA_CLIPPING_CAMPIONE = 32760  # vicino al fondo scala int16 (32767)
+# Fondo scala reale dell'interrogatore non noto (int32; massimo visto il
+# 02/11 ~2.1 milioni). Prima del 02/11 era 32760 sulla lettura a 16 bit,
+# dove il "clipping" era il riavvolgimento dei segnali forti (report §4).
+SOGLIA_CLIPPING_CAMPIONE = 2_000_000_000
 EPS_DBFS = 1e-9
 
 # NOTA: qui sotto ci sono DUE metriche distinte per l'allineamento, che
@@ -99,8 +104,11 @@ def leggi_wav_come_array(percorso):
     with wave.open(percorso, "rb") as wf:
         n_campioni = wf.getnframes()
         sample_rate = wf.getframerate()
+        larghezza = wf.getsampwidth()
         dati = wf.readframes(n_campioni)
-    campioni = np.frombuffer(dati, dtype=np.int16).astype(np.float64)
+    # 4 byte = formato vero (int32, 12kHz). 2 byte = WAV vecchio a 16 bit: quelli
+    # del progetto sono stati tutti convertiti il 02/11/2026.
+    campioni = np.frombuffer(dati, dtype="<i4" if larghezza == 4 else "<i2").astype(np.float64)
     return campioni, sample_rate
 
 

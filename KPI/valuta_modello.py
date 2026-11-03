@@ -56,7 +56,7 @@ def calcola_curva_calibrazione(y_true, probabilita_predette, etichette_predette,
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--modello", default=str(MLTODL_DIR / "modello_classificatore.pkl"))
-    ap.add_argument("--dataset", default=str(MLTODL_DIR / "dataset_sensori_24kHz"))
+    ap.add_argument("--dataset", default=str(MLTODL_DIR / "dataset_sensori_12kHz"))
     ap.add_argument("--test-size", type=float, default=0.25)
     ap.add_argument("--out-71", default=str(KPI_DIR / "report_kpi_7_1.json"))
     ap.add_argument("--out-76", default=str(KPI_DIR / "report_kpi_7_6.json"))

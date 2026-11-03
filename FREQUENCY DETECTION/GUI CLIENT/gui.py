@@ -136,7 +136,7 @@ class RilevatoreAlarmSource(QObject):
     def __init__(self, id_sensori_attivi, parent=None):
         super().__init__(parent)
         self._stati = {i: StatoSensore.LIBERO for i in id_sensori_attivi}
-        self._accumulo_goertzel = np.zeros(0, dtype=np.int16)
+        self._accumulo_goertzel = np.zeros(0, dtype=np.int32)
 
         self._connesso = False           # nessun evento ancora visto dal boot
         self._ultimo_evento_valido = None  # time.monotonic() dell'ultimo marcatore/slot

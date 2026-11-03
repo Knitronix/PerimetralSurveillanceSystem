@@ -26,17 +26,25 @@ KPI_DIR = Path(__file__).resolve().parent
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 12345
-CAMPIONI_PER_PACCHETTO = 254
-SAMPLE_RATE = 24000
-BYTES_ATTESI = CAMPIONI_PER_PACCHETTO * 2
+# Formato vero dei pacchetti (Wireshark, 02/11/2026): 127 campioni int32
+# little-endian a 12kHz; fino al 02/11 letti come 254 int16 a 24kHz
+# (report/REPORT_2026-10-28_29.md, §4).
+CAMPIONI_PER_PACCHETTO = 127
+SAMPLE_RATE = 12000
+DTYPE_CAMPIONI = np.dtype("<i4")
+BYTES_ATTESI = CAMPIONI_PER_PACCHETTO * DTYPE_CAMPIONI.itemsize
 FILE_LOG_SELFTEST = KPI_DIR / "kpi_selftest_log.jsonl"
 
 # Soglie di plausibilità: da tarare sulla base dell'esperienza reale del
 # sistema. Questi default sono un punto di partenza, non valori assoluti.
-RMS_MINIMO_PLAUSIBILE = 5.0      # sotto questo: sospetto fibra scollegata / segnale digitale piatto
-RMS_MASSIMO_PLAUSIBILE = 20000.0  # sopra questo: sospetto saturazione permanente
+# 02/11/2026: x1.41 rispetto ai valori a 16 bit (per i segnali piccoli l'RMS
+# letto a 32 bit e' sqrt(2) volte quello di prima, misurato: 1.41).
+RMS_MINIMO_PLAUSIBILE = 7.0      # sotto questo: sospetto fibra scollegata / segnale digitale piatto
+RMS_MASSIMO_PLAUSIBILE = 28000.0  # sopra questo: sospetto saturazione permanente
 FRAZIONE_MINIMA_PACCHETTI = 0.85  # rispetto al teorico, sotto: continuità compromessa
-SOGLIA_CLIPPING = 32000
+# Fondo scala reale dell'interrogatore non noto (int32; massimo visto il 02/11
+# ~2.1 milioni): soglia vicino al limite dell'int32, da rivedere.
+SOGLIA_CLIPPING = 2_000_000_000
 
 
 def main():
@@ -64,7 +72,7 @@ def main():
             continue
         if len(data) != BYTES_ATTESI:
             continue
-        campioni = np.frombuffer(data, dtype=np.int16)
+        campioni = np.frombuffer(data, dtype=DTYPE_CAMPIONI)
         rms_totali.append(float(np.sqrt(np.mean(campioni.astype(np.float64) ** 2))))
         picco_massimo_assoluto = max(picco_massimo_assoluto, int(np.max(np.abs(campioni))))
         pacchetti_ricevuti += 1

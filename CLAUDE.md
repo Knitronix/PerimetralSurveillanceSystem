@@ -11,8 +11,8 @@ per il training (nessun vincolo embedded).
 
 - `CONFRONTO FIBRE/` — flusso di confronto oggettivo tra le fibre ottiche (quale fibra "sente"
   meglio), indipendente dal flusso ML/DL. Cartella "pulita", attiva.
-  - `1_registratore.py` — GUI (PySide6 + pyqtgraph) che riceve il segnale via UDP (24kHz, pacchetti
-    da 254 campioni int16, porta 12345), mostra forma d'onda e spettrogramma in tempo reale,
+  - `1_registratore.py` — GUI (PySide6 + pyqtgraph) che riceve il segnale via UDP (12kHz, pacchetti
+    da 127 campioni int32, porta 12345), mostra forma d'onda e spettrogramma in tempo reale,
     registra dataset WAV etichettati per classe/fibra (cattura a soglia RMS o a durata fissa).
   - `2_confronta_fibre.py` — confronto fibre su eventi brevi (RMS, crest factor, clipping, SNR
     per banda, punteggio composito).
@@ -34,7 +34,7 @@ per il training (nessun vincolo embedded).
   - `realtime_inference.py` — inferenza in tempo reale usata dalla modalità Riconoscimento.
   - `plan.md` — planning di progetto a 3 fasi (Laboratorio → Pretest campo → SAFE).
   - `guidaoperativa.md` — manuale d'uso passo-passo di tutta la pipeline.
-  - Dataset (`dataset_sensori_24kHz/`), modello (`modello_classificatore.pkl`) e log operativi
+  - Dataset (`dataset_sensori_12kHz/`), modello (`modello_classificatore.pkl`) e log operativi
     (`eventi_log.jsonl`, `riconoscimenti_log.jsonl`) vivono qui; gli script KPI in `KPI/` li
     leggono da qui ma non li possiedono.
 - `MLtoDLseparateFasiSUPERATO/` — ARCHIVIATO: versione precedente della pipeline sopra, con la
@@ -81,6 +81,13 @@ Integrazione ML in due fasi:
 - Nuova classe aggiunta ai pre-test: "gruppo che passeggia/corre".
 
 ## Note tecniche importanti (da NON perdere)
+- Formato dati dell'interrogatore (verificato con Wireshark il 02/11/2026): ogni pacchetto UDP
+  da 508 byte contiene 127 campioni int32 little-endian, 12kHz (banda utile 6kHz). Fino al
+  02/11 tutti gli script leggevano 254 int16 a 24kHz: i segnali forti si "riavvolgevano" in
+  rumore e ogni tono aveva una copia a 12000-f. A parita' di segnale piccolo: potenza Goertzel
+  x4, RMS x1.41, picco uguale. Il 02/11 tutti i WAV del progetto sono stati convertiti
+  sul posto (stessi byte, nuova intestazione 12kHz/32 bit; cartelle `..._24kHz` rinominate
+  `..._12kHz`). Dettagli: `report/REPORT_2026-10-28_29.md` §4.
 - Il dispositivo/interrogatore non invia un flusso UDP uniforme: bufferizza e invia a raffiche di
   ~16 pacchetti quasi simultanei, con pausa strutturale di ~169ms tra una raffica e l'altra.
   Comportamento del dispositivo, non modificabile — va gestito lato software.
@@ -88,7 +95,8 @@ Integrazione ML in due fasi:
   ampiezza (energia concentrata nelle basse frequenze). Con STA/LTA a banda larga, rumore di fondo
   e passi lenti possono avere rapporti simili, non separabili con nessuna soglia.
 - Test di confronto fibre: motorino vibrante a 5m — fibra1 lo rilevava già con soglia a 2000,
-  sulle altre fibre soglia abbassata a 250 per rilevarlo.
+  sulle altre fibre soglia abbassata a 250 per rilevarlo (soglie RMS lette a 16 bit: a 32 bit
+  sono ~2830 e ~350).
 
 ## Convenzioni e regole per Claude Code
 - NON modificare nulla dentro `CONFRONTO FIBRE/OLD CONFRONTO/` o `MLtoDLseparateFasiSUPERATO/`:

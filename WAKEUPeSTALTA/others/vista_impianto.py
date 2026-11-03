@@ -26,13 +26,13 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .tema import BG, BG_INPUT, BORDO, FONT_NOME, ROSSO, TESTO, VERDE
+from .tema import BG, BG_INPUT, BLU, BORDO, COLORI, FONT_NOME, ROSSO, TESTO, VERDE
 
-TESTO_SU_COLORE = "#0a1210"
-BG_BASE = BG_INPUT     # la BASE al centro: un gradino sopra la card che contiene la vista
-GRIGIO_ANELLO = "#5a606b"
-GRIGIO_TAPPETO = "#4a4f58"
-GRIGIO_LATI = "#3d424b"
+TESTO_SU_COLORE = COLORI["accento_testo_su"]
+BG_BASE = BG_INPUT     # la BASE al centro: un gradino sotto la card bianca che contiene la vista
+GRIGIO_ANELLO = "#8e97a3"
+GRIGIO_TAPPETO = "#c3cad3"
+GRIGIO_LATI = "#dde2e8"
 
 _STATI_ASCOLTO = {"AMBIENTE", "ASCOLTO"}
 
@@ -86,9 +86,9 @@ class _PulsanteReset(QtWidgets.QPushButton):
         self.setStyleSheet(f"""
             QPushButton#Reset {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #6dbaff, stop:1 #3d8fe0);
-                color: #0b1622;
-                border: 1px solid rgba(255, 255, 255, 40);
+                    stop:0 #3a82dc, stop:1 {BLU});
+                color: {TESTO_SU_COLORE};
+                border: 1px solid rgba(0, 0, 0, 40);
                 border-radius: 10px;
                 font-family: 'Segoe UI', sans-serif;
                 font-size: 15px;
@@ -97,20 +97,20 @@ class _PulsanteReset(QtWidgets.QPushButton):
             }}
             QPushButton#Reset:hover {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #9fd2ff, stop:1 #5eb1ff);
-                border: 1px solid rgba(255, 255, 255, 110);
+                    stop:0 #5596e4, stop:1 #2a74d2);
+                border: 1px solid rgba(0, 0, 0, 70);
             }}
             QPushButton#Reset:pressed {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #3a86d6, stop:1 #2f6fb3);
+                    stop:0 #1756a8, stop:1 #13478c);
                 padding-top: 3px;
             }}
-            QPushButton#Reset:focus {{ border: 2px solid #e4e6eb; }}
+            QPushButton#Reset:focus {{ border: 2px solid {TESTO}; }}
         """)
 
         self._alone = QtWidgets.QGraphicsDropShadowEffect(self)
         self._alone.setOffset(0, 0)
-        self._alone.setColor(QtGui.QColor(94, 177, 255, 200))
+        self._alone.setColor(QtGui.QColor(26, 100, 196, 150))
         self._alone.setBlurRadius(6)
         self.setGraphicsEffect(self._alone)
 
@@ -289,7 +289,7 @@ class VistaImpianto(QtWidgets.QWidget):
                     p.setPen(QtGui.QPen(a, allarg))
                     p.setBrush(QtCore.Qt.NoBrush)
                     p.drawRoundedRect(r, raggio_angoli, raggio_angoli)
-            p.setPen(QtGui.QPen(c.lighter(125), 1))
+            p.setPen(QtGui.QPen(c.darker(115), 1))
             p.setBrush(c)
             p.drawRoundedRect(r, raggio_angoli, raggio_angoli)
             font.setPixelSize(max(11, int(R * 0.085)))
@@ -314,10 +314,10 @@ class VistaImpianto(QtWidgets.QWidget):
         p.setPen(QtGui.QPen(bordo, 1))
         p.setBrush(sfondo)
         p.drawRoundedRect(pillola, 16, 16)
-        p.setBrush(colore.lighter(115))
+        p.setBrush(colore)
         p.setPen(QtCore.Qt.NoPen)
         p.drawEllipse(QtCore.QPointF(pillola.left() + 18, pillola.center().y()), 4.5, 4.5)
-        p.setPen(colore.lighter(130))
+        p.setPen(colore.darker(110))
         p.drawText(pillola.adjusted(18, 0, 0, 0), QtCore.Qt.AlignCenter, testo)
         p.end()
 

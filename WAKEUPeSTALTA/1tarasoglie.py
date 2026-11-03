@@ -44,6 +44,7 @@ import pyqtgraph as pg
 # 3main.py inizia con un numero (ordine d'uso degli script): "import 3main"
 # non e' sintassi valida, si importa per nome.
 M = importlib.import_module("3main")
+from others import formato_dati
 from others.comandi_daisy import ComandiDaisy
 from others.archivio import CARTELLA_ARCHIVIO, cartella_taratura
 from others.tema import COLORI, FONT_MONO, STYLE_QSS, applica_palette, crea_card, etichetta, stile_plot
@@ -213,7 +214,7 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
         self.t_parla = 0.0
         self.volume: tuple[int, int] | None = None  # come lo riporta il master
         self.stato_chiesto = False
-        self.coda = np.zeros(0, dtype=np.int16)
+        self.coda = np.zeros(0, dtype=np.int32)
         n_grafico = int(SECONDI_GRAFICO * FS / B)
         self.storico_f1 = np.full(n_grafico, 1e-9)
         self.storico_f2 = np.full(n_grafico, 1e-9)
@@ -396,8 +397,9 @@ class FinestraTaraSoglie(QtWidgets.QMainWindow):
                 dati = self.sock.recv(4096)
             except (BlockingIOError, OSError):
                 break
-            if len(dati) == M.CAMPIONI_PER_PACCHETTO * 2:
-                pacchetti.append(np.frombuffer(dati, dtype=np.int16))
+            campioni = formato_dati.decodifica_pacchetto(dati)
+            if campioni is not None:
+                pacchetti.append(campioni)
         if pacchetti:
             nuovi = np.concatenate(pacchetti)
             if self.fase in ("muta", "misura"):

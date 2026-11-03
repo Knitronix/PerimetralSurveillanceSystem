@@ -94,7 +94,7 @@ Questo sostituisce la soglia RMS fissa **solo per la modalità di cattura a sogl
 
 ## 4bis. Fase 1 (laboratorio): solo validazione tecnica, non dataset finale
 
-Coerente con la definizione di Fase 1 in §1bis: i dati di laboratorio non entrano nel dataset finale. Nessuna gestione di metadati "laboratorio vs campo": quando il codice è verificato, la cartella `dataset_sensori_24kHz/` (e il log eventi) viene svuotata e si riparte da zero con la sola raccolta sul campo (Fase 2). Motivazione: un modello allenato anche parzialmente su dati di laboratorio rischia di imparare caratteristiche dell'ambiente di laboratorio (accoppiamento della fibra, rumore di fondo, superfici) che non si ritrovano nel campo reale — più semplice ripartire puliti che pesare/filtrare due popolazioni di dati miste.
+Coerente con la definizione di Fase 1 in §1bis: i dati di laboratorio non entrano nel dataset finale. Nessuna gestione di metadati "laboratorio vs campo": quando il codice è verificato, la cartella `dataset_sensori_12kHz/` (e il log eventi) viene svuotata e si riparte da zero con la sola raccolta sul campo (Fase 2). Motivazione: un modello allenato anche parzialmente su dati di laboratorio rischia di imparare caratteristiche dell'ambiente di laboratorio (accoppiamento della fibra, rumore di fondo, superfici) che non si ritrovano nel campo reale — più semplice ripartire puliti che pesare/filtrare due popolazioni di dati miste.
 
 ## 4ter. Miglioramenti aggiuntivi integrati nel registratore
 

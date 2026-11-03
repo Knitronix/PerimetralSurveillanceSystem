@@ -30,7 +30,7 @@ Nessuna libreria audio esterna (niente librosa): tutto basato su NumPy/SciPy, pe
 ```bash
 python registratore_stalta.py
 ```
-Al primo avvio crea automaticamente le cartelle `dataset_sensori_24kHz/` e `registrazioni_audio/`, e un file `full_streaming_<timestamp>.wav` con lo streaming grezzo continuo (utile come backup/debug, indipendente dagli eventi ritagliati).
+Al primo avvio crea automaticamente le cartelle `dataset_sensori_12kHz/` e `registrazioni_audio/`, e un file `full_streaming_<timestamp>.wav` con lo streaming grezzo continuo (utile come backup/debug, indipendente dagli eventi ritagliati).
 
 **2. Verifica che i dati arrivino**
 Controlla la label "Rete" in basso a sinistra: deve mostrare un numero di pacchetti/secondo stabile. **Nota**: il dispositivo invia dati a raffiche (~16 pacchetti quasi simultanei ogni ~169ms), non in flusso uniforme — è normale e non un problema di rete, l'app è calibrata su questo comportamento. Preoccupati solo se vedi crescere "anomalie raffica" molto rapidamente o "secondi con possibile perdita dati" — quelli sì indicano dati mancanti, non solo la normale cadenza a scatti.
@@ -79,7 +79,7 @@ Cambiare le soglie STA/LTA (spinbox ON/OFF) funziona anche in questa modalità, 
 | File | Ruolo |
 |---|---|
 | `audio_features.py` | Estrae ~20 feature (RMS, picco, zero-crossing, centroide spettrale, energia per banda, ecc.) da un evento audio. Usato sia dal training sia dall'inferenza — stesso codice, garanzia che non ci sia disallineamento. |
-| `train_classifier.py` | Legge tutti i WAV in `dataset_sensori_24kHz/`, estrae le feature, allena **sia** Random Forest **sia** SVM RBF (con grid search sugli iperparametri), e salva il migliore dei due per F1 macro in `modello_classificatore.pkl`. Esclude automaticamente le classi con meno di 8 esempi. |
+| `train_classifier.py` | Legge tutti i WAV in `dataset_sensori_12kHz/`, estrae le feature, allena **sia** Random Forest **sia** SVM RBF (con grid search sugli iperparametri), e salva il migliore dei due per F1 macro in `modello_classificatore.pkl`. Esclude automaticamente le classi con meno di 8 esempi. |
 | `realtime_inference.py` | Carica `modello_classificatore.pkl` e classifica un buffer audio in tempo reale. Sotto il 75% di confidenza restituisce `SCONOSCIUTO_DA_VERIFICARE` invece di forzare una classe nota. Usato dalla modalità Riconoscimento di `registratore_stalta.py`. |
 
 > **Nota**: esiste anche `riconoscimento_realtime.py`, uno script indipendente creato in un'iterazione precedente (processo separato, senza interfaccia grafica). È stato superato dalla modalità Riconoscimento integrata sopra, che risolve lo stesso problema (leggerezza) senza duplicare la logica STA/LTA in due file diversi. Puoi tenerlo se in futuro ti serve davvero un processo indipendente dal registratore (es. su un'altra macchina), altrimenti la modalità integrata è la via consigliata.
@@ -95,7 +95,7 @@ Cambiare le soglie STA/LTA (spinbox ON/OFF) funziona anche in questa modalità, 
 
 **Fase B — Primo training di prova**
 ```bash
-python train_classifier.py --dataset dataset_sensori_24kHz --out modello_classificatore.pkl
+python train_classifier.py --dataset dataset_sensori_12kHz --out modello_classificatore.pkl
 ```
 Con pochi esempi il risultato sarà debole — è normale e atteso, serve solo a verificare che lo script giri senza errori e a leggere il report (precision/recall per classe, matrice di confusione) per farsi un'idea di quali classi si confondono.
 
@@ -105,7 +105,7 @@ Passa a modalità Riconoscimento dal menu a tendina (Parte 2), premi Avvia, gene
 **Fase D — Reset e passaggio al campo (come deciso)**
 Quando la pipeline sopra funziona senza errori:
 ```bash
-rm -rf dataset_sensori_24kHz eventi_riconosciuti
+rm -rf dataset_sensori_12kHz eventi_riconosciuti
 rm -f modello_classificatore.pkl
 ```
 (o semplicemente cancella/svuota manualmente quelle cartelle/file) e riparti con la raccolta vera sul campo, seguendo la roadmap in `planning_progetto_fibra.md`.

@@ -8,7 +8,7 @@ confronto_fibre/
 ├── 3_analizza_sweep.py
 ├── config_soglie.json
 ├── readme.md
-└── dataset_sensori_24kHz/        (generata automaticamente)
+└── dataset_sensori_12kHz/        (generata automaticamente)
 ```
 
 ## 1. Preparazione (una volta sola)
@@ -34,7 +34,7 @@ confronto_fibre/
 
 ## 4. File generati
 
-- `dataset_sensori_24kHz/<id_fibra>/<classe>/campione_*.wav` — campioni catalogati
+- `dataset_sensori_12kHz/<id_fibra>/<classe>/campione_*.wav` — campioni catalogati
 - `registrazioni_audio/full_streaming_*.wav` — copia grezza e continua dell'intera sessione
 - `confronto_fibre.csv` — dettaglio per-file dell'analisi eventi brevi
 - `confronto_sweep.csv` — dettaglio banda-per-banda dell'analisi sweep
