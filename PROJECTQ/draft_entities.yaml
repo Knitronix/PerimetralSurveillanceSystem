@@ -1,0 +1,147 @@
+# SUPERSEDED on 04/11/2026: the real entities are in hydrisIntegrator.py (sensor_entities,
+# _alarm). Differences: symbol on sensors and alarms, track on alarms, `other` class.
+#
+# DRAFT (03/11/2026) - how our system would appear in Hydris.
+# FAKE coordinates: to be replaced with the real ones of the site (see README §4.1).
+# Field schema taken from the Hydris Entity Cookbook ("Perimeter Sensors" section).
+#
+# To try it, with Hydris installed:  hydris ec apply draft_entities.yaml
+#
+# Six entities:
+#   knx.fiber1              the interrogator + the fiber (sensor, asset)
+#   knx.fiber1.path         where the fiber runs (line on the map)
+#   knx.mat1 / 2            the mats (point sensors, assets)
+#   knx.fiber1~det~event    a fiber alarm (not localized)
+#   knx.mat2~det~event      a pressed mat (localized)
+---
+id: knx.fiber1
+label: Fiber 1
+geo:
+  latitude: 45.0000
+  longitude: 9.0000
+device:
+  class: ugs
+  category: Ground
+  state: DeviceStateActive
+metric:
+  metrics:
+    - id: 1
+      label: STA/LTA ratio
+      double: 0.94
+classification:
+  taxonomy:
+    - confidence:
+        confidence: 1.0
+      equipment:
+        sensor:
+          emplaced: {}
+          acoustic: {}
+routing:
+  channels:
+    - {}
+---
+id: knx.fiber1.path
+label: Fiber 1 path
+shape:
+  geometry:
+    planar:
+      line:
+        points:
+          - { longitude: 9.0000, latitude: 45.0000 }
+          - { longitude: 9.0010, latitude: 45.0000 }
+          - { longitude: 9.0010, latitude: 45.0006 }
+---
+id: knx.mat1
+label: Mat 1
+geo:
+  latitude: 45.0001
+  longitude: 9.0004
+device:
+  class: ugs
+  category: Ground
+  parent: knx.fiber1
+  state: DeviceStateActive
+classification:
+  taxonomy:
+    - confidence:
+        confidence: 1.0
+      equipment:
+        sensor:
+          emplaced: {}
+routing:
+  channels:
+    - {}
+---
+id: knx.mat2
+label: Mat 2
+geo:
+  latitude: 45.0001
+  longitude: 9.0008
+device:
+  class: ugs
+  category: Ground
+  parent: knx.fiber1
+  # cut cable -> DeviceStateDegraded + error
+  state: DeviceStateActive
+classification:
+  taxonomy:
+    - confidence:
+        confidence: 1.0
+      equipment:
+        sensor:
+          emplaced: {}
+routing:
+  channels:
+    - {}
+---
+# Fiber alarm: we only know something is near the fiber, not where.
+# Zero offset + large covariance (~ fiber length). The class would come from
+# a classifier; pending = confidence below threshold.
+# A real push also needs lifetime.fresh / lifetime.until.
+id: knx.fiber1~det~event
+label: Fiber event
+controller:
+  id: knx.fiber1
+priority: PriorityImmediate
+detection:
+  detectorEntityId: knx.fiber1
+  confidence: 0.75
+classification:
+  taxonomy:
+    - confidence:
+        confidence: 0.75
+        pending: false
+      person: {}
+pose:
+  parent: knx.fiber1
+  cartesian:
+    covariance:
+      mxx: 10000
+      myy: 10000
+routing:
+  channels:
+    - {}
+---
+# Pressed mat: here we know the position, 1-2 m uncertainty.
+id: knx.mat2~det~event
+label: Mat 2 pressed
+controller:
+  id: knx.fiber1
+priority: PriorityImmediate
+detection:
+  detectorEntityId: knx.mat2
+  confidence: 1.0
+classification:
+  taxonomy:
+    - confidence:
+        confidence: 1.0
+      person: {}
+pose:
+  parent: knx.mat2
+  cartesian:
+    covariance:
+      mxx: 4
+      myy: 4
+routing:
+  channels:
+    - {}

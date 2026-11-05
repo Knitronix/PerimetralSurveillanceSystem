@@ -1,0 +1,25 @@
+{
+  "esp_host": "10.19.161.225",
+  "hydris": {
+    "address": "localhost:50051",
+    "alarm_duration_s": 60,
+    "alarm_renewal_s": 20,
+    "sensor_lifetime_s": 60,
+    "sensor_heartbeat_s": 10
+  },
+  "fiber": {
+    "id": "knx.fiber1",
+    "name": "Perimetral Fiber",
+    "lat": 45.0,
+    "lon": 9.0,
+    "alarm_radius_m": 500,
+    "path": [[45.0, 9.0], [45.0, 9.001], [45.0006, 9.001]]
+  },
+  "mats": [
+    {"number": 1, "id": "knx.mat1", "name": "Mat 1", "lat": 45.0001, "lon": 9.0004, "alarm_radius_m": 2},
+    {"number": 2, "id": "knx.mat2", "name": "Mat 2", "lat": 45.0001, "lon": 9.0008, "alarm_radius_m": 2}
+  ],
+  "stalta": {"sta_s": 0.5, "lta_s": 3.0, "threshold_on": 1.5, "threshold_off": 1.2},
+  "f1f2_thresholds": {"on_f1": 0.000248, "off_f1": 0.00016, "on_f2": 0.000232, "off_f2": 0.000152},
+  "timing": {"inactivity_s": 120, "maximum_s": 300, "mats_unheard_s": 5}
+}
