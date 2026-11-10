@@ -138,9 +138,13 @@ risveglio vero.
 
 ### Tab 2 · Pannello di controllo
 
-Vista tecnica per chi installa/manutiene il sistema: forma d'onda,
-contatore della daisy chain, timer di riarmo regolabili (vedi sotto), campo
-per l'IP della presa Shelly.
+Vista tecnica per chi installa/manutiene il sistema. In alto una riga di
+impostazioni: contatore della daisy chain, campo per l'IP del modulo ESP del
+master e **volume dei toni f1/f2** (pulsanti 20/50/100% o valore libero +
+"Imposta"; accanto il volume letto dal master, "master: N%"). Sotto, la forma
+d'onda. Il volume viene salvato dal master (EEPROM); più basso = vibratore
+meno udibile e marcatore misurato più vicino ai 200 ms veri. I timer di
+riarmo non sono più qui (dal 03/11/2026): stanno solo in tab 3.
 
 ### Tab 3 · Pannello di visualizzazione
 
@@ -150,7 +154,7 @@ risveglio, grigio con tappeti colorati = armato) e i due timer in versione
 compatta. Un pulsante RESET (disegnato sull'impianto) spegne la presa e
 torna subito in ascolto, senza aspettare i timeout.
 
-### I due timer di riarmo (presenti in tab 2 e 3, sincronizzati)
+### I due timer di riarmo (solo in tab 3)
 
 - **INATTIVITÀ** — prioritario. Si azzera ad ogni chiusura di un tappeto:
   scade quando i tappeti restano fermi per N minuti. Pensato per il caso
@@ -164,15 +168,18 @@ torna subito in ascolto, senza aspettare i timeout.
 
 ## Configurazione
 
-- **IP della presa Shelly**: modificabile a runtime dal campo "SMART PLUG"
-  nella tab 2 (il DHCP può riassegnarlo di tanto in tanto) — non serve
-  toccare il codice. Il valore di partenza è in `Config.SMART_PLUG_HOST`
-  dentro `3main.py`.
+- **IP del modulo ESP del master**: modificabile a runtime dal campo nella
+  tab 2 (il DHCP può riassegnarlo, e cambia se cambia la rete WiFi) — non
+  serve toccare il codice. Il valore di partenza è in `Config.ESP_HOST`
+  dentro `3main.py`, letto anche da `0trovafrequenze.py`, `1tarasoglie.py`,
+  `2analizzatempiminimi.py` e `verificacatena.py`.
+- **Volume dei toni f1/f2**: dalla tab 2 (comando `VOL n n` al master). Il
+  master lo ricorda anche da spento.
 - **Soglie e finestre STA/LTA**: regolabili a schermo nella tab 1 (vedi
   sopra); i valori di partenza sono le costanti `STA_LTA_SOGLIA_*` e
   `*_FINESTRA_SEC_DEFAULT` in testa a `3main.py`.
 - **Timeout di riarmo** (inattività, tetto massimo, attesa di sincronizzazione
-  della daisy chain): regolabili a schermo nelle tab 2/3; i valori di
+  della daisy chain): regolabili a schermo nella tab 3; i valori di
   partenza sono in `Config` dentro `3main.py` e sono marcati `TODO` nel
   codice — non ancora validati con un test lungo sul campo.
 - **Frequenze e timing del protocollo f1/f2** (`F1_HZ`, `F2_HZ`, `T0_MS`,
