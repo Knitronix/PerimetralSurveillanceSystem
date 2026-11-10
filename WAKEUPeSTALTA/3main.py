@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 import socket
 import time
 from dataclasses import asdict, dataclass
@@ -452,6 +453,10 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
         self.config = Config()
         self.daisy = ComandiDaisy(self.config.ESP_HOST)
+        # Volume del master come lo riporta lui (STATO / VOL), None = non
+        # ancora letto. STATO si chiede una volta per ogni collegamento.
+        self._volume_master: tuple[int, int] | None = None
+        self._stato_master_chiesto = False
         self.stato = Stato.AMBIENTE
         # Finché non si preme "OK STALTA TARATO": un evento rilevato viene
         # solo LOGGATO ("avrei attivato RISVEGLIO"), non cambia mai stato né
@@ -987,8 +992,8 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             self.label_prova.setStyleSheet(f"color: {COLORI['pericolo']}; font-weight: 700;")
 
     def _crea_tab_ascolto(self) -> QtWidgets.QWidget:
-        """Fase 2: onda + pannello timer + una riga impianto (tappeti e
-        IP del modulo ESP). Lo stato resta nella barra in alto, condivisa."""
+        """Fase 2: onda + una riga impianto (tappeti, IP del modulo ESP,
+        volume). Lo stato resta nella barra in alto, condivisa."""
         tab = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(tab)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -997,21 +1002,12 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         card_onda, layout_onda, _ = crea_card("Segnale audio · tempo reale", spaziatura=6, compatta=True)
         self.plot_widget_ascolto, self.curva_onda_ascolto = self._crea_plot_onda()
         # Il grafico è la parte elastica della tab: con poca altezza (schermo
-        # scalato, finestra bassa) cede lui, non i timer sotto.
+        # scalato, finestra bassa) cede lui, non la riga impostazioni.
         self.plot_widget_ascolto.setMinimumHeight(70)
         layout_onda.addWidget(self.plot_widget_ascolto)
-        layout.addWidget(card_onda, stretch=1)
 
-        # Pannello timer: la logica dei due timer resta tutta in
-        # controlla_transizioni_temporali, qui si mostra/regola soltanto.
-        self.pannello_timer = WidgetTimer(
-            self.config.TIMEOUT_INATTIVITA_MIN,
-            self.config.TIMEOUT_MASSIMO_MIN if not math.isinf(self.config.TIMEOUT_MASSIMO_MIN) else 5.0,
-            mai=math.isinf(self.config.TIMEOUT_MASSIMO_MIN),
-        )
-        self.pannello_timer.timeout_inattivita_cambiato.connect(self._su_timeout_inattivita_cambiato)
-        self.pannello_timer.timeout_massimo_cambiato.connect(self._su_timeout_massimo_cambiato)
-        layout.addWidget(self.pannello_timer)
+        # (03/11/2026) Il pannello timer qui e' stato tolto: c'e' gia' in
+        # tab 3, che resta l'unico posto dove guardarli/regolarli.
 
         # Riga impianto: counter tappeti + IP del modulo ESP, una sola
         # card bassa invece di un QGroupBox enorme per una riga di testo.
@@ -1046,14 +1042,40 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         btn_applica_ip.setCursor(QtCore.Qt.PointingHandCursor)
         btn_applica_ip.clicked.connect(self.cambia_ip_esp)
         riga.addWidget(btn_applica_ip)
+        riga.addSpacing(8)
+        riga.addWidget(separatore(verticale=True))
+        riga.addSpacing(8)
+
+        # Volume dei toni f1/f2 del master (03/11/2026): un solo valore per
+        # tutti e due. Piu' basso = vibratore meno udibile e marcatore misurato
+        # piu' vicino ai 200ms veri (prove 100/50/20%: al 20% 0 cicli
+        # sbagliati, f2 ancora ~15x sopra soglia). Salvato nel master (EEPROM).
+        riga.addWidget(etichetta("VOLUME", "Eyebrow"))
+        for percento in (20, 50, 100):
+            b = QtWidgets.QPushButton(f"{percento}%")
+            b.setObjectName("Piatto")
+            b.setCursor(QtCore.Qt.PointingHandCursor)
+            b.clicked.connect(lambda _=False, p=percento: self.imposta_volume(p))
+            riga.addWidget(b)
+        self.stepper_volume = Stepper(0, 100, 20, 5, decimali=0, suffisso="%", larghezza=64)
+        riga.addWidget(self.stepper_volume)
+        btn_imposta_volume = QtWidgets.QPushButton("Imposta")
+        btn_imposta_volume.setCursor(QtCore.Qt.PointingHandCursor)
+        btn_imposta_volume.clicked.connect(lambda: self.imposta_volume(int(self.stepper_volume.spin.value())))
+        riga.addWidget(btn_imposta_volume)
+        self.label_volume_master = QtWidgets.QLabel("master: …")
+        self.label_volume_master.setObjectName("Campo")
+        riga.addWidget(self.label_volume_master)
         riga.addStretch(1)
+        # Riga impostazioni in alto, grafico sotto (03/11/2026).
         layout.addWidget(card_impianto)
+        layout.addWidget(card_onda, stretch=1)
         return tab
 
     def _crea_tab_vista_impianto(self) -> QtWidgets.QWidget:
-        """Fase 3, quella da mostrare al cliente: a sinistra lo stesso
-        pannello timer di tab 2 in colonna (seconda istanza, tenuta
-        sincronizzata), a destra l'anello/tappeti di VistaImpianto in una
+        """Fase 3, quella da mostrare al cliente: a sinistra il pannello
+        timer in colonna (l'unico, tolto da tab 2 il 03/11/2026), a destra
+        l'anello/tappeti di VistaImpianto in una
         card - niente numeri grezzi, soglie o log tecnico."""
         tab = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout(tab)
@@ -1096,19 +1118,9 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
     def _su_timeout_inattivita_cambiato(self, valore: float) -> None:
         self.config.TIMEOUT_INATTIVITA_MIN = valore
-        # Sincronizza l'altra istanza (tab 2 <-> tab 3): setValue() su Qt non
-        # riemette il segnale se il valore è già quello, quindi qui non si
-        # torna in loop infinito tra i due pannelli.
-        for pannello in (self.pannello_timer, self.pannello_timer_vista):
-            pannello.stepper_inattivita.spin.setValue(valore)
 
     def _su_timeout_massimo_cambiato(self, valore: float) -> None:
         self.config.TIMEOUT_MASSIMO_MIN = valore
-        mai = math.isinf(valore)
-        for pannello in (self.pannello_timer, self.pannello_timer_vista):
-            pannello.switch_mai.setChecked(mai)
-            if not mai:
-                pannello.stepper_massimo.spin.setValue(valore)
 
     def cambia_ip_esp(self) -> None:
         nuovo_host = self.campo_ip_esp.text().strip()
@@ -1116,7 +1128,20 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
             return
         self.config.ESP_HOST = nuovo_host
         self.daisy.imposta_host(nuovo_host)
+        self._volume_master, self._stato_master_chiesto = None, False
+        self.label_volume_master.setText("master: …")
         self._aggiungi_log(f"IP del modulo ESP aggiornato: {nuovo_host}")
+
+    def imposta_volume(self, percento: int) -> None:
+        """VOL al master, stesso valore per f1 e f2. La conferma arriva dal
+        master ("VOL f1=..% f2=..%") e la legge _gestisci_daisy."""
+        if not self.daisy.connesso:
+            self.label_volume_master.setText("master: ESP non raggiungibile")
+            return
+        self.stepper_volume.spin.setValue(percento)
+        self.daisy.comando(f"VOL {percento} {percento}")
+        self.label_volume_master.setText("master: …")
+        self._aggiungi_log(f"Volume daisy chain -> {percento}%")
 
     def _conferma_stalta_tarato(self) -> None:
         self._modalita_dry_run = False
@@ -1288,7 +1313,6 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
         self._aggiungi_log(
             f"Evento rilevato (STA/LTA={rapporto:.2f} > ON={soglia_on:.2f}) => PARLA alla daisy chain"
         )
-        self.pannello_timer.segna_allarme()
         self.pannello_timer_vista.segna_allarme()
         self._accumulo_tappeti = np.empty(0, dtype=np.int32)
         self._pulisci_indicatori_tappeti()
@@ -1326,8 +1350,20 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
     def _gestisci_daisy(self, ora: float) -> None:
         """Ogni tick: messaggi del master nell'archivio (+ avvisi utili) e,
         mentre deve parlare, il PARLA periodico (vedi INTERVALLO_PARLA_S)."""
+        if not self.daisy.connesso:
+            self._stato_master_chiesto = False
+            if self._volume_master is None:
+                self.label_volume_master.setText("master: ESP non raggiungibile")
+        elif not self._stato_master_chiesto:
+            self.daisy.comando("STATO")  # la risposta contiene anche "VOL=a b"
+            self._stato_master_chiesto = True
         for riga in self.daisy.righe_ricevute():
             self.archivio.evento("master", testo=riga)
+            m = re.search(r"VOL=(\d+) (\d+)", riga) or re.search(r"VOL f1=(\d+)% f2=(\d+)%", riga)
+            if m:
+                self._volume_master = (int(m.group(1)), int(m.group(2)))
+                f1, f2 = self._volume_master
+                self.label_volume_master.setText(f"master: {f1}%" if f1 == f2 else f"master: f1 {f1}%  f2 {f2}%")
             if "NON RISPONDE" in riga or "nessun PARLA" in riga:
                 self._aggiungi_log(f"Master: {riga}")
             if riga.startswith("Nodo"):
@@ -1471,15 +1507,14 @@ class FinestraWakeupStalta(QtWidgets.QMainWindow):
 
         # WidgetTimer.aggiorna() fa già tutto il lavoro che prima era qui
         # dentro (quale dei due timer comanda, countdown, caso "Mai", caso
-        # "chiusure in corso") - due istanze (tab 2 e tab 3), stesso stato.
-        for pannello in (self.pannello_timer, self.pannello_timer_vista):
-            pannello.aggiorna(
-                self.stato.name, ora, self._ultima_chiusura_s, self._inizio_armato_s,
-                # Finché il PARLA non è partito passo "ora" invece del vero
-                # inizio: il countdown resta fermo al valore pieno.
-                self._inizio_risveglio_s if self._parla_confermato else ora,
-                self.config.ATTESA_BOOT_DAISY_CHAIN_S,
-            )
+        # "chiusure in corso") - un'istanza sola, in tab 3.
+        self.pannello_timer_vista.aggiorna(
+            self.stato.name, ora, self._ultima_chiusura_s, self._inizio_armato_s,
+            # Finché il PARLA non è partito passo "ora" invece del vero
+            # inizio: il countdown resta fermo al valore pieno.
+            self._inizio_risveglio_s if self._parla_confermato else ora,
+            self.config.ATTESA_BOOT_DAISY_CHAIN_S,
+        )
 
     def _torna_ad_ambiente(self, motivo: str) -> None:
         """Comune a timeout vero e al pulsante "Forza AMBIENTE": riparte da
